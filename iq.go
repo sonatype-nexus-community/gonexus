@@ -1,4 +1,4 @@
-package nexusiq
+package goiq
 
 import (
 	"bytes"

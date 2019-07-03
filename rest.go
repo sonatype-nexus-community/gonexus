@@ -1,4 +1,4 @@
-package nexusiq
+package goiq
 
 const iqRestSessionPrivate = "%s/rest/user/session"
 const iqRestOrganization = "%s/api/v2/organizations"
