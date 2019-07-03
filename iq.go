@@ -210,7 +210,7 @@ func (iq *IQ) DeleteOrganization(organizationID string) error {
 }
 
 // EvaluateComponents evaluates the list of components
-func (iq *IQ) EvaluateComponents(components []IQComponent, applicationID string) (eval *IQEvaluation, err error) {
+func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (eval *Evaluation, err error) {
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
 		return
@@ -228,7 +228,7 @@ func (iq *IQ) EvaluateComponents(components []IQComponent, applicationID string)
 	}
 
 	resultsEndpoint := fmt.Sprintf(iqRestEvaluationResults, "%s", results.ApplicationID, results.ResultID)
-	getEvaluationResults := func() (*IQEvaluation, error) {
+	getEvaluationResults := func() (*Evaluation, error) {
 		body, resp, err := iq.get(resultsEndpoint)
 		if err != nil {
 			return nil, err
@@ -238,7 +238,7 @@ func (iq *IQ) EvaluateComponents(components []IQComponent, applicationID string)
 			return nil, nil
 		}
 
-		var eval IQEvaluation
+		var eval Evaluation
 		if err = json.Unmarshal(body, &eval); err != nil {
 			return nil, err
 		}
@@ -262,7 +262,7 @@ func (iq *IQ) EvaluateComponents(components []IQComponent, applicationID string)
 }
 
 // EvaluateComponentsAsFirewall evaluates the list of components using Root Organization only
-func (iq *IQ) EvaluateComponentsAsFirewall(components []IQComponent) (eval *IQEvaluation, err error) {
+func (iq *IQ) EvaluateComponentsAsFirewall(components []Component) (eval *Evaluation, err error) {
 	// Create temp application
 	_, appName, appID, err := iq.createTempApplication()
 	if err != nil {
