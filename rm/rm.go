@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/hokiegeek/gonexus"
 )
 
 // http://localhost:8081/service/rest/v1/components?continuationToken=foo&repository=bar
@@ -74,7 +76,7 @@ type listComponentsResponse struct {
 
 // RM holds basic and state info of the Repository Manager server we will connect to
 type RM struct {
-	host, username, password string
+	rest *nexus.Server
 }
 
 // ListComponents returns a list of components in the indicated repository
@@ -88,26 +90,38 @@ func (rm *RM) ListComponents(repo string) (items []RepositoryItem, err error) {
 			url += "&continuationToken=" + continuation
 		}
 
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
+		fmt.Println("here")
+		body, resp, err := rest.Get(url)
+		if err != nil || resp.StatusCode == http.StatusOK {
 			return
 		}
 
-		client := &http.Client{}
-		req.SetBasicAuth(rm.username, rm.password)
-		resp, err := client.Do(req)
-		if err != nil {
+		if err = json.Unmarshal(body, &listResp); err != nil {
 			return
 		}
 
-		if resp.StatusCode == http.StatusOK {
-			defer resp.Body.Close()
-			body, _ := ioutil.ReadAll(resp.Body)
-
-			if err = json.Unmarshal(body, &listResp); err != nil {
+		/*
+			req, err := http.NewRequest("GET", url, nil)
+			if err != nil {
 				return
 			}
-		}
+
+			client := &http.Client{}
+			req.SetBasicAuth(rm.username, rm.password)
+			resp, err := client.Do(req)
+			if err != nil {
+				return
+			}
+
+			if resp.StatusCode == http.StatusOK {
+				defer resp.Body.Close()
+				body, _ := ioutil.ReadAll(resp.Body)
+
+				if err = json.Unmarshal(body, &listResp); err != nil {
+					return
+				}
+			}
+		*/
 
 		return
 	}
@@ -170,10 +184,11 @@ func rmFwComponents(rmServer, iqServer serverInfo, repo string) (*results, error
 */
 
 // New creates a new Repository Manager instance
-func New(host, username, password string) (*RM, error) {
-	rm := new(RM)
-	rm.host = host
-	rm.username = username
-	rm.password = password
-	return rm, nil
+func New(host, username, password string) (rm *RM, err error) {
+	rm = new(RM)
+	rm.rest, err = nexus.NewServer(host, username, password)
+	// rm.host = host
+	// rm.username = username
+	// rm.password = password
+	return
 }

@@ -8,9 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	// "net/http/httputil"
-
-	"github.com/hokiegeek/gonexus/iq"
-	"github.com/hokiegeek/gonexus/rm"
+	// "github.com/hokiegeek/gonexus/iq"
+	// "github.com/hokiegeek/gonexus/rm"
 )
 
 /*
@@ -87,6 +86,16 @@ func (s *Server) Del(endpoint string) error {
 	return err
 }
 
+// NewServer returns a new rest client for a Nexus server
+func NewServer(host, username, password string) (s *Server, err error) {
+	s = new(Server)
+	s.host = host
+	s.username = username
+	s.password = password
+	return
+}
+
+/*
 // RmItemToIQComponent converts a repo item to an IQ component
 func RmItemToIQComponent(rm nexusrm.RepositoryItem) nexusiq.Component {
 	var iqc nexusiq.Component
@@ -110,3 +119,4 @@ func RmItemToIQComponent(rm nexusrm.RepositoryItem) nexusiq.Component {
 	iqc.Hash = rm.Hash()
 	return iqc
 }
+*/
