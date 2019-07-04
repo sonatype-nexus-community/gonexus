@@ -81,15 +81,6 @@ func (s *Server) Del(endpoint string) error {
 	return err
 }
 
-// NewServer returns a new rest client for a Nexus server
-func NewServer(host, username, password string) (s *Server, err error) {
-	s = new(Server)
-	s.Host = host
-	s.Username = username
-	s.Password = password
-	return
-}
-
 /*
 func iqResultToComponent(r nexusiq.ComponentEvaluationResult) component {
 	var c component

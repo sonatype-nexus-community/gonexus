@@ -36,8 +36,7 @@ type RepositoryItem struct {
 	Tags []interface{} `json:"tags"`
 }
 
-// Hash is a hack which returns the most pertinent hash for a component
-func (i *RepositoryItem) Hash() string {
+func (i *RepositoryItem) hash() string {
 	var hash string
 
 	sumByExt := func(exts []string) string {
