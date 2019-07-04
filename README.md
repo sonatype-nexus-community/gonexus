@@ -2,7 +2,10 @@
 
 Provides a go library for connecting to, and interacting with, Sonatype Nexus application such as Nexus Repository Manager and Nexus IQ Server.
 
-## nexusrm [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/rm?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/rm)
+## Organization
+The library is broken into two packages. One for each application
+
+### nexusrm [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/rm?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/rm)
 
 Create a connection to an instance of Nexus Repository Manager
 ```go
@@ -14,13 +17,13 @@ if err != nil {
 }
 ```
 
-## nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq)
+### nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq)
 
 Create a connection to an instance of Nexus IQ Server
 ```go
 import "github.com/hokiegeek/gonexus/iq"
 
-iq, err := nexusiq.New("http://localhost:8081", "user", "password")
+iq, err := nexusiq.New("http://localhost:8070", "user", "password")
 if err != nil {
     panic(err)
 }
