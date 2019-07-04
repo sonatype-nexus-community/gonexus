@@ -8,48 +8,31 @@ import (
 	"io/ioutil"
 	"net/http"
 	// "net/http/httputil"
-	// "github.com/hokiegeek/gonexus/iq"
-	// "github.com/hokiegeek/gonexus/rm"
 )
-
-/*
-func iqResultToComponent(r nexusiq.ComponentEvaluationResult) component {
-	var c component
-	c.ComponentIdentifier.Format = r.Component.ComponentIdentifier.Format
-	c.ComponentIdentifier.Coordinates.ArtifactID = r.Component.ComponentIdentifier.Coordinates.ArtifactID
-	c.ComponentIdentifier.Coordinates.GroupID = r.Component.ComponentIdentifier.Coordinates.GroupID
-	c.ComponentIdentifier.Coordinates.Version = r.Component.ComponentIdentifier.Coordinates.Version
-	c.ComponentIdentifier.Coordinates.Extension = r.Component.ComponentIdentifier.Coordinates.Extension
-	// c.Quarantined = false
-	if highestViolation := r.HighestThreatPolicy(); highestViolation != nil {
-		// c.HighestThreatLevel = true
-		c.ThreatLevel = highestViolation.ThreatLevel
-		c.PolicyName = highestViolation.PolicyName
-	}
-	return c
-}
-*/
 
 // Server provides an HTTP wrapper with optimized for communicating with a Nexus server
 type Server struct {
-	host, username, password string
+	Host, Username, Password string
 }
 
-func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
-	url := fmt.Sprintf(endpoint, s.host)
+// NewRequest created an http.Request object based on an endpoint and fills in basic auth
+func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error) {
+	url := fmt.Sprintf("%s/%s", s.Host, endpoint)
 	request, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	request.SetBasicAuth(s.username, s.password)
+	request.SetBasicAuth(s.Username, s.Password)
 	if payload != nil {
 		request.Header.Set("Content-Type", "application/json")
 	}
 
-	// dump, _ := httputil.DumpRequest(request, true)
-	// fmt.Printf("%q\n", dump)
+	return request, nil
+}
 
+// Do performs an http.Request and reads the body if StatusOK
+func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
@@ -63,6 +46,18 @@ func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http
 	}
 
 	return nil, resp, errors.New(resp.Status)
+}
+
+func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
+	request, err := s.NewRequest(method, endpoint, payload)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// dump, _ := httputil.DumpRequest(request, true)
+	// fmt.Printf("%q\n", dump)
+
+	return s.Do(request)
 }
 
 // Get performs an HTTP GET against the indicated endpoint
@@ -89,13 +84,29 @@ func (s *Server) Del(endpoint string) error {
 // NewServer returns a new rest client for a Nexus server
 func NewServer(host, username, password string) (s *Server, err error) {
 	s = new(Server)
-	s.host = host
-	s.username = username
-	s.password = password
+	s.Host = host
+	s.Username = username
+	s.Password = password
 	return
 }
 
 /*
+func iqResultToComponent(r nexusiq.ComponentEvaluationResult) component {
+	var c component
+	c.ComponentIdentifier.Format = r.Component.ComponentIdentifier.Format
+	c.ComponentIdentifier.Coordinates.ArtifactID = r.Component.ComponentIdentifier.Coordinates.ArtifactID
+	c.ComponentIdentifier.Coordinates.GroupID = r.Component.ComponentIdentifier.Coordinates.GroupID
+	c.ComponentIdentifier.Coordinates.Version = r.Component.ComponentIdentifier.Coordinates.Version
+	c.ComponentIdentifier.Coordinates.Extension = r.Component.ComponentIdentifier.Coordinates.Extension
+	// c.Quarantined = false
+	if highestViolation := r.HighestThreatPolicy(); highestViolation != nil {
+		// c.HighestThreatLevel = true
+		c.ThreatLevel = highestViolation.ThreatLevel
+		c.PolicyName = highestViolation.PolicyName
+	}
+	return c
+}
+
 // RmItemToIQComponent converts a repo item to an IQ component
 func RmItemToIQComponent(rm nexusrm.RepositoryItem) nexusiq.Component {
 	var iqc nexusiq.Component

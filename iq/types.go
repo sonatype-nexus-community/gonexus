@@ -1,12 +1,5 @@
 package nexusiq
 
-const iqRestSessionPrivate = "%s/rest/user/session"
-const iqRestOrganization = "%s/api/v2/organizations"
-const iqRestApplication = "%s/api/v2/applications"
-const iqRestOrganizationPrivate = "%s/rest/organization/%s"
-const iqRestEvaluation = "%s/api/v2/evaluation/applications/%s"
-const iqRestEvaluationResults = "%s/api/v2/evaluation/applications/%s/results/%s"
-
 // Component identifies a component within IQ
 type Component struct {
 	Hash                string `json:"hash,omitempty"`

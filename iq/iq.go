@@ -1,31 +1,35 @@
 package nexusiq
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	// "log"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
 	// "net/http/httputil"
+
+	"github.com/hokiegeek/gonexus"
 )
 
-const iqSessionCookieName = "CLM-CSRF-TOKEN"
+const iqRestOrganizationPrivate = "rest/organization/%s"
+const iqRestSessionPrivate = "rest/user/session"
+const iqRestOrganization = "api/v2/organizations"
+const iqRestApplication = "api/v2/applications"
+const iqRestEvaluation = "api/v2/evaluation/applications/%s"
+const iqRestEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
 
 // IQ holds basic and state info on the IQ Server we will connect to
 type IQ struct {
-	host, username, password string
+	nexus.Server
 }
 
 func (iq *IQ) getApplicationInfoByName(applicationName string) (appInfo *iqAppInfo, err error) {
 	endpoint := fmt.Sprintf("%s?publicId=%s", iqRestApplication, applicationName)
 
-	body, _, err := iq.get(endpoint)
+	body, _, err := iq.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -35,11 +39,11 @@ func (iq *IQ) getApplicationInfoByName(applicationName string) (appInfo *iqAppIn
 		return nil, err
 	}
 
-	if len(resp.Applications) > 0 {
-		return &resp.Applications[0], nil
+	if len(resp.Applications) == 0 {
+		return nil, errors.New("Application not found")
 	}
 
-	return nil, errors.New("Application not found")
+	return &resp.Applications[0], nil
 }
 
 func (iq *IQ) createTempApplication() (orgID string, appName string, appID string, err error) {
@@ -78,56 +82,25 @@ func (iq *IQ) deleteTempApplication(applicationName string) error {
 	return nil
 }
 
-func (iq *IQ) getSessionCookies() ([]*http.Cookie, error) {
-	_, resp, err := iq.get(iqRestSessionPrivate)
+func (iq *IQ) newPrivateRequest(method, endpoint string, payload io.Reader) (*http.Request, error) {
+	req, err := iq.NewRequest(method, endpoint, payload)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.Cookies(), nil
-}
-
-func (iq *IQ) http(method, endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
-	url := fmt.Sprintf(endpoint, iq.host)
-	request, err := http.NewRequest(method, url, payload)
+	_, resp, err := iq.Get(iqRestSessionPrivate)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	request.SetBasicAuth(iq.username, iq.password)
-	if payload != nil {
-		request.Header.Set("Content-Type", "application/json")
+	for _, cookie := range resp.Cookies() {
+		req.AddCookie(cookie)
+		if cookie.Name == "CLM-CSRF-TOKEN" {
+			req.Header.Add("X-CSRF-TOKEN", cookie.Value)
+		}
 	}
 
-	// dump, _ := httputil.DumpRequest(request, true)
-	// fmt.Printf("%q\n", dump)
-
-	client := &http.Client{}
-	resp, err := client.Do(request)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if resp.StatusCode == http.StatusOK {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		return body, resp, err
-	}
-
-	return nil, resp, errors.New(resp.Status)
-}
-
-func (iq *IQ) get(endpoint string) ([]byte, *http.Response, error) {
-	return iq.http("GET", endpoint, nil)
-}
-
-func (iq *IQ) post(endpoint string, payload []byte) ([]byte, *http.Response, error) {
-	return iq.http("POST", endpoint, bytes.NewBuffer(payload))
-}
-
-func (iq *IQ) del(endpoint string) error {
-	_, _, err := iq.http("DELETE", endpoint, nil)
-	return err
+	return req, nil
 }
 
 // CreateOrganization creates an organization in IQ with the given name
@@ -137,7 +110,7 @@ func (iq *IQ) CreateOrganization(name string) (string, error) {
 		return "", err
 	}
 
-	body, _, err := iq.post(iqRestOrganization, request)
+	body, _, err := iq.Post(iqRestOrganization, request)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +130,7 @@ func (iq *IQ) CreateApplication(name, organizationID string) (string, error) {
 		return "", err
 	}
 
-	body, _, err := iq.post(iqRestApplication, request)
+	body, _, err := iq.Post(iqRestApplication, request)
 	if err != nil {
 		return "", err
 	}
@@ -171,38 +144,21 @@ func (iq *IQ) CreateApplication(name, organizationID string) (string, error) {
 
 // DeleteApplication deletes an application in IQ with the given id
 func (iq *IQ) DeleteApplication(applicationID string) error {
-	iq.del(fmt.Sprintf("%s/%s", iqRestApplication, applicationID))
+	iq.Del(fmt.Sprintf("%s/%s", iqRestApplication, applicationID))
 	return nil // Always returns an error, so...
 }
 
 // DeleteOrganization deletes an organization in IQ with the given id
 func (iq *IQ) DeleteOrganization(organizationID string) error {
-	// return iq.del(fmt.Sprintf(iqRestOrganizationPrivate, "%s", organizationID))
-	url := fmt.Sprintf(iqRestOrganizationPrivate, iq.host, organizationID)
+	url := fmt.Sprintf(iqRestOrganizationPrivate, organizationID)
 
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := iq.newPrivateRequest("DELETE", url, nil)
 	if err != nil {
 		return err
 	}
 
-	sessionCookies, err := iq.getSessionCookies()
-	if err != nil {
-		return err
-	}
-	for _, cookie := range sessionCookies {
-		req.AddCookie(cookie)
-		if cookie.Name == iqSessionCookieName {
-			req.Header.Add("X-CSRF-TOKEN", cookie.Value)
-		}
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	// _, resp, err := iq.httpReq(req)
-	if resp.StatusCode != http.StatusNoContent {
+	_, resp, err := iq.Do(req)
+	if err != nil || resp.StatusCode != http.StatusNoContent {
 		return err
 	}
 
@@ -216,8 +172,8 @@ func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (
 		return
 	}
 
-	requestEndpoint := fmt.Sprintf(iqRestEvaluation, "%s", applicationID)
-	body, _, err := iq.post(requestEndpoint, request)
+	requestEndpoint := fmt.Sprintf(iqRestEvaluation, applicationID)
+	body, _, err := iq.Post(requestEndpoint, request)
 	if err != nil {
 		return
 	}
@@ -227,31 +183,38 @@ func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (
 		return
 	}
 
-	resultsEndpoint := fmt.Sprintf(iqRestEvaluationResults, "%s", results.ApplicationID, results.ResultID)
-	getEvaluationResults := func() (*Evaluation, error) {
-		body, resp, err := iq.get(resultsEndpoint)
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.StatusCode == http.StatusNotFound {
-			return nil, nil
-		}
-
-		var eval Evaluation
-		if err = json.Unmarshal(body, &eval); err != nil {
-			return nil, err
-		}
-
-		return &eval, nil
-	}
-
-	ticker := time.NewTicker(10 * time.Second)
+	resultsEndpoint := fmt.Sprintf(iqRestEvaluationResults, results.ApplicationID, results.ResultID)
+	ticker := time.NewTicker(5 * time.Second)
 	done := make(chan bool, 1)
 	go func() {
-		for _ = range ticker.C {
-			if eval, err = getEvaluationResults(); eval != nil {
+		getEvaluationResults := func() (*Evaluation, error) {
+			body, resp, err := iq.Get(resultsEndpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			if resp.StatusCode == http.StatusNotFound {
+				return nil, nil
+			}
+
+			var eval Evaluation
+			if err = json.Unmarshal(body, &eval); err != nil {
+				return nil, err
+			}
+
+			return &eval, nil
+		}
+
+		for {
+			select {
+			case <-ticker.C:
+				if eval, err = getEvaluationResults(); eval != nil || err != nil {
+					ticker.Stop()
+					done <- true
+				}
+			case <-time.After(5 * time.Minute):
 				ticker.Stop()
+				err = errors.New("Timed out waiting for valid results")
 				done <- true
 			}
 		}
@@ -282,8 +245,8 @@ func (iq *IQ) EvaluateComponentsAsFirewall(components []Component) (eval *Evalua
 // New creates a new IQ instance
 func New(host, username, password string) (*IQ, error) {
 	iq := new(IQ)
-	iq.host = host
-	iq.username = username
-	iq.password = password
+	iq.Host = host
+	iq.Username = username
+	iq.Password = password
 	return iq, nil
 }

@@ -3,7 +3,6 @@ package nexusrm
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 )
 
 // http://localhost:8081/service/rest/v1/components?continuationToken=foo&repository=bar
-const restListComponentsByRepo = "%s/service/rest/v1/components?repository=%s"
+const restListComponentsByRepo = "service/rest/v1/components?repository=%s"
 
 const hashPart = 20
 
@@ -76,7 +75,7 @@ type listComponentsResponse struct {
 
 // RM holds basic and state info of the Repository Manager server we will connect to
 type RM struct {
-	rest *nexus.Server
+	nexus.Server
 }
 
 // ListComponents returns a list of components in the indicated repository
@@ -84,44 +83,20 @@ func (rm *RM) ListComponents(repo string) (items []RepositoryItem, err error) {
 	continuation := ""
 
 	getComponents := func() (listResp listComponentsResponse, err error) {
-		url := fmt.Sprintf(restListComponentsByRepo, rm.host, repo)
+		url := fmt.Sprintf(restListComponentsByRepo, repo)
 
 		if continuation != "" {
 			url += "&continuationToken=" + continuation
 		}
 
-		fmt.Println("here")
-		body, resp, err := rest.Get(url)
-		if err != nil || resp.StatusCode == http.StatusOK {
+		body, resp, err := rm.Get(url)
+		if err != nil || resp.StatusCode != http.StatusOK {
 			return
 		}
 
 		if err = json.Unmarshal(body, &listResp); err != nil {
 			return
 		}
-
-		/*
-			req, err := http.NewRequest("GET", url, nil)
-			if err != nil {
-				return
-			}
-
-			client := &http.Client{}
-			req.SetBasicAuth(rm.username, rm.password)
-			resp, err := client.Do(req)
-			if err != nil {
-				return
-			}
-
-			if resp.StatusCode == http.StatusOK {
-				defer resp.Body.Close()
-				body, _ := ioutil.ReadAll(resp.Body)
-
-				if err = json.Unmarshal(body, &listResp); err != nil {
-					return
-				}
-			}
-		*/
 
 		return
 	}
@@ -134,61 +109,21 @@ func (rm *RM) ListComponents(repo string) (items []RepositoryItem, err error) {
 
 		items = append(items, resp.Items...)
 
-		// for _, item := range rmItems.Items {
-		// 	iqc := rmItemToIQComponent(item)
-		// 	if iqc.Hash != "" {
-		// 		c = append(c, iqc)
-		// 	}
-		// }
-
 		if resp.ContinuationToken == "" {
 			break
 		}
+
 		continuation = resp.ContinuationToken
 	}
 
 	return
 }
 
-/*
-func rmFwComponents(rmServer, iqServer serverInfo, repo string) (*results, error) {
-	// fmt.Println(":: Getting components from proxy")
-	rmComponents, err := getRepoComponents(rmServer, repo)
-	if err != nil {
-		return nil, err
-	}
-
-	iq, err := nexusiq.New(iqServer.host, iqServer.auth.username, iqServer.auth.password)
-	if err != nil {
-		return nil, err
-	}
-
-	// fmt.Println(":: Evaluating components")
-	report, err := iq.EvaluateComponentsAsFirewall(rmComponents)
-	if err != nil {
-		return nil, err
-	}
-
-	if report.IsError {
-		panic(fmt.Sprintf("%q", report.ErrorMessage))
-	}
-
-	r := new(results)
-
-	for _, result := range report.Results {
-		r.Components = append(r.Components, iqResultToComponent(result))
-	}
-
-	return r, nil
-}
-*/
-
 // New creates a new Repository Manager instance
 func New(host, username, password string) (rm *RM, err error) {
 	rm = new(RM)
-	rm.rest, err = nexus.NewServer(host, username, password)
-	// rm.host = host
-	// rm.username = username
-	// rm.password = password
+	rm.Host = host
+	rm.Username = username
+	rm.Password = password
 	return
 }
