@@ -16,6 +16,7 @@ if err != nil {
 
 ## nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq)
 
+Create a connection to an instance of Nexus IQ Server
 ```go
 import "github.com/hokiegeek/gonexus/iq"
 
