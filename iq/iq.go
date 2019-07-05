@@ -21,6 +21,26 @@ type IQ struct {
 	nexus.Server
 }
 
+func (iq *IQprivate) getApplicationInfoByName(applicationName string) (appInfo *iqAppInfo, err error) {
+	endpoint := fmt.Sprintf("%s?publicId=%s", iqRestApplication, applicationName)
+
+	body, _, err := iq.Get(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp iqAppInfoResponse
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+
+	if len(resp.Applications) == 0 {
+		return nil, errors.New("Application not found")
+	}
+
+	return &resp.Applications[0], nil
+}
+
 // CreateOrganization creates an organization in IQ with the given name
 func (iq *IQ) CreateOrganization(name string) (string, error) {
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
