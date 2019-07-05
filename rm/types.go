@@ -26,7 +26,8 @@ type RepositoryItem struct {
 	Tags []interface{} `json:"tags"`
 }
 
-func (i *RepositoryItem) hash() string {
+// Hash is a hack which returns the most appopriate IQable hash of a repo item
+func (i *RepositoryItem) Hash() string {
 	var hash string
 
 	sumByExt := func(exts []string) string {
