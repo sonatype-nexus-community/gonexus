@@ -130,7 +130,7 @@ func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (
 		for {
 			select {
 			case <-ticker.C:
-				if eval, err = getEvaluationResults(); eval != nil || err != nil {
+				if eval, err = getEvaluationResults(); eval != nil {
 					ticker.Stop()
 					done <- true
 				}
