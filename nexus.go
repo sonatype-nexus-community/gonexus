@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	// "net/http/httputil"
+	"net/http/httputil"
 )
 
 // Server provides an HTTP wrapper with optimized for communicating with a Nexus server
@@ -34,7 +34,7 @@ func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.R
 
 // Do performs an http.Request and reads the body if StatusOK
 func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
-	if Debug {
+	if s.Debug {
 		dump, _ := httputil.DumpRequest(request, true)
 		fmt.Printf("%q\n", dump)
 	}
