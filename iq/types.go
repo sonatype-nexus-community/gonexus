@@ -116,11 +116,12 @@ type iqNewAppRequest struct {
 	} `json:"applicationTags,omitempty"`
 }
 
-type iqAppInfoResponse struct {
-	Applications []iqAppInfo `json:"applications"`
+type iqAppDetailsResponse struct {
+	Applications []ApplicationDetails `json:"applications"`
 }
 
-type iqAppInfo struct {
+// ApplicationDetails captures information of an IQ application
+type ApplicationDetails struct {
 	ID              string `json:"id"`
 	PublicID        string `json:"publicId"`
 	Name            string `json:"name"`

@@ -21,7 +21,8 @@ type IQ struct {
 	nexus.Server
 }
 
-func (iq *IQprivate) getApplicationInfoByName(applicationName string) (appInfo *iqAppInfo, err error) {
+// GetApplicationDetailsByName returns details on the named IQ application
+func (iq *IQ) GetApplicationDetailsByName(applicationName string) (appInfo *ApplicationDetails, err error) {
 	endpoint := fmt.Sprintf("%s?publicId=%s", iqRestApplication, applicationName)
 
 	body, _, err := iq.Get(endpoint)
@@ -29,7 +30,7 @@ func (iq *IQprivate) getApplicationInfoByName(applicationName string) (appInfo *
 		return nil, err
 	}
 
-	var resp iqAppInfoResponse
+	var resp iqAppDetailsResponse
 	if err = json.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (iq *IQ) CreateApplication(name, organizationID string) (string, error) {
 		return "", err
 	}
 
-	var resp iqAppInfo
+	var resp ApplicationDetails
 	if err = json.Unmarshal(body, &resp); err != nil {
 		return "", err
 	}
