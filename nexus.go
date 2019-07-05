@@ -13,6 +13,7 @@ import (
 // Server provides an HTTP wrapper with optimized for communicating with a Nexus server
 type Server struct {
 	Host, Username, Password string
+	Debug                    bool
 }
 
 // NewRequest created an http.Request object based on an endpoint and fills in basic auth
@@ -33,8 +34,10 @@ func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.R
 
 // Do performs an http.Request and reads the body if StatusOK
 func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
-	// dump, _ := httputil.DumpRequest(request, true)
-	// fmt.Printf("%q\n", dump)
+	if Debug {
+		dump, _ := httputil.DumpRequest(request, true)
+		fmt.Printf("%q\n", dump)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(request)
