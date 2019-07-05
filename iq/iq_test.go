@@ -1,7 +1,11 @@
 package nexusiq
 
-func ExampleCreateOrganization() {
-	iq, err := nexusiq.New("http://localhost:8070", "user", "password")
+import (
+	"fmt"
+)
+
+func ExampleIQ_CreateOrganization() {
+	iq, err := New("http://localhost:8070", "user", "password")
 	if err != nil {
 		panic(err)
 	}
