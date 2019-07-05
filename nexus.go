@@ -33,6 +33,9 @@ func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.R
 
 // Do performs an http.Request and reads the body if StatusOK
 func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
+	// dump, _ := httputil.DumpRequest(request, true)
+	// fmt.Printf("%q\n", dump)
+
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
@@ -54,9 +57,6 @@ func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http
 		return nil, nil, err
 	}
 
-	// dump, _ := httputil.DumpRequest(request, true)
-	// fmt.Printf("%q\n", dump)
-
 	return s.Do(request)
 }
 
@@ -76,9 +76,9 @@ func (s *Server) Put(endpoint string, payload []byte) ([]byte, *http.Response, e
 }
 
 // Del performs an HTTP DELETE against the indicated endpoint
-func (s *Server) Del(endpoint string) error {
-	_, _, err := s.http("DELETE", endpoint, nil)
-	return err
+func (s *Server) Del(endpoint string) (resp *http.Response, err error) {
+	_, resp, err = s.http("DELETE", endpoint, nil)
+	return
 }
 
 /*
