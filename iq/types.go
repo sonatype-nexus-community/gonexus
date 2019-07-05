@@ -1,18 +1,21 @@
 package nexusiq
 
-// Component identifies a component within IQ
+// ComponentIdentifier identifies the format and coordinates of a component
+type ComponentIdentifier struct {
+	Format      string `json:"format,omitempty"`
+	Coordinates struct {
+		ArtifactID string `json:"artifactId,omitempty"`
+		GroupID    string `json:"groupId,omitempty"`
+		Version    string `json:"version,omitempty"`
+		Extension  string `json:"extension,omitempty"`
+	} `json:"coordinates"`
+}
+
+// Component encapsulates the details of a component in IQ
 type Component struct {
-	Hash                string `json:"hash,omitempty"`
-	ComponentIdentifier struct {
-		Format      string `json:"format,omitempty"`
-		Coordinates struct {
-			ArtifactID string `json:"artifactId,omitempty"`
-			GroupID    string `json:"groupId,omitempty"`
-			Version    string `json:"version,omitempty"`
-			Extension  string `json:"extension,omitempty"`
-		} `json:"coordinates"`
-	} `json:"componentIdentifier,omitempty"`
-	Proprietary bool `json:"proprietary,omitempty"`
+	Hash        string              `json:"hash,omitempty"`
+	ComponentID ComponentIdentifier `json:"componentIdentifier,omitempty"`
+	Proprietary bool                `json:"proprietary,omitempty"`
 }
 
 // PolicyViolation is a struct
