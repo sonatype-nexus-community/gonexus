@@ -27,7 +27,7 @@ func New(host, username, password string) (rm *RM, err error) {
 }
 
 // GetComponents returns a list of components in the indicated repository
-func GetComponents(rm *RM, repo string) (items []RepositoryItem, err error) {
+func GetComponents(rm nexus.Server, repo string) (items []RepositoryItem, err error) {
 	continuation := ""
 
 	getComponents := func() (listResp listComponentsResponse, err error) {
@@ -66,7 +66,7 @@ func GetComponents(rm *RM, repo string) (items []RepositoryItem, err error) {
 }
 
 // GetRepositories returns a list of components in the indicated repository
-func GetRepositories(rm *RM) (repos []Repository, err error) {
+func GetRepositories(rm nexus.Server) (repos []Repository, err error) {
 	body, resp, err := rm.Get(restListRepositories)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return
