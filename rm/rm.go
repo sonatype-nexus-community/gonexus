@@ -12,15 +12,22 @@ import (
 const restListComponentsByRepo = "service/rest/v1/components?repository=%s"
 const restListRepositories = "service/rest/v1/repositories"
 
-const hashPart = 20
-
 // RM holds basic and state info of the Repository Manager server we will connect to
 type RM struct {
-	nexus.Server
+	nexus.DefaultServer
+}
+
+// New creates a new Repository Manager instance
+func New(host, username, password string) (rm *RM, err error) {
+	rm = new(RM)
+	rm.Host = host
+	rm.Username = username
+	rm.Password = password
+	return
 }
 
 // GetComponents returns a list of components in the indicated repository
-func (rm *RM) GetComponents(repo string) (items []RepositoryItem, err error) {
+func GetComponents(rm *RM, repo string) (items []RepositoryItem, err error) {
 	continuation := ""
 
 	getComponents := func() (listResp listComponentsResponse, err error) {
@@ -59,7 +66,7 @@ func (rm *RM) GetComponents(repo string) (items []RepositoryItem, err error) {
 }
 
 // GetRepositories returns a list of components in the indicated repository
-func (rm *RM) GetRepositories() (repos []Repository, err error) {
+func GetRepositories(rm *RM) (repos []Repository, err error) {
 	body, resp, err := rm.Get(restListRepositories)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return
@@ -67,14 +74,5 @@ func (rm *RM) GetRepositories() (repos []Repository, err error) {
 
 	err = json.Unmarshal(body, &repos)
 
-	return
-}
-
-// New creates a new Repository Manager instance
-func New(host, username, password string) (rm *RM, err error) {
-	rm = new(RM)
-	rm.Host = host
-	rm.Username = username
-	rm.Password = password
 	return
 }

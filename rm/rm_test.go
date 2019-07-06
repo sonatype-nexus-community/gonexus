@@ -11,7 +11,7 @@ func TestGetRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repos, err := rm.GetRepositories()
+	repos, err := GetRepositories(rm)
 	if err != nil {
 		t.Error(err)
 	}
@@ -24,7 +24,7 @@ func ExampleRM_GetComponents() {
 		panic(err)
 	}
 
-	items, err := rm.GetComponents("maven-central")
+	items, err := GetComponents(rm, "maven-central")
 	if err != nil {
 		panic(err)
 	}

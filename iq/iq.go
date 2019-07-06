@@ -6,24 +6,32 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	// "net/http/httputil"
 
 	"github.com/hokiegeek/gonexus"
 )
 
-const iqRestOrganization = "api/v2/organizations"
-const iqRestApplication = "api/v2/applications"
-const iqRestEvaluation = "api/v2/evaluation/applications/%s"
-const iqRestEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
+const restOrganization = "api/v2/organizations"
+const restApplication = "api/v2/applications"
+const restEvaluation = "api/v2/evaluation/applications/%s"
+const restEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
 
 // IQ holds basic and state info on the IQ Server we will connect to
 type IQ struct {
-	nexus.Server
+	nexus.DefaultServer
+}
+
+// New creates a new IQ instance
+func New(host, username, password string) (*IQ, error) {
+	iq := new(IQ)
+	iq.Host = host
+	iq.Username = username
+	iq.Password = password
+	return iq, nil
 }
 
 // GetApplicationDetailsByName returns details on the named IQ application
-func (iq *IQ) GetApplicationDetailsByName(applicationName string) (appInfo *ApplicationDetails, err error) {
-	endpoint := fmt.Sprintf("%s?publicId=%s", iqRestApplication, applicationName)
+func GetApplicationDetailsByName(iq *IQ, applicationName string) (appInfo *ApplicationDetails, err error) {
+	endpoint := fmt.Sprintf("%s?publicId=%s", restApplication, applicationName)
 
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
@@ -43,13 +51,13 @@ func (iq *IQ) GetApplicationDetailsByName(applicationName string) (appInfo *Appl
 }
 
 // CreateOrganization creates an organization in IQ with the given name
-func (iq *IQ) CreateOrganization(name string) (string, error) {
+func CreateOrganization(iq *IQ, name string) (string, error) {
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
 	if err != nil {
 		return "", err
 	}
 
-	body, _, err := iq.Post(iqRestOrganization, request)
+	body, _, err := iq.Post(restOrganization, request)
 	if err != nil {
 		return "", err
 	}
@@ -63,13 +71,13 @@ func (iq *IQ) CreateOrganization(name string) (string, error) {
 }
 
 // CreateApplication creates an application in IQ with the given name
-func (iq *IQ) CreateApplication(name, organizationID string) (string, error) {
+func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
 	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
 	if err != nil {
 		return "", err
 	}
 
-	body, _, err := iq.Post(iqRestApplication, request)
+	body, _, err := iq.Post(restApplication, request)
 	if err != nil {
 		return "", err
 	}
@@ -82,19 +90,19 @@ func (iq *IQ) CreateApplication(name, organizationID string) (string, error) {
 }
 
 // DeleteApplication deletes an application in IQ with the given id
-func (iq *IQ) DeleteApplication(applicationID string) error {
-	iq.Del(fmt.Sprintf("%s/%s", iqRestApplication, applicationID))
+func DeleteApplication(iq *IQ, applicationID string) error {
+	iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID))
 	return nil // Always returns an error, so...
 }
 
 // EvaluateComponents evaluates the list of components
-func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (eval *Evaluation, err error) {
+func EvaluateComponents(iq *IQ, components []Component, applicationID string) (eval *Evaluation, err error) {
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
 		return
 	}
 
-	requestEndpoint := fmt.Sprintf(iqRestEvaluation, applicationID)
+	requestEndpoint := fmt.Sprintf(restEvaluation, applicationID)
 	body, _, err := iq.Post(requestEndpoint, request)
 	if err != nil {
 		return
@@ -105,7 +113,7 @@ func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (
 		return
 	}
 
-	resultsEndpoint := fmt.Sprintf(iqRestEvaluationResults, results.ApplicationID, results.ResultID)
+	resultsEndpoint := fmt.Sprintf(restEvaluationResults, results.ApplicationID, results.ResultID)
 	ticker := time.NewTicker(5 * time.Second)
 	done := make(chan bool, 1)
 	go func() {
@@ -144,13 +152,4 @@ func (iq *IQ) EvaluateComponents(components []Component, applicationID string) (
 	<-done
 
 	return
-}
-
-// New creates a new IQ instance
-func New(host, username, password string) (*IQ, error) {
-	iq := new(IQ)
-	iq.Host = host
-	iq.Username = username
-	iq.Password = password
-	return iq, nil
 }

@@ -24,14 +24,14 @@ func createTempApplication(t *testing.T) (orgID string, appName string, appID st
 
 	iq := getTestIQ(t)
 
-	orgID, err = iq.CreateOrganization(name)
+	orgID, err = CreateOrganization(iq, name)
 	if err != nil {
 		return
 	}
 
 	appName = fmt.Sprintf("%s_app", name)
 
-	appID, err = iq.CreateApplication(appName, orgID)
+	appID, err = CreateApplication(iq, appName, orgID)
 	if err != nil {
 		return
 	}
@@ -42,16 +42,16 @@ func createTempApplication(t *testing.T) (orgID string, appName string, appID st
 func deleteTempApplication(t *testing.T, applicationName string) error {
 	iq := getTestIQ(t)
 
-	appInfo, err := iq.GetApplicationDetailsByName(applicationName)
+	appInfo, err := GetApplicationDetailsByName(iq, applicationName)
 	if err != nil {
 		return err
 	}
 
-	if err := iq.DeleteApplication(appInfo.ID); err != nil {
+	if err := DeleteApplication(iq, appInfo.ID); err != nil {
 		return err
 	}
 
-	// if err := iq.DeleteOrganization(appInfo.OrganizationID); err != nil {
+	// if err := DeleteOrganization(iq, appInfo.OrganizationID); err != nil {
 	// 	return err
 	// }
 
@@ -76,7 +76,7 @@ func TestIQ_EvaluateComponents(t *testing.T) {
 	}
 	defer deleteTempApplication(t, appName)
 
-	report, err := iq.EvaluateComponents([]Component{dummy}, appID)
+	report, err := EvaluateComponents(iq, []Component{dummy}, appID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func ExampleIQ_CreateOrganization() {
 		panic(err)
 	}
 
-	orgID, err := iq.CreateOrganization("DatabaseTeam")
+	orgID, err := CreateOrganization(iq, "DatabaseTeam")
 	if err != nil {
 		panic(err)
 	}

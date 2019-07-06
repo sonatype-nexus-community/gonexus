@@ -4,6 +4,8 @@ import (
 	"strings"
 )
 
+const hashPart = 20
+
 // RepositoryItem holds the data of a component in a repository
 type RepositoryItem struct {
 	ID         string `json:"id"`

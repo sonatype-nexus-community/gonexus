@@ -10,14 +10,23 @@ import (
 	"net/http/httputil"
 )
 
-// Server provides an HTTP wrapper with optimized for communicating with a Nexus server
-type Server struct {
+type Server interface {
+	// NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error)
+	// Do(request *http.Request) ([]byte, *http.Response, error)
+	Get(endpoint string) ([]byte, *http.Response, error)
+	Post(endpoint string, payload []byte) ([]byte, *http.Response, error)
+	Put(endpoint string, payload []byte) ([]byte, *http.Response, error)
+	Del(endpoint string) (resp *http.Response, err error)
+}
+
+// DefaultServer provides an HTTP wrapper with optimized for communicating with a Nexus server
+type DefaultServer struct {
 	Host, Username, Password string
 	Debug                    bool
 }
 
 // NewRequest created an http.Request object based on an endpoint and fills in basic auth
-func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error) {
+func (s DefaultServer) NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error) {
 	url := fmt.Sprintf("%s/%s", s.Host, endpoint)
 	request, err := http.NewRequest(method, url, payload)
 	if err != nil {
@@ -33,7 +42,7 @@ func (s *Server) NewRequest(method, endpoint string, payload io.Reader) (*http.R
 }
 
 // Do performs an http.Request and reads the body if StatusOK
-func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
+func (s DefaultServer) Do(request *http.Request) ([]byte, *http.Response, error) {
 	if s.Debug {
 		dump, _ := httputil.DumpRequest(request, true)
 		fmt.Printf("%q\n", dump)
@@ -54,7 +63,7 @@ func (s *Server) Do(request *http.Request) ([]byte, *http.Response, error) {
 	return nil, resp, errors.New(resp.Status)
 }
 
-func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
+func (s DefaultServer) http(method, endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
 	request, err := s.NewRequest(method, endpoint, payload)
 	if err != nil {
 		return nil, nil, err
@@ -64,22 +73,22 @@ func (s *Server) http(method, endpoint string, payload io.Reader) ([]byte, *http
 }
 
 // Get performs an HTTP GET against the indicated endpoint
-func (s *Server) Get(endpoint string) ([]byte, *http.Response, error) {
+func (s DefaultServer) Get(endpoint string) ([]byte, *http.Response, error) {
 	return s.http("GET", endpoint, nil)
 }
 
 // Post performs an HTTP POST against the indicated endpoint
-func (s *Server) Post(endpoint string, payload []byte) ([]byte, *http.Response, error) {
+func (s DefaultServer) Post(endpoint string, payload []byte) ([]byte, *http.Response, error) {
 	return s.http("POST", endpoint, bytes.NewBuffer(payload))
 }
 
 // Put performs an HTTP PUT against the indicated endpoint
-func (s *Server) Put(endpoint string, payload []byte) ([]byte, *http.Response, error) {
+func (s DefaultServer) Put(endpoint string, payload []byte) ([]byte, *http.Response, error) {
 	return s.http("PUT", endpoint, bytes.NewBuffer(payload))
 }
 
 // Del performs an HTTP DELETE against the indicated endpoint
-func (s *Server) Del(endpoint string) (resp *http.Response, err error) {
+func (s DefaultServer) Del(endpoint string) (resp *http.Response, err error) {
 	_, resp, err = s.http("DELETE", endpoint, nil)
 	return
 }
