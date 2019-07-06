@@ -30,7 +30,7 @@ func New(host, username, password string) (*IQ, error) {
 }
 
 // GetApplicationDetailsByName returns details on the named IQ application
-func GetApplicationDetailsByName(iq *IQ, applicationName string) (appInfo *ApplicationDetails, err error) {
+func GetApplicationDetailsByName(iq nexus.Server, applicationName string) (appInfo *ApplicationDetails, err error) {
 	endpoint := fmt.Sprintf("%s?publicId=%s", restApplication, applicationName)
 
 	body, _, err := iq.Get(endpoint)
@@ -51,7 +51,7 @@ func GetApplicationDetailsByName(iq *IQ, applicationName string) (appInfo *Appli
 }
 
 // CreateOrganization creates an organization in IQ with the given name
-func CreateOrganization(iq *IQ, name string) (string, error) {
+func CreateOrganization(iq nexus.Server, name string) (string, error) {
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
 	if err != nil {
 		return "", err
@@ -71,7 +71,7 @@ func CreateOrganization(iq *IQ, name string) (string, error) {
 }
 
 // CreateApplication creates an application in IQ with the given name
-func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
+func CreateApplication(iq nexus.Server, name, organizationID string) (string, error) {
 	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
 	if err != nil {
 		return "", err
@@ -90,13 +90,13 @@ func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
 }
 
 // DeleteApplication deletes an application in IQ with the given id
-func DeleteApplication(iq *IQ, applicationID string) error {
+func DeleteApplication(iq nexus.Server, applicationID string) error {
 	iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID))
 	return nil // Always returns an error, so...
 }
 
 // EvaluateComponents evaluates the list of components
-func EvaluateComponents(iq *IQ, components []Component, applicationID string) (eval *Evaluation, err error) {
+func EvaluateComponents(iq nexus.Server, components []Component, applicationID string) (eval *Evaluation, err error) {
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
 		return
