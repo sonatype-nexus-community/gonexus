@@ -1,5 +1,18 @@
 package nexusiq
 
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/hokiegeek/gonexus"
+)
+
+const restEvaluation = "api/v2/evaluation/applications/%s"
+const restEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
+
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
 	Format      string `json:"format,omitempty"`
@@ -99,44 +112,65 @@ type iqEvaluationRequestResponse struct {
 	ResultsURL    string `json:"resultsUrl"`
 }
 
-type iqNewOrgRequest struct {
-	Name string `json:"name"`
-}
-
-type iqNewOrgResponse struct {
-	ID   string   `json:"id"`
-	Name string   `json:"name"`
-	Tags []string `json:"tags"`
-}
-
-type iqNewAppRequest struct {
-	PublicID        string `json:"publicId"`
-	Name            string `json:"name"`
-	OrganizationID  string `json:"organizationId"`
-	ContactUserName string `json:"contactUserName,omitempty"`
-	ApplicationTags []struct {
-		TagID string `json:"tagId"`
-	} `json:"applicationTags,omitempty"`
-}
-
-type iqAppDetailsResponse struct {
-	Applications []ApplicationDetails `json:"applications"`
-}
-
-// ApplicationDetails captures information of an IQ application
-type ApplicationDetails struct {
-	ID              string `json:"id"`
-	PublicID        string `json:"publicId"`
-	Name            string `json:"name"`
-	OrganizationID  string `json:"organizationId"`
-	ContactUserName string `json:"contactUserName"`
-	ApplicationTags []struct {
-		ID            string `json:"id"`
-		TagID         string `json:"tagId"`
-		ApplicationID string `json:"applicationId"`
-	} `json:"applicationTags"`
-}
-
 type iqEvaluationRequest struct {
 	Components []Component `json:"components"`
+}
+
+// EvaluateComponents evaluates the list of components
+func EvaluateComponents(iq nexus.Server, components []Component, applicationID string) (eval *Evaluation, err error) {
+	request, err := json.Marshal(iqEvaluationRequest{Components: components})
+	if err != nil {
+		return
+	}
+
+	requestEndpoint := fmt.Sprintf(restEvaluation, applicationID)
+	body, _, err := iq.Post(requestEndpoint, request)
+	if err != nil {
+		return
+	}
+
+	var results iqEvaluationRequestResponse
+	if err = json.Unmarshal(body, &results); err != nil {
+		return
+	}
+
+	resultsEndpoint := fmt.Sprintf(restEvaluationResults, results.ApplicationID, results.ResultID)
+	ticker := time.NewTicker(5 * time.Second)
+	done := make(chan bool, 1)
+	go func() {
+		getEvaluationResults := func() (*Evaluation, error) {
+			body, resp, err := iq.Get(resultsEndpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			if resp.StatusCode == http.StatusNotFound {
+				return nil, nil
+			}
+
+			var eval Evaluation
+			if err = json.Unmarshal(body, &eval); err != nil {
+				return nil, err
+			}
+
+			return &eval, nil
+		}
+
+		for {
+			select {
+			case <-ticker.C:
+				if eval, err = getEvaluationResults(); eval != nil {
+					ticker.Stop()
+					done <- true
+				}
+			case <-time.After(5 * time.Minute):
+				ticker.Stop()
+				err = errors.New("Timed out waiting for valid results")
+				done <- true
+			}
+		}
+	}()
+	<-done
+
+	return
 }
