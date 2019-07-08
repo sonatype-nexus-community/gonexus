@@ -83,15 +83,18 @@ func CreateApplication(iq nexus.Server, name, organizationID string) (string, er
 }
 
 // GetAllApplications returns a slice of all of the applications in an IQ instance
-func GetAllApplications(iq nexus.Server) (apps []ApplicationDetails, err error) {
+func GetAllApplications(iq nexus.Server) ([]ApplicationDetails, error) {
 	body, _, err := iq.Get(restApplication)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	err = json.Unmarshal(body, &apps)
+	var resp allAppsResponse
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
 
-	return
+	return resp.Applications, nil
 }
 
 // DeleteApplication deletes an application in IQ with the given id

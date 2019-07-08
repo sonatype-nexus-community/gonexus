@@ -49,6 +49,17 @@ func deleteTempApplication(t *testing.T, applicationName string) error {
 	return nil
 }
 
+func TestGetAllApplications(t *testing.T) {
+	iq := getTestIQ(t)
+
+	applications, err := GetAllApplications(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%v\n", applications)
+}
+
 func ExampleGetAllApplications() {
 	iq, err := New("http://localhost:8070", "username", "password")
 	if err != nil {
