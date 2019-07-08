@@ -18,14 +18,8 @@ type SourceControlEntry struct {
 	Token         string `json:"token"`
 }
 
-// GetSourceControlEntry lists of all of the Source Control entries for the given application
-func GetSourceControlEntry(iq nexus.Server, applicationID string) (entry SourceControlEntry, err error) {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
-	if err != nil {
-		return
-	}
-
-	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
+func getSourceControlEntryByInternalID(iq nexus.Server, applicationID string) (entry SourceControlEntry, err error) {
+	endpoint := fmt.Sprintf(restSourceControl, applicationID)
 
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
@@ -33,6 +27,32 @@ func GetSourceControlEntry(iq nexus.Server, applicationID string) (entry SourceC
 	}
 
 	err = json.Unmarshal(body, &entry)
+
+	return
+}
+
+// GetSourceControlEntry lists of all of the Source Control entries for the given application
+func GetSourceControlEntry(iq nexus.Server, applicationID string) (entry SourceControlEntry, err error) {
+	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	if err != nil {
+		return
+	}
+
+	return getSourceControlEntryByInternalID(iq, appInfo.ID)
+}
+
+// GetAllSourceControlEntries lists of all of the Source Control entries in the IQ instance
+func GetAllSourceControlEntries(iq nexus.Server) (entries []SourceControlEntry, err error) {
+	apps, err := GetAllApplications(iq)
+	if err != nil {
+		return
+	}
+
+	for _, app := range apps {
+		if entry, err := getSourceControlEntryByInternalID(iq, app.ID); err == nil {
+			entries = append(entries, entry)
+		}
+	}
 
 	return
 }
@@ -81,6 +101,17 @@ func UpdateSourceControlEntry(iq nexus.Server, applicationID, repositoryURL, tok
 	return nil
 }
 
+func deleteSourceControlEntry(iq nexus.Server, appInternalID, sourceControlID string) error {
+	endpoint := fmt.Sprintf(restSourceControlDelete, appInternalID, sourceControlID)
+
+	_, err := iq.Del(endpoint)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteSourceControlEntry deletes a source control entry in IQ
 func DeleteSourceControlEntry(iq nexus.Server, applicationID, sourceControlID string) error {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
@@ -88,12 +119,32 @@ func DeleteSourceControlEntry(iq nexus.Server, applicationID, sourceControlID st
 		return err
 	}
 
-	endpoint := fmt.Sprintf(restSourceControlDelete, appInfo.ID, sourceControlID)
+	return deleteSourceControlEntry(iq, appInfo.ID, sourceControlID)
+}
 
-	_, err = iq.Del(endpoint)
+// DeleteSourceControlEntryByApp deletes a source control entry in IQ for the given application
+func DeleteSourceControlEntryByApp(iq nexus.Server, applicationID string) error {
+	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	entry, err := getSourceControlEntryByInternalID(iq, appInfo.ID)
+	if err != nil {
+		return err
+	}
+
+	return deleteSourceControlEntry(iq, appInfo.ID, entry.ID)
 }
+
+// DeleteSourceControlEntryByEntry deletes a source control entry in IQ for the given entry ID
+/*
+func DeleteSourceControlEntryByEntry(iq nexus.Server, sourceControlID string) error {
+	entry, err := getSourceControlEntryByInternalID(iq, appInfo.ID)
+	if err != nil {
+		return err
+	}
+
+	return deleteSourceControlEntry(iq, entry.ApplicationID, entry.ID)
+}
+*/

@@ -23,3 +23,14 @@ func TestGetSourceControlEntry(t *testing.T) {
 
 	t.Logf("%v\n", entries)
 }
+
+func TestGetAllSourceControlEntries(t *testing.T) {
+	iq := getTestIQ(t)
+
+	entries, err := GetAllSourceControlEntries(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%v\n", entries)
+}
