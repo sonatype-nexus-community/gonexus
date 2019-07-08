@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hokiegeek/gonexus"
+	nexus "github.com/hokiegeek/gonexus"
 )
 
 // http://localhost:8081/service/rest/v1/components?continuationToken=foo&repository=bar

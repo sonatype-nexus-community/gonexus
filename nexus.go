@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 )
 
+// Server is the interface which all Nexus server objects need to adhere to
 type Server interface {
 	// NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error)
 	// Do(request *http.Request) ([]byte, *http.Response, error)

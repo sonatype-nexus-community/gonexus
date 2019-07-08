@@ -5,12 +5,9 @@ import (
 	"encoding/hex"
 )
 
-func newAnonGroovyScript(content string) (s Script) {
+func newAnonGroovyScript(content string) Script {
 	h := sha1.New()
 	h.Write([]byte(content))
 
-	s.Name = hex.EncodeToString(h.Sum(nil))
-	s.Content = content
-	s.Type = "groovy"
-	return
+	return Script{hex.EncodeToString(h.Sum(nil)), content, "groovy"}
 }

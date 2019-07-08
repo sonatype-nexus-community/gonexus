@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/hokiegeek/gonexus"
+	nexus "github.com/hokiegeek/gonexus"
 )
 
 /*
@@ -15,12 +15,13 @@ type blobStoreDelete struct {
 const groovyDeleteBlobStore = `blobStore.delete('{{.Name}}')`
 */
 
-type BlobStoreFile struct {
+type blobStoreFile struct {
 	Name, Path string
 }
 
 const groovyCreateFileBlobStore = `blobStore.createFileBlobStore('{{.Name}}', '{{.Path}}')`
 
+// BlobStoreS3 encapsulates the needed options for creating an S3 blob store
 type BlobStoreS3 struct {
 	Name, BucketName, AwsAccessKey, AwsSecret, AwsIamRole, AwsRegion string
 }
@@ -66,7 +67,7 @@ func CreateFileBlobStore(rm nexus.Server, name, path string) error {
 	}
 
 	buf := new(bytes.Buffer)
-	err = tmpl.Execute(buf, BlobStoreFile{name, path})
+	err = tmpl.Execute(buf, blobStoreFile{name, path})
 	if err != nil {
 		return err
 	}

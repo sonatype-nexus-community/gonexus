@@ -1,7 +1,7 @@
 package nexusrm
 
 import (
-	"github.com/hokiegeek/gonexus"
+	nexus "github.com/hokiegeek/gonexus"
 )
 
 // RM holds basic and state info of the Repository Manager server we will connect to

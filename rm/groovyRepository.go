@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/hokiegeek/gonexus"
+	nexus "github.com/hokiegeek/gonexus"
 )
 
 /*
@@ -19,6 +19,7 @@ const (
 
 type repositoryFormat int
 
+// Enumerates the formats which can be created as Repository Manager repositories
 const (
 	Maven repositoryFormat = iota
 	Npm
@@ -55,21 +56,21 @@ type repositoryHosted struct {
 	// layoutPolicy LayoutPolicy
 }
 
-const groovyCreateProxyMaven = "repository.createMavenProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyNpm = "repository.createNpmProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyNuget = "repository.createNugetProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyApt = "repository.createAptProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyDocker = "repository.createDockerProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyGolang = "repository.createGolangProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyRaw = "repository.createRawProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyRubygems = "repository.createRubygemsProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyBower = "repository.createBowerProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyPypi = "repository.createPypiProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyYum = "repository.createYumProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyGitLfs = "repository.createGitLfsProxy('{{.Name}}'{{with .RemoteUrl}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyMaven = "repository.createMavenProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyNpm = "repository.createNpmProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyNuget = "repository.createNugetProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyApt = "repository.createAptProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyDocker = "repository.createDockerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyGolang = "repository.createGolangProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyRaw = "repository.createRawProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyRubygems = "repository.createRubygemsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyBower = "repository.createBowerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyPypi = "repository.createPypiProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyYum = "repository.createYumProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const groovyCreateProxyGitLfs = "repository.createGitLfsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
 
 type repositoryProxy struct {
-	Name, RemoteUrl, BlobStore  string
+	Name, RemoteURL, BlobStore  string
 	StrictContentTypeValidation bool
 	// versionPolicy VersionPolicy
 	// layoutPolicy LayoutPolicy
@@ -93,6 +94,7 @@ type repositoryGroup struct {
 	Members         []string
 }
 
+// CreateHostedRepository creates a hosted repository of the indicated format
 func CreateHostedRepository(rm nexus.Server, format repositoryFormat, config repositoryHosted) error {
 	var groovyTmpl string
 	switch format {
@@ -136,6 +138,7 @@ func CreateHostedRepository(rm nexus.Server, format repositoryFormat, config rep
 	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
 }
 
+// CreateProxyRepository creates a proxy repository of the indicated format
 func CreateProxyRepository(rm nexus.Server, format repositoryFormat, config repositoryProxy) error {
 	var groovyTmpl string
 	switch format {
@@ -179,6 +182,7 @@ func CreateProxyRepository(rm nexus.Server, format repositoryFormat, config repo
 	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
 }
 
+// CreateGroupRepository creates a group repository of the indicated format
 func CreateGroupRepository(rm nexus.Server, format repositoryFormat, config repositoryGroup) error {
 	var groovyTmpl string
 	switch format {

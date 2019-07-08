@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hokiegeek/gonexus"
+	nexus "github.com/hokiegeek/gonexus"
 )
 
 const restScript = "service/rest/v1/script"
@@ -79,7 +79,7 @@ func ScriptUpdate(rm nexus.Server, script Script) error {
 	return nil
 }
 
-// ScriptRunOnce executes the named Script
+// ScriptRun executes the named Script
 func ScriptRun(rm nexus.Server, name string, arguments []byte) error {
 	endpoint := fmt.Sprintf(restScriptRun, name)
 	_, _, err := rm.Post(endpoint, arguments) // TODO: Better response handling
