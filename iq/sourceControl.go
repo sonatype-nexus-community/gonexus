@@ -24,7 +24,6 @@ func GetSourceControlEntry(iq nexus.Server, applicationID string) (entry SourceC
 	if err != nil {
 		return
 	}
-	fmt.Println(appInfo)
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
 

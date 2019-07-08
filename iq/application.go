@@ -24,6 +24,10 @@ type iqAppDetailsResponse struct {
 	Applications []ApplicationDetails `json:"applications"`
 }
 
+type allAppsResponse struct {
+	Applications []ApplicationDetails `json:"applications"`
+}
+
 // ApplicationDetails captures information of an IQ application
 type ApplicationDetails struct {
 	ID              string `json:"id"`
@@ -76,6 +80,18 @@ func CreateApplication(iq nexus.Server, name, organizationID string) (string, er
 		return "", err
 	}
 	return resp.ID, nil
+}
+
+// GetAllApplications returns a slice of all of the applications in an IQ instance
+func GetAllApplications(iq nexus.Server) (apps []ApplicationDetails, err error) {
+	body, _, err := iq.Get(restApplication)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(body, &apps)
+
+	return
 }
 
 // DeleteApplication deletes an application in IQ with the given id
