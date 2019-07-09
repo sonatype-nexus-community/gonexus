@@ -2,8 +2,6 @@ package nexusiq
 
 import (
 	"encoding/json"
-
-	"github.com/hokiegeek/gonexus"
 )
 
 const restOrganization = "api/v2/organizations"
@@ -19,7 +17,7 @@ type iqNewOrgResponse struct {
 }
 
 // CreateOrganization creates an organization in IQ with the given name
-func CreateOrganization(iq nexus.Server, name string) (string, error) {
+func CreateOrganization(iq *IQ, name string) (string, error) {
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
 	if err != nil {
 		return "", err

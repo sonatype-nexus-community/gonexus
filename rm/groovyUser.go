@@ -3,8 +3,6 @@ package nexusrm
 // "bytes"
 // "text/template"
 
-// "github.com/hokiegeek/gonexus"
-
 // User encapsulates the information about a Repository Manager user
 type User struct {
 	ID, FirstName, LastName, Password string

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/hokiegeek/gonexus"
 )
 
 const restApplication = "api/v2/applications"
@@ -43,7 +41,7 @@ type ApplicationDetails struct {
 }
 
 // GetApplicationDetailsByPublicID returns details on the named IQ application
-func GetApplicationDetailsByPublicID(iq nexus.Server, applicationPublicID string) (appInfo *ApplicationDetails, err error) {
+func GetApplicationDetailsByPublicID(iq *IQ, applicationPublicID string) (appInfo *ApplicationDetails, err error) {
 	endpoint := fmt.Sprintf("%s?publicId=%s", restApplication, applicationPublicID)
 
 	body, _, err := iq.Get(endpoint)
@@ -64,7 +62,7 @@ func GetApplicationDetailsByPublicID(iq nexus.Server, applicationPublicID string
 }
 
 // CreateApplication creates an application in IQ with the given name
-func CreateApplication(iq nexus.Server, name, organizationID string) (string, error) {
+func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
 	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
 	if err != nil {
 		return "", err
@@ -83,7 +81,7 @@ func CreateApplication(iq nexus.Server, name, organizationID string) (string, er
 }
 
 // GetAllApplications returns a slice of all of the applications in an IQ instance
-func GetAllApplications(iq nexus.Server) ([]ApplicationDetails, error) {
+func GetAllApplications(iq *IQ) ([]ApplicationDetails, error) {
 	body, _, err := iq.Get(restApplication)
 	if err != nil {
 		return nil, err
@@ -98,7 +96,7 @@ func GetAllApplications(iq nexus.Server) ([]ApplicationDetails, error) {
 }
 
 // DeleteApplication deletes an application in IQ with the given id
-func DeleteApplication(iq nexus.Server, applicationID string) error {
+func DeleteApplication(iq *IQ, applicationID string) error {
 	iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID))
 	return nil // Always returns an error, so...
 }

@@ -3,8 +3,6 @@ package nexusrm
 import (
 	"bytes"
 	"text/template"
-
-	nexus "github.com/hokiegeek/gonexus"
 )
 
 /*
@@ -95,7 +93,7 @@ type repositoryGroup struct {
 }
 
 // CreateHostedRepository creates a hosted repository of the indicated format
-func CreateHostedRepository(rm nexus.Server, format repositoryFormat, config repositoryHosted) error {
+func CreateHostedRepository(rm *RM, format repositoryFormat, config repositoryHosted) error {
 	var groovyTmpl string
 	switch format {
 	case Maven:
@@ -139,7 +137,7 @@ func CreateHostedRepository(rm nexus.Server, format repositoryFormat, config rep
 }
 
 // CreateProxyRepository creates a proxy repository of the indicated format
-func CreateProxyRepository(rm nexus.Server, format repositoryFormat, config repositoryProxy) error {
+func CreateProxyRepository(rm *RM, format repositoryFormat, config repositoryProxy) error {
 	var groovyTmpl string
 	switch format {
 	case Maven:
@@ -183,7 +181,7 @@ func CreateProxyRepository(rm nexus.Server, format repositoryFormat, config repo
 }
 
 // CreateGroupRepository creates a group repository of the indicated format
-func CreateGroupRepository(rm nexus.Server, format repositoryFormat, config repositoryGroup) error {
+func CreateGroupRepository(rm *RM, format repositoryFormat, config repositoryGroup) error {
 	var groovyTmpl string
 	switch format {
 	case Maven:

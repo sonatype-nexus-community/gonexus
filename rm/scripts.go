@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	nexus "github.com/hokiegeek/gonexus"
 )
 
 const restScript = "service/rest/v1/script"
@@ -24,7 +22,7 @@ type runResponse struct {
 }
 
 // ScriptList lists all of the uploaded scripts in Repository Manager
-func ScriptList(rm nexus.Server) (scripts []Script, err error) {
+func ScriptList(rm *RM) (scripts []Script, err error) {
 	body, _, err := rm.Get(restScript)
 	if err != nil {
 		return nil, err
@@ -36,7 +34,7 @@ func ScriptList(rm nexus.Server) (scripts []Script, err error) {
 }
 
 // ScriptGet returns the named script
-func ScriptGet(rm nexus.Server, name string) (script Script, err error) {
+func ScriptGet(rm *RM, name string) (script Script, err error) {
 	endpoint := fmt.Sprintf("%s/%s", restScript, name)
 	body, _, err := rm.Get(endpoint)
 	if err != nil {
@@ -49,7 +47,7 @@ func ScriptGet(rm nexus.Server, name string) (script Script, err error) {
 }
 
 // ScriptUpload uploads the given Script to Repository Manager
-func ScriptUpload(rm nexus.Server, script Script) error {
+func ScriptUpload(rm *RM, script Script) error {
 	json, err := json.Marshal(script)
 	if err != nil {
 		return err
@@ -64,7 +62,7 @@ func ScriptUpload(rm nexus.Server, script Script) error {
 }
 
 // ScriptUpdate update the contents of the given script
-func ScriptUpdate(rm nexus.Server, script Script) error {
+func ScriptUpdate(rm *RM, script Script) error {
 	json, err := json.Marshal(script)
 	if err != nil {
 		return err
@@ -80,7 +78,7 @@ func ScriptUpdate(rm nexus.Server, script Script) error {
 }
 
 // ScriptRun executes the named Script
-func ScriptRun(rm nexus.Server, name string, arguments []byte) error {
+func ScriptRun(rm *RM, name string, arguments []byte) error {
 	endpoint := fmt.Sprintf(restScriptRun, name)
 	_, _, err := rm.Post(endpoint, arguments) // TODO: Better response handling
 	if err != nil {
@@ -91,7 +89,7 @@ func ScriptRun(rm nexus.Server, name string, arguments []byte) error {
 }
 
 // ScriptRunOnce takes the given Script, uploads it, executes it, and deletes it
-func ScriptRunOnce(rm nexus.Server, script Script, arguments []byte) (err error) {
+func ScriptRunOnce(rm *RM, script Script, arguments []byte) (err error) {
 	if err = ScriptUpload(rm, script); err != nil {
 		return
 	}
@@ -101,7 +99,7 @@ func ScriptRunOnce(rm nexus.Server, script Script, arguments []byte) (err error)
 }
 
 // ScriptDelete removes the name, uploaded script
-func ScriptDelete(rm nexus.Server, name string) error {
+func ScriptDelete(rm *RM, name string) error {
 	endpoint := fmt.Sprintf("%s/%s", restScript, name)
 	resp, err := rm.Del(endpoint) // TODO handle output
 	if err != nil && resp.StatusCode != http.StatusNoContent {
