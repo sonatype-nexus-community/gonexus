@@ -7,6 +7,7 @@ import (
 )
 
 const restApplication = "api/v2/applications"
+const restApplicationByPublic = "api/v2/applications?publicId=%s"
 
 type iqNewAppRequest struct {
 	PublicID        string `json:"publicId"`
@@ -37,13 +38,56 @@ type ApplicationDetails struct {
 		ID            string `json:"id"`
 		TagID         string `json:"tagId"`
 		ApplicationID string `json:"applicationId"`
-	} `json:"applicationTags"`
+	} `json:"applicationTags,omitempty"`
+}
+
+func (a *ApplicationDetails) Equals(b *ApplicationDetails) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.ID != b.ID {
+		return
+	}
+
+	if a.PublicID != b.PublicID {
+		return
+	}
+
+	if a.Name != b.Name {
+		return
+	}
+
+	if a.OrganizationID != b.OrganizationID {
+		return
+	}
+
+	if a.ContactUserName != b.ContactUserName {
+		return
+	}
+
+	if len(a.ApplicationTags) != len(b.ApplicationTags) {
+		return
+	}
+
+	for i, v := range a.ApplicationTags {
+		if v.ID != b.ApplicationTags[i].ID {
+			return
+		}
+		if v.TagID != b.ApplicationTags[i].TagID {
+			return
+		}
+		if v.ApplicationID != b.ApplicationTags[i].ApplicationID {
+			return
+		}
+	}
+
+	return true
 }
 
 // GetApplicationDetailsByPublicID returns details on the named IQ application
-func GetApplicationDetailsByPublicID(iq *IQ, applicationPublicID string) (appInfo *ApplicationDetails, err error) {
-	endpoint := fmt.Sprintf("%s?publicId=%s", restApplication, applicationPublicID)
-
+func GetApplicationDetailsByPublicID(iq IQ, applicationPublicID string) (appInfo *ApplicationDetails, err error) {
+	endpoint := fmt.Sprintf(restApplicationByPublic, applicationPublicID)
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
 		return nil, err
@@ -62,7 +106,7 @@ func GetApplicationDetailsByPublicID(iq *IQ, applicationPublicID string) (appInf
 }
 
 // CreateApplication creates an application in IQ with the given name
-func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
+func CreateApplication(iq IQ, name, organizationID string) (string, error) {
 	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
 	if err != nil {
 		return "", err
@@ -80,8 +124,14 @@ func CreateApplication(iq *IQ, name, organizationID string) (string, error) {
 	return resp.ID, nil
 }
 
+// DeleteApplication deletes an application in IQ with the given id
+func DeleteApplication(iq IQ, applicationID string) error {
+	iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID))
+	return nil // Always returns an error, so...
+}
+
 // GetAllApplications returns a slice of all of the applications in an IQ instance
-func GetAllApplications(iq *IQ) ([]ApplicationDetails, error) {
+func GetAllApplications(iq IQ) ([]ApplicationDetails, error) {
 	body, _, err := iq.Get(restApplication)
 	if err != nil {
 		return nil, err
@@ -93,10 +143,4 @@ func GetAllApplications(iq *IQ) ([]ApplicationDetails, error) {
 	}
 
 	return resp.Applications, nil
-}
-
-// DeleteApplication deletes an application in IQ with the given id
-func DeleteApplication(iq *IQ, applicationID string) error {
-	iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID))
-	return nil // Always returns an error, so...
 }
