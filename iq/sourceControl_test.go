@@ -5,6 +5,7 @@ import (
 )
 
 func TestCreateSourceControlEntry(t *testing.T) {
+	t.Skip("Needs new framework")
 	iq := getTestIQ(t)
 
 	err := CreateSourceControlEntry(iq, "WebGoat", "https://github.com/HokieGeek/WebGoat", "c564532366dc0fdd1abece4cd1d6f9fd4abe4840")
@@ -14,6 +15,7 @@ func TestCreateSourceControlEntry(t *testing.T) {
 }
 
 func TestGetSourceControlEntry(t *testing.T) {
+	t.Skip("Needs new framework")
 	iq := getTestIQ(t)
 
 	entries, err := GetSourceControlEntry(iq, "WebGoat")
@@ -25,6 +27,7 @@ func TestGetSourceControlEntry(t *testing.T) {
 }
 
 func TestGetAllSourceControlEntries(t *testing.T) {
+	t.Skip("Needs new framework")
 	iq := getTestIQ(t)
 
 	entries, err := GetAllSourceControlEntries(iq)

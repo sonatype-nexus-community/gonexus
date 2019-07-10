@@ -75,22 +75,22 @@ func (s DefaultServer) http(method, endpoint string, payload io.Reader) ([]byte,
 
 // Get performs an HTTP GET against the indicated endpoint
 func (s DefaultServer) Get(endpoint string) ([]byte, *http.Response, error) {
-	return s.http("GET", endpoint, nil)
+	return s.http(http.MethodGet, endpoint, nil)
 }
 
 // Post performs an HTTP POST against the indicated endpoint
 func (s DefaultServer) Post(endpoint string, payload []byte) ([]byte, *http.Response, error) {
-	return s.http("POST", endpoint, bytes.NewBuffer(payload))
+	return s.http(http.MethodPost, endpoint, bytes.NewBuffer(payload))
 }
 
 // Put performs an HTTP PUT against the indicated endpoint
 func (s DefaultServer) Put(endpoint string, payload []byte) ([]byte, *http.Response, error) {
-	return s.http("PUT", endpoint, bytes.NewBuffer(payload))
+	return s.http(http.MethodPut, endpoint, bytes.NewBuffer(payload))
 }
 
 // Del performs an HTTP DELETE against the indicated endpoint
 func (s DefaultServer) Del(endpoint string) (resp *http.Response, err error) {
-	_, resp, err = s.http("DELETE", endpoint, nil)
+	_, resp, err = s.http(http.MethodDelete, endpoint, nil)
 	return
 }
 

@@ -115,7 +115,7 @@ type iqEvaluationRequest struct {
 }
 
 // EvaluateComponents evaluates the list of components
-func EvaluateComponents(iq *IQ, components []Component, applicationID string) (eval *Evaluation, err error) {
+func EvaluateComponents(iq IQ, components []Component, applicationID string) (eval *Evaluation, err error) {
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
 		return

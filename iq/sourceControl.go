@@ -16,7 +16,7 @@ type SourceControlEntry struct {
 	Token         string `json:"token"`
 }
 
-func getSourceControlEntryByInternalID(iq *IQ, applicationID string) (entry SourceControlEntry, err error) {
+func getSourceControlEntryByInternalID(iq IQ, applicationID string) (entry SourceControlEntry, err error) {
 	endpoint := fmt.Sprintf(restSourceControl, applicationID)
 
 	body, _, err := iq.Get(endpoint)
@@ -30,7 +30,7 @@ func getSourceControlEntryByInternalID(iq *IQ, applicationID string) (entry Sour
 }
 
 // GetSourceControlEntry lists of all of the Source Control entries for the given application
-func GetSourceControlEntry(iq *IQ, applicationID string) (entry SourceControlEntry, err error) {
+func GetSourceControlEntry(iq IQ, applicationID string) (entry SourceControlEntry, err error) {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return
@@ -40,7 +40,7 @@ func GetSourceControlEntry(iq *IQ, applicationID string) (entry SourceControlEnt
 }
 
 // GetAllSourceControlEntries lists of all of the Source Control entries in the IQ instance
-func GetAllSourceControlEntries(iq *IQ) (entries []SourceControlEntry, err error) {
+func GetAllSourceControlEntries(iq IQ) (entries []SourceControlEntry, err error) {
 	apps, err := GetAllApplications(iq)
 	if err != nil {
 		return
@@ -56,7 +56,7 @@ func GetAllSourceControlEntries(iq *IQ) (entries []SourceControlEntry, err error
 }
 
 // CreateSourceControlEntry creates a source control entry in IQ
-func CreateSourceControlEntry(iq *IQ, applicationID, repositoryURL, token string) error {
+func CreateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string) error {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func CreateSourceControlEntry(iq *IQ, applicationID, repositoryURL, token string
 }
 
 // UpdateSourceControlEntry updates a source control entry in IQ
-func UpdateSourceControlEntry(iq *IQ, applicationID, repositoryURL, token string) error {
+func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string) error {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func UpdateSourceControlEntry(iq *IQ, applicationID, repositoryURL, token string
 	return nil
 }
 
-func deleteSourceControlEntry(iq *IQ, appInternalID, sourceControlID string) error {
+func deleteSourceControlEntry(iq IQ, appInternalID, sourceControlID string) error {
 	endpoint := fmt.Sprintf(restSourceControlDelete, appInternalID, sourceControlID)
 
 	_, err := iq.Del(endpoint)
@@ -111,7 +111,7 @@ func deleteSourceControlEntry(iq *IQ, appInternalID, sourceControlID string) err
 }
 
 // DeleteSourceControlEntry deletes a source control entry in IQ
-func DeleteSourceControlEntry(iq *IQ, applicationID, sourceControlID string) error {
+func DeleteSourceControlEntry(iq IQ, applicationID, sourceControlID string) error {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func DeleteSourceControlEntry(iq *IQ, applicationID, sourceControlID string) err
 }
 
 // DeleteSourceControlEntryByApp deletes a source control entry in IQ for the given application
-func DeleteSourceControlEntryByApp(iq *IQ, applicationID string) error {
+func DeleteSourceControlEntryByApp(iq IQ, applicationID string) error {
 	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func DeleteSourceControlEntryByApp(iq *IQ, applicationID string) error {
 
 // DeleteSourceControlEntryByEntry deletes a source control entry in IQ for the given entry ID
 /*
-func DeleteSourceControlEntryByEntry(iq *IQ, sourceControlID string) error {
+func DeleteSourceControlEntryByEntry(iq IQ, sourceControlID string) error {
 	entry, err := getSourceControlEntryByInternalID(iq, appInfo.ID)
 	if err != nil {
 		return err
