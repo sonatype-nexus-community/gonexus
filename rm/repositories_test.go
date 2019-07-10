@@ -5,6 +5,7 @@ import (
 )
 
 func TestGetRepositories(t *testing.T) {
+	t.Skip("Needs new framework")
 	rm := getTestRM(t)
 
 	repos, err := GetRepositories(rm)
