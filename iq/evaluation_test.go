@@ -32,7 +32,7 @@ func createTempApplication(t *testing.T) (orgID string, appName string, appID st
 func deleteTempApplication(t *testing.T, applicationName string) error {
 	iq := getTestIQ(t)
 
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationName)
+	appInfo, err := GetApplicationByPublicID(iq, applicationName)
 	if err != nil {
 		return err
 	}

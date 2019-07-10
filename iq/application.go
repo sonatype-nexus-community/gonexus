@@ -20,15 +20,15 @@ type iqNewAppRequest struct {
 }
 
 type iqAppDetailsResponse struct {
-	Applications []ApplicationDetails `json:"applications"`
+	Applications []Application `json:"applications"`
 }
 
 type allAppsResponse struct {
-	Applications []ApplicationDetails `json:"applications"`
+	Applications []Application `json:"applications"`
 }
 
-// ApplicationDetails captures information of an IQ application
-type ApplicationDetails struct {
+// Application captures information of an IQ application
+type Application struct {
 	ID              string `json:"id"`
 	PublicID        string `json:"publicId"`
 	Name            string `json:"name"`
@@ -41,7 +41,7 @@ type ApplicationDetails struct {
 	} `json:"applicationTags,omitempty"`
 }
 
-func (a *ApplicationDetails) Equals(b *ApplicationDetails) (_ bool) {
+func (a *Application) Equals(b *Application) (_ bool) {
 	if a == b {
 		return true
 	}
@@ -85,8 +85,8 @@ func (a *ApplicationDetails) Equals(b *ApplicationDetails) (_ bool) {
 	return true
 }
 
-// GetApplicationDetailsByPublicID returns details on the named IQ application
-func GetApplicationDetailsByPublicID(iq IQ, applicationPublicID string) (appInfo *ApplicationDetails, err error) {
+// GetApplicationByPublicID returns details on the named IQ application
+func GetApplicationByPublicID(iq IQ, applicationPublicID string) (appInfo *Application, err error) {
 	endpoint := fmt.Sprintf(restApplicationByPublic, applicationPublicID)
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
@@ -117,7 +117,7 @@ func CreateApplication(iq IQ, name, organizationID string) (string, error) {
 		return "", err
 	}
 
-	var resp ApplicationDetails
+	var resp Application
 	if err = json.Unmarshal(body, &resp); err != nil {
 		return "", err
 	}
@@ -131,7 +131,7 @@ func DeleteApplication(iq IQ, applicationID string) error {
 }
 
 // GetAllApplications returns a slice of all of the applications in an IQ instance
-func GetAllApplications(iq IQ) ([]ApplicationDetails, error) {
+func GetAllApplications(iq IQ) ([]Application, error) {
 	body, _, err := iq.Get(restApplication)
 	if err != nil {
 		return nil, err

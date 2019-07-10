@@ -31,7 +31,7 @@ func getSourceControlEntryByInternalID(iq IQ, applicationID string) (entry Sourc
 
 // GetSourceControlEntry lists of all of the Source Control entries for the given application
 func GetSourceControlEntry(iq IQ, applicationID string) (entry SourceControlEntry, err error) {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	appInfo, err := GetApplicationByPublicID(iq, applicationID)
 	if err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func GetAllSourceControlEntries(iq IQ) (entries []SourceControlEntry, err error)
 
 // CreateSourceControlEntry creates a source control entry in IQ
 func CreateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string) error {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	appInfo, err := GetApplicationByPublicID(iq, applicationID)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func CreateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 
 // UpdateSourceControlEntry updates a source control entry in IQ
 func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string) error {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	appInfo, err := GetApplicationByPublicID(iq, applicationID)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func deleteSourceControlEntry(iq IQ, appInternalID, sourceControlID string) erro
 
 // DeleteSourceControlEntry deletes a source control entry in IQ
 func DeleteSourceControlEntry(iq IQ, applicationID, sourceControlID string) error {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	appInfo, err := GetApplicationByPublicID(iq, applicationID)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func DeleteSourceControlEntry(iq IQ, applicationID, sourceControlID string) erro
 
 // DeleteSourceControlEntryByApp deletes a source control entry in IQ for the given application
 func DeleteSourceControlEntryByApp(iq IQ, applicationID string) error {
-	appInfo, err := GetApplicationDetailsByPublicID(iq, applicationID)
+	appInfo, err := GetApplicationByPublicID(iq, applicationID)
 	if err != nil {
 		return err
 	}

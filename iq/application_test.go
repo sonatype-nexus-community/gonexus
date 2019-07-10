@@ -11,16 +11,16 @@ import (
 	"testing"
 )
 
-var dummyApps = []ApplicationDetails{
-	ApplicationDetails{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "app1OrgId"},
-	ApplicationDetails{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "app2OrgId"},
-	ApplicationDetails{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "app3OrgId"},
-	ApplicationDetails{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
+var dummyApps = []Application{
+	Application{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "app1OrgId"},
+	Application{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "app2OrgId"},
+	Application{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "app3OrgId"},
+	Application{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
 }
 
-func applicationsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
+func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		getByPublicID := func(pubId string) (app ApplicationDetails, i int, ok bool) {
+		getByPublicID := func(pubId string) (app Application, i int, ok bool) {
 			for i, app = range dummyApps {
 				if app.PublicID == pubId {
 					return app, i, true
@@ -43,7 +43,7 @@ func applicationsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) 
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restApplicationByPublic[:len(restApplicationByPublic)-2]):
 			pubId := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
 			if app, _, ok := getByPublicID(pubId); ok {
-				resp, err := json.Marshal(iqAppDetailsResponse{[]ApplicationDetails{app}})
+				resp, err := json.Marshal(iqAppDetailsResponse{[]Application{app}})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -62,7 +62,7 @@ func applicationsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) 
 			if err = json.Unmarshal(body, &appReq); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 			}
-			app := ApplicationDetails{
+			app := Application{
 				ID:              appReq.Name + "InternalId",
 				PublicID:        appReq.PublicID,
 				Name:            appReq.Name,
@@ -86,7 +86,7 @@ func applicationsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) 
 			pubId := strings.Replace(r.URL.Path[1:], restApplication+"/", "", 1)
 			if _, i, ok := getByPublicID(pubId); ok {
 				copy(dummyApps[i:], dummyApps[i+1:])
-				dummyApps[len(dummyApps)-1] = ApplicationDetails{}
+				dummyApps[len(dummyApps)-1] = Application{}
 				dummyApps = dummyApps[:len(dummyApps)-1]
 
 				w.WriteHeader(http.StatusNoContent)
@@ -99,7 +99,7 @@ func applicationsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) 
 }
 
 func TestGetAllApplications(t *testing.T) {
-	iq, mock, err := applicationsTestIQ(t)
+	iq, mock, err := applicationTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,8 +123,8 @@ func TestGetAllApplications(t *testing.T) {
 	t.Logf("%v\n", applications)
 }
 
-func TestGetApplicationDetailsByPublicID(t *testing.T) {
-	iq, mock, err := applicationsTestIQ(t)
+func TestGetApplicationByPublicID(t *testing.T) {
+	iq, mock, err := applicationTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestGetApplicationDetailsByPublicID(t *testing.T) {
 
 	dummyAppsIdx := 2
 
-	app, err := GetApplicationDetailsByPublicID(iq, dummyApps[dummyAppsIdx].PublicID)
+	app, err := GetApplicationByPublicID(iq, dummyApps[dummyAppsIdx].PublicID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -145,20 +145,20 @@ func TestGetApplicationDetailsByPublicID(t *testing.T) {
 }
 
 func TestCreateApplication(t *testing.T) {
-	iq, mock, err := applicationsTestIQ(t)
+	iq, mock, err := applicationTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
 
-	createdApp := ApplicationDetails{PublicID: "createdApp", Name: "createdApp", OrganizationID: "createdAppOrgId"}
+	createdApp := Application{PublicID: "createdApp", Name: "createdApp", OrganizationID: "createdAppOrgId"}
 
 	createdApp.ID, err = CreateApplication(iq, createdApp.Name, createdApp.OrganizationID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	app, err := GetApplicationDetailsByPublicID(iq, createdApp.PublicID)
+	app, err := GetApplicationByPublicID(iq, createdApp.PublicID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,13 +169,13 @@ func TestCreateApplication(t *testing.T) {
 }
 
 func TestDeleteApplication(t *testing.T) {
-	iq, mock, err := applicationsTestIQ(t)
+	iq, mock, err := applicationTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
 
-	deleteMeApp := ApplicationDetails{PublicID: "deleteMeApp", Name: "deleteMeApp", OrganizationID: "deleteMeAppOrgId"}
+	deleteMeApp := Application{PublicID: "deleteMeApp", Name: "deleteMeApp", OrganizationID: "deleteMeAppOrgId"}
 
 	deleteMeApp.ID, err = CreateApplication(iq, deleteMeApp.Name, deleteMeApp.OrganizationID)
 	if err != nil {
@@ -186,7 +186,7 @@ func TestDeleteApplication(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := GetApplicationDetailsByPublicID(iq, deleteMeApp.PublicID); err == nil {
+	if _, err := GetApplicationByPublicID(iq, deleteMeApp.PublicID); err == nil {
 		t.Fatal("App was not deleted")
 	}
 }
