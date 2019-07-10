@@ -19,17 +19,6 @@ var dummyOrgs = []Organization{
 
 func organizationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		/*
-			getByPublicID := func(pubId string) (app ApplicationDetails, i int, ok bool) {
-				for i, app = range dummyApps {
-					if app.PublicID == pubId {
-						return app, i, true
-					}
-				}
-				return
-			}
-		*/
-
 		dump, _ := httputil.DumpRequest(r, true)
 		t.Logf("%q\n", dump)
 

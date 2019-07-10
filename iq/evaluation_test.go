@@ -1,56 +1,86 @@
 package nexusiq
 
 import (
+	"encoding/json"
 	"fmt"
-	"math/rand"
-	"strconv"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"strings"
 	"testing"
-	"time"
 )
 
-func createTempApplication(t *testing.T) (orgID string, appName string, appID string, err error) {
-	rand.Seed(time.Now().UnixNano())
-	name := strconv.Itoa(rand.Int())
+var activeEval iqEvaluationRequestResponse
+var activeEvalAttempts = 0
+var activeEvalMaxAttempts = 1
+var activeEvalResult Evaluation
 
-	iq := getTestIQ(t)
+func evaluationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
+	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		dump, _ := httputil.DumpRequest(r, true)
+		t.Logf("%q\n", dump)
 
-	orgID, err = CreateOrganization(iq, name)
-	if err != nil {
-		return
-	}
+		switch {
+		case r.Method == http.MethodGet:
+			expectedEndpoint := fmt.Sprintf(restEvaluationResults, activeEval.ApplicationID, activeEval.ResultID)
+			if r.URL.String()[1:] != expectedEndpoint {
+				t.Fatalf("Did not find expected URL: %s", expectedEndpoint)
+			}
+			if activeEvalAttempts < activeEvalMaxAttempts {
+				activeEvalAttempts++
+				w.WriteHeader(http.StatusNotFound)
+			}
 
-	appName = fmt.Sprintf("%s_app", name)
+			resp, err := json.Marshal(activeEvalResult)
+			if err != nil {
+				w.WriteHeader(http.StatusTeapot)
+			}
 
-	appID, err = CreateApplication(iq, appName, orgID)
-	if err != nil {
-		return
-	}
+			fmt.Fprintln(w, string(resp))
+		case r.Method == http.MethodPost:
+			defer r.Body.Close()
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
 
-	return
-}
+			var req iqEvaluationRequest
+			if err = json.Unmarshal(body, &req); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
 
-func deleteTempApplication(t *testing.T, applicationName string) error {
-	iq := getTestIQ(t)
+			activeEval.ResultID = "dummyResultID"
+			activeEval.SubmittedDate = "Tomorrow and tomorrow and tomorrow"
+			activeEval.ApplicationID = strings.Replace(r.URL.Path[1:], restEvaluation[:len(restEvaluation)-2], "", 1)
+			activeEval.ResultsURL = "URLTODO"
 
-	appInfo, err := GetApplicationByPublicID(iq, applicationName)
-	if err != nil {
-		return err
-	}
+			// Populate the Evaluation object
+			activeEvalResult.SubmittedDate = activeEval.SubmittedDate
+			activeEvalResult.ApplicationID = activeEval.ApplicationID
+			activeEvalResult.EvaluationDate = "Today"
+			for _, c := range req.Components {
+				activeEvalResult.Results = append(activeEvalResult.Results, ComponentEvaluationResult{Component: c})
+			}
 
-	if err := DeleteApplication(iq, appInfo.ID); err != nil {
-		return err
-	}
+			resp, err := json.Marshal(activeEval)
+			if err != nil {
+				w.WriteHeader(http.StatusTeapot)
+			}
 
-	// if err := DeleteOrganization(iq, appInfo.OrganizationID); err != nil {
-	// 	return err
-	// }
-
-	return nil
+			fmt.Fprintln(w, string(resp))
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}))
 }
 
 func TestEvaluateComponents(t *testing.T) {
-	t.Skip("Skipping until I figure out a better test")
-	iq := getTestIQ(t)
+	iq, mock, err := evaluationTestIQ(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
 
 	var dummy Component
 	dummy.Hash = "045c37a03be19f3e0db8"
@@ -60,15 +90,24 @@ func TestEvaluateComponents(t *testing.T) {
 	dummy.ComponentID.Coordinates.Version = "2.6.1"
 	dummy.ComponentID.Coordinates.Extension = "jar"
 
-	_, appName, appID, err := createTempApplication(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer deleteTempApplication(t, appName)
+	appID := "dummyAppId"
 
 	report, err := EvaluateComponents(iq, []Component{dummy}, appID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Logf("%v\n", report)
+
+	if report.ApplicationID != appID {
+		t.Errorf("AppID %s not found in report", appID)
+	}
+
+	if len(report.Results) != 1 {
+		t.Errorf("Got %d results instead of the expected 1", len(report.Results))
+	}
+
+	reportComponent := report.Results[0].Component
+	if !dummy.Equals(&reportComponent) {
+		t.Error("Did not find the expected Component in evaluation results")
+	}
 }

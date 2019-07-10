@@ -21,11 +21,59 @@ type ComponentIdentifier struct {
 	} `json:"coordinates"`
 }
 
+func (a *ComponentIdentifier) Equals(b *ComponentIdentifier) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.Format != b.Format {
+		return
+	}
+
+	if a.Coordinates.ArtifactID != b.Coordinates.ArtifactID {
+		return
+	}
+
+	if a.Coordinates.GroupID != b.Coordinates.GroupID {
+		return
+	}
+
+	if a.Coordinates.Version != b.Coordinates.Version {
+		return
+	}
+
+	if a.Coordinates.Extension != b.Coordinates.Extension {
+		return
+	}
+
+	return true
+}
+
 // Component encapsulates the details of a component in IQ
 type Component struct {
 	Hash        string              `json:"hash,omitempty"`
 	ComponentID ComponentIdentifier `json:"componentIdentifier,omitempty"`
 	Proprietary bool                `json:"proprietary,omitempty"`
+}
+
+func (a *Component) Equals(b *Component) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.Hash != b.Hash {
+		return
+	}
+
+	if !a.ComponentID.Equals(&b.ComponentID) {
+		return
+	}
+
+	if a.Proprietary != b.Proprietary {
+		return
+	}
+
+	return true
 }
 
 // PolicyViolation is a struct
