@@ -6,6 +6,7 @@ import (
 
 /*
 func TestCreateFileBlobStore(t *testing.T) {
+	t.Skip("Needs new framework")
 	rm := getTestRM(t)
 
 	err := CreateFileBlobStore(rm, "testname", "testpath")
@@ -19,6 +20,7 @@ func TestCreateFileBlobStore(t *testing.T) {
 
 /*
 func TestDeleteBlobStore(t *testing.T) {
+	t.Skip("Needs new framework")
 	rm := getTestRM(t)
 
 	err := DeleteBlobStore(rm, "testname")

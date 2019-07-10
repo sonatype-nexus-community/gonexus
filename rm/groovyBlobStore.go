@@ -41,7 +41,7 @@ const groovyCreateBlobStoreGroup = `blobStore.createBlobStoreGroup('{{.Name}}', 
 
 /*
 // DeleteBlobStore creates a blobstore
-func DeleteBlobStore(rm *RM, name string) error {
+func DeleteBlobStore(rm RM, name string) error {
 	tmpl, err := template.New("dbs").Parse(groovyDeleteBlobStore)
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func DeleteBlobStore(rm *RM, name string) error {
 */
 
 // CreateFileBlobStore creates a blobstore
-func CreateFileBlobStore(rm *RM, name, path string) error {
+func CreateFileBlobStore(rm RM, name, path string) error {
 	tmpl, err := template.New("fbs").Parse(groovyCreateFileBlobStore)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func CreateFileBlobStore(rm *RM, name, path string) error {
 }
 
 // CreateBlobStoreGroup creates a blobstore
-func CreateBlobStoreGroup(rm *RM, name string, blobStores []string) error {
+func CreateBlobStoreGroup(rm RM, name string, blobStores []string) error {
 	tmpl, err := template.New("group").Parse(groovyCreateBlobStoreGroup)
 	if err != nil {
 		return err
