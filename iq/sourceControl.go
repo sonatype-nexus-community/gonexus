@@ -16,6 +16,31 @@ type SourceControlEntry struct {
 	Token         string `json:"token"`
 }
 
+// Equals compares two SourceControlEntry objects
+func (a *SourceControlEntry) Equals(b *SourceControlEntry) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.ID != b.ID {
+		return
+	}
+
+	if a.ApplicationID != b.ApplicationID {
+		return
+	}
+
+	if a.RepositoryURL != b.RepositoryURL {
+		return
+	}
+
+	if a.Token != b.Token {
+		return
+	}
+
+	return true
+}
+
 func getSourceControlEntryByInternalID(iq IQ, applicationID string) (entry SourceControlEntry, err error) {
 	endpoint := fmt.Sprintf(restSourceControl, applicationID)
 

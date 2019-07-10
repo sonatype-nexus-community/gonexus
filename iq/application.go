@@ -41,6 +41,7 @@ type Application struct {
 	} `json:"applicationTags,omitempty"`
 }
 
+// Equals compares two Application objects
 func (a *Application) Equals(b *Application) (_ bool) {
 	if a == b {
 		return true

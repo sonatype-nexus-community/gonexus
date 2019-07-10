@@ -18,16 +18,27 @@ var dummyApps = []Application{
 	Application{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
 }
 
+func getAppByPublicID(pubID string) (app Application, i int, ok bool) {
+	for i, app = range dummyApps {
+		if app.PublicID == pubID {
+			return app, i, true
+		}
+	}
+	return
+}
+
 func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		getByPublicID := func(pubId string) (app Application, i int, ok bool) {
-			for i, app = range dummyApps {
-				if app.PublicID == pubId {
-					return app, i, true
+		/*
+			getAppByPublicID := func(pubId string) (app Application, i int, ok bool) {
+				for i, app = range dummyApps {
+					if app.PublicID == pubId {
+						return app, i, true
+					}
 				}
+				return
 			}
-			return
-		}
+		*/
 
 		dump, _ := httputil.DumpRequest(r, true)
 		t.Logf("%q\n", dump)
@@ -41,8 +52,8 @@ func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 
 			fmt.Fprintln(w, string(apps))
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restApplicationByPublic[:len(restApplicationByPublic)-2]):
-			pubId := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
-			if app, _, ok := getByPublicID(pubId); ok {
+			pubID := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
+			if app, _, ok := getAppByPublicID(pubID); ok {
 				resp, err := json.Marshal(iqAppDetailsResponse{[]Application{app}})
 				if err != nil {
 					t.Fatal(err)
@@ -83,15 +94,16 @@ func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 
 			fmt.Fprintln(w, string(resp))
 		case r.Method == http.MethodDelete:
-			pubId := strings.Replace(r.URL.Path[1:], restApplication+"/", "", 1)
-			if _, i, ok := getByPublicID(pubId); ok {
+			pubID := strings.Replace(r.URL.Path[1:], restApplication+"/", "", 1)
+			if _, i, ok := getAppByPublicID(pubID); ok {
 				copy(dummyApps[i:], dummyApps[i+1:])
 				dummyApps[len(dummyApps)-1] = Application{}
 				dummyApps = dummyApps[:len(dummyApps)-1]
 
 				w.WriteHeader(http.StatusNoContent)
+			} else {
+				w.WriteHeader(http.StatusNotFound)
 			}
-			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

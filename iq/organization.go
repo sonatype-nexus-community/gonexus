@@ -22,6 +22,7 @@ type Organization struct {
 	Tags []string `json:"tags"`
 }
 
+// Equals compares two Organization objects
 func (a *Organization) Equals(b *Organization) (_ bool) {
 	if a == b {
 		return true

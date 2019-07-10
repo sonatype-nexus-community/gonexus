@@ -21,6 +21,7 @@ type ComponentIdentifier struct {
 	} `json:"coordinates"`
 }
 
+// Equals compares two ComponentIdentifier objects
 func (a *ComponentIdentifier) Equals(b *ComponentIdentifier) (_ bool) {
 	if a == b {
 		return true
@@ -56,6 +57,7 @@ type Component struct {
 	Proprietary bool                `json:"proprietary,omitempty"`
 }
 
+// Equals compares two Component objects
 func (a *Component) Equals(b *Component) (_ bool) {
 	if a == b {
 		return true
