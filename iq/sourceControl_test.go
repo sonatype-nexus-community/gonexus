@@ -11,19 +11,6 @@ import (
 	"testing"
 )
 
-/*
-const restSourceControl = "api/v2/sourceControl/%s"
-const restSourceControlDelete = "api/v2/sourceControl/%s/%s"
-
-// SourceControlEntry describes a Source Control entry in IQ
-type SourceControlEntry struct {
-	ID            string `json:"id,omitempty"`
-	ApplicationID string `json:"applicationId"`
-	RepositoryURL string `json:"repositoryUrl"`
-	Token         string `json:"token"`
-}
-*/
-
 var dummyEntries = []SourceControlEntry{
 	SourceControlEntry{ID: "entry1InternalId", ApplicationID: "app1InternalId", RepositoryURL: "entry1URL", Token: "entry1token"},
 	SourceControlEntry{ID: "entry2InternalId", ApplicationID: "app2InternalId", RepositoryURL: "entry2URL", Token: "entry2token"},
@@ -111,7 +98,25 @@ func sourceControlTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error)
 				}
 			}
 			dummyEntries = append(dummyEntries, entry)
-			// case r.Method == http.MethodDelete:
+		case r.Method == http.MethodDelete:
+			splt := strings.Split(r.URL.Path, "/")
+			id := splt[len(splt)-1]
+
+			var found bool
+			for i, e := range dummyEntries {
+				if e.ID == id {
+					found = true
+					copy(dummyEntries[i:], dummyEntries[i+1:])
+					dummyEntries[len(dummyEntries)-1] = SourceControlEntry{}
+					dummyEntries = dummyEntries[:len(dummyEntries)-1]
+
+					w.WriteHeader(http.StatusNoContent)
+				}
+			}
+
+			if !found {
+				w.WriteHeader(http.StatusNotFound)
+			}
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -247,19 +252,47 @@ func TestUpdateSourceControlEntry(t *testing.T) {
 }
 
 func TestDeleteSourceControlEntry(t *testing.T) {
-	t.Skip("Needs new framework")
-	_, mock, err := sourceControlTestIQ(t)
+	iq, mock, err := sourceControlTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
+
+	app := dummyApps[len(dummyApps)-1]
+	deleteMe := SourceControlEntry{newEntryID, app.ID, "deleteMeURL", "deleteMeToken"}
+
+	if err = CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
+		t.Error(err)
+	}
+
+	if err = DeleteSourceControlEntry(iq, app.PublicID, newEntryID); err != nil {
+		t.Error(err)
+	}
+
+	if _, err = GetSourceControlEntry(iq, app.PublicID); err == nil {
+		t.Error("Unexpectedly found entry which should have been deleted")
+	}
 }
 
 func TestDeleteSourceControlEntryByApp(t *testing.T) {
-	t.Skip("Needs new framework")
-	_, mock, err := sourceControlTestIQ(t)
+	iq, mock, err := sourceControlTestIQ(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
+
+	app := dummyApps[len(dummyApps)-1]
+	deleteMe := SourceControlEntry{newEntryID, app.ID, "deleteMeURL", "deleteMeToken"}
+
+	if err = CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
+		t.Error(err)
+	}
+
+	if err = DeleteSourceControlEntryByApp(iq, app.PublicID); err != nil {
+		t.Error(err)
+	}
+
+	if _, err = GetSourceControlEntry(iq, app.PublicID); err == nil {
+		t.Error("Unexpectedly found entry which should have been deleted")
+	}
 }

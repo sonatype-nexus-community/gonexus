@@ -3,6 +3,7 @@ package nexusiq
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
 const restSourceControl = "api/v2/sourceControl/%s"
@@ -127,8 +128,8 @@ func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 func deleteSourceControlEntry(iq IQ, appInternalID, sourceControlID string) error {
 	endpoint := fmt.Sprintf(restSourceControlDelete, appInternalID, sourceControlID)
 
-	_, err := iq.Del(endpoint)
-	if err != nil {
+	resp, err := iq.Del(endpoint)
+	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
 
