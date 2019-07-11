@@ -11,10 +11,14 @@ import (
 	"testing"
 )
 
-var activeEval iqEvaluationRequestResponse
-var activeEvalAttempts = 0
-var activeEvalMaxAttempts = 1
-var activeEvalResult Evaluation
+var (
+	activeEval            iqEvaluationRequestResponse
+	activeEvalAttempts    = 0
+	activeEvalMaxAttempts = 1
+	activeEvalResult      Evaluation
+)
+
+const restEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
 
 func evaluationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +31,7 @@ func evaluationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 			if r.URL.String()[1:] != expectedEndpoint {
 				t.Fatalf("Did not find expected URL: %s", expectedEndpoint)
 			}
+
 			if activeEvalAttempts < activeEvalMaxAttempts {
 				activeEvalAttempts++
 				w.WriteHeader(http.StatusNotFound)
@@ -53,7 +58,7 @@ func evaluationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
 			activeEval.ResultID = "dummyResultID"
 			activeEval.SubmittedDate = "Tomorrow and tomorrow and tomorrow"
 			activeEval.ApplicationID = strings.Replace(r.URL.Path[1:], restEvaluation[:len(restEvaluation)-2], "", 1)
-			activeEval.ResultsURL = "URLTODO"
+			activeEval.ResultsURL = fmt.Sprintf(restEvaluationResults, activeEval.ApplicationID, activeEval.ResultID)
 
 			// Populate the Evaluation object
 			activeEvalResult.SubmittedDate = activeEval.SubmittedDate
