@@ -10,28 +10,26 @@ import (
 	"net/http/httputil"
 )
 
-/*
-// ClientResponse provides an HTTP wrapper with optimized for communicating with a Nexus server
-type ClientResponse struct {
-	Response *http.Response
-	Err      error
+// ServerInfo contains the information needed to connect to a Nexus server
+type ServerInfo struct {
+	Host, Username, Password string
 }
 
-// Body will read the http.Response body
-func (c *ClientResponse) Body() ([]byte, error) {
-	if c.Response.StatusCode != http.StatusOK {
-		return nil
-	}
-
-	defer c.Response.Body.Close()
-	return ioutil.ReadAll(c.Response.Body)
+// Client is the interface which allows interacting with an IQ server
+type Client interface {
+	NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error)
+	Do(request *http.Request) ([]byte, *http.Response, error)
+	Get(endpoint string) ([]byte, *http.Response, error)
+	Post(endpoint string, payload []byte) ([]byte, *http.Response, error)
+	Put(endpoint string, payload []byte) (*http.Response, error)
+	Del(endpoint string) (*http.Response, error)
+	Info() ServerInfo
 }
-*/
 
 // DefaultClient provides an HTTP wrapper with optimized for communicating with a Nexus server
 type DefaultClient struct {
-	Host, Username, Password string
-	Debug                    bool
+	ServerInfo
+	Debug bool
 }
 
 // NewRequest created an http.Request object based on an endpoint and fills in basic auth
@@ -103,4 +101,9 @@ func (s DefaultClient) Put(endpoint string, payload []byte) (resp *http.Response
 func (s DefaultClient) Del(endpoint string) (resp *http.Response, err error) {
 	_, resp, err = s.http(http.MethodDelete, endpoint, nil)
 	return
+}
+
+// Info return information about the Nexus server
+func (s DefaultClient) Info() ServerInfo {
+	return ServerInfo{s.Host, s.Username, s.Password}
 }

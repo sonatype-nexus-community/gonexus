@@ -1,17 +1,12 @@
 package nexusiq
 
 import (
-	"net/http"
-
 	"github.com/hokiegeek/gonexus"
 )
 
-// IQ is the interface which any IQ Server implementation would need to satisfy
+// IQ is the interface which allows interacting with an IQ server
 type IQ interface {
-	Get(endpoint string) ([]byte, *http.Response, error)
-	Post(endpoint string, payload []byte) ([]byte, *http.Response, error)
-	Put(endpoint string, payload []byte) (*http.Response, error)
-	Del(endpoint string) (*http.Response, error)
+	nexus.Client
 }
 
 type iqClient struct {
