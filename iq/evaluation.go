@@ -187,10 +187,9 @@ func EvaluateComponents(iq IQ, components []Component, applicationID string) (ev
 		getEvaluationResults := func() (*Evaluation, error) {
 			body, resp, err := iq.Get(results.ResultsURL)
 			if err != nil {
-				return nil, err
-			}
-
-			if resp.StatusCode == http.StatusNotFound {
+				if resp.StatusCode != http.StatusNotFound {
+					return nil, err
+				}
 				return nil, nil
 			}
 
@@ -205,7 +204,7 @@ func EvaluateComponents(iq IQ, components []Component, applicationID string) (ev
 		for {
 			select {
 			case <-ticker.C:
-				if eval, err = getEvaluationResults(); eval != nil {
+				if eval, err = getEvaluationResults(); eval != nil || err != nil {
 					ticker.Stop()
 					done <- true
 				}

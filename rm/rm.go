@@ -10,17 +10,17 @@ import (
 type RM interface {
 	Get(endpoint string) ([]byte, *http.Response, error)
 	Post(endpoint string, payload []byte) ([]byte, *http.Response, error)
-	Put(endpoint string, payload []byte) ([]byte, *http.Response, error)
-	Del(endpoint string) (resp *http.Response, err error)
+	Put(endpoint string, payload []byte) (*http.Response, error)
+	Del(endpoint string) (*http.Response, error)
 }
 
-type rmServer struct {
-	nexus.DefaultServer
+type rmClient struct {
+	nexus.DefaultClient
 }
 
 // New creates a new Repository Manager instance
 func New(host, username, password string) (RM, error) {
-	rm := new(rmServer)
+	rm := new(rmClient)
 	rm.Host = host
 	rm.Username = username
 	rm.Password = password

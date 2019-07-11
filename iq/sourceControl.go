@@ -6,8 +6,10 @@ import (
 	"net/http"
 )
 
-const restSourceControl = "api/v2/sourceControl/%s"
-const restSourceControlDelete = "api/v2/sourceControl/%s/%s"
+const (
+	restSourceControl       = "api/v2/sourceControl/%s"
+	restSourceControlDelete = "api/v2/sourceControl/%s/%s"
+)
 
 // SourceControlEntry describes a Source Control entry in IQ
 type SourceControlEntry struct {
@@ -94,9 +96,7 @@ func CreateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 	}
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
-
-	_, _, err = iq.Post(endpoint, request)
-	if err != nil {
+	if _, _, err = iq.Post(endpoint, request); err != nil {
 		return err
 	}
 
@@ -116,9 +116,7 @@ func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 	}
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
-
-	_, _, err = iq.Put(endpoint, request)
-	if err != nil {
+	if _, err = iq.Put(endpoint, request); err != nil {
 		return err
 	}
 

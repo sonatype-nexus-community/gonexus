@@ -65,36 +65,38 @@ func GetOrganizationByName(iq IQ, organizationName string) (*Organization, error
 }
 
 // CreateOrganization creates an organization in IQ with the given name
-func CreateOrganization(iq IQ, name string) (string, error) {
+func CreateOrganization(iq IQ, name string) (orgID string, err error) {
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
 	if err != nil {
-		return "", err
+		return
 	}
 
 	body, _, err := iq.Post(restOrganization, request)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	var org Organization
 	if err = json.Unmarshal(body, &org); err != nil {
-		return "", err
+		return
 	}
+	orgID = org.ID
 
-	return org.ID, nil
+	return
 }
 
 // GetAllOrganizations returns a slice of all of the organizations in an IQ instance
-func GetAllOrganizations(iq IQ) ([]Organization, error) {
+func GetAllOrganizations(iq IQ) (orgs []Organization, err error) {
 	body, _, err := iq.Get(restOrganization)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var resp allOrgsResponse
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return nil, err
+		return
 	}
+	orgs = resp.Organizations
 
-	return resp.Organizations, nil
+	return
 }

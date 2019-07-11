@@ -46,7 +46,7 @@ type runResponse struct {
 func ScriptList(rm RM) (scripts []Script, err error) {
 	body, _, err := rm.Get(restScript)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = json.Unmarshal(body, &scripts)
@@ -90,7 +90,7 @@ func ScriptUpdate(rm RM, script Script) error {
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restScript, script.Name)
-	_, resp, err := rm.Put(endpoint, json)
+	resp, err := rm.Put(endpoint, json)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
@@ -110,9 +110,9 @@ func ScriptRun(rm RM, name string, arguments []byte) error {
 }
 
 // ScriptRunOnce takes the given Script, uploads it, executes it, and deletes it
-func ScriptRunOnce(rm RM, script Script, arguments []byte) (err error) {
-	if err = ScriptUpload(rm, script); err != nil {
-		return
+func ScriptRunOnce(rm RM, script Script, arguments []byte) error {
+	if err := ScriptUpload(rm, script); err != nil {
+		return err
 	}
 	defer ScriptDelete(rm, script.Name)
 
@@ -122,7 +122,7 @@ func ScriptRunOnce(rm RM, script Script, arguments []byte) (err error) {
 // ScriptDelete removes the name, uploaded script
 func ScriptDelete(rm RM, name string) error {
 	endpoint := fmt.Sprintf("%s/%s", restScript, name)
-	resp, err := rm.Del(endpoint) // TODO handle output
+	resp, err := rm.Del(endpoint)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
