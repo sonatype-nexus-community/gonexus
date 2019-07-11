@@ -9,7 +9,6 @@ import (
 )
 
 const restEvaluation = "api/v2/evaluation/applications/%s"
-const restEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
 
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
@@ -132,12 +131,11 @@ func EvaluateComponents(iq *IQ, components []Component, applicationID string) (e
 		return
 	}
 
-	resultsEndpoint := fmt.Sprintf(restEvaluationResults, results.ApplicationID, results.ResultID)
 	ticker := time.NewTicker(5 * time.Second)
 	done := make(chan bool, 1)
 	go func() {
 		getEvaluationResults := func() (*Evaluation, error) {
-			body, resp, err := iq.Get(resultsEndpoint)
+			body, resp, err := iq.Get(results.ResultsURL)
 			if err != nil {
 				return nil, err
 			}
