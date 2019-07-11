@@ -53,7 +53,8 @@ func DeleteBlobStore(rm RM, name string) error {
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }
 */
 
@@ -70,7 +71,8 @@ func CreateFileBlobStore(rm RM, name, path string) error {
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }
 
 // CreateBlobStoreGroup creates a blobstore
@@ -86,5 +88,6 @@ func CreateBlobStoreGroup(rm RM, name string, blobStores []string) error {
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }

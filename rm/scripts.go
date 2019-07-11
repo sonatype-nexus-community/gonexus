@@ -6,8 +6,10 @@ import (
 	"net/http"
 )
 
-const restScript = "service/rest/v1/script"
-const restScriptRun = "service/rest/v1/script/%s/run"
+const (
+	restScript    = "service/rest/v1/script"
+	restScriptRun = "service/rest/v1/script/%s/run"
+)
 
 // Script encapsulates a Repository Manager script
 type Script struct {
@@ -99,20 +101,26 @@ func ScriptUpdate(rm RM, script Script) error {
 }
 
 // ScriptRun executes the named Script
-func ScriptRun(rm RM, name string, arguments []byte) error {
+func ScriptRun(rm RM, name string, arguments []byte) (ret string, err error) {
 	endpoint := fmt.Sprintf(restScriptRun, name)
-	_, _, err := rm.Post(endpoint, arguments) // TODO: Better response handling
+	body, _, err := rm.Post(endpoint, arguments) // TODO: Better response handling
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
+	var resp runResponse
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return
+	}
+	ret = resp.Result
+
+	return
 }
 
 // ScriptRunOnce takes the given Script, uploads it, executes it, and deletes it
-func ScriptRunOnce(rm RM, script Script, arguments []byte) error {
+func ScriptRunOnce(rm RM, script Script, arguments []byte) (string, error) {
 	if err := ScriptUpload(rm, script); err != nil {
-		return err
+		return "", err
 	}
 	defer ScriptDelete(rm, script.Name)
 

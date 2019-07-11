@@ -261,8 +261,13 @@ func TestScriptRun(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = ScriptRun(rm, script.Name, []byte(input)); err != nil {
+	ret, err := ScriptRun(rm, script.Name, []byte(input))
+	if err != nil {
 		t.Error(err)
+	}
+
+	if ret != input {
+		t.Errorf("Did not get expected script output: %s\n", ret)
 	}
 
 	if err = ScriptDelete(rm, script.Name); err != nil {
@@ -280,8 +285,13 @@ func TestScriptRunOnce(t *testing.T) {
 	script := Script{Name: "scriptArgsTest", Content: "return args", Type: "groovy"}
 	input := "this is a test"
 
-	if err = ScriptRunOnce(rm, script, []byte(input)); err != nil {
+	ret, err := ScriptRunOnce(rm, script, []byte(input))
+	if err != nil {
 		t.Error(err)
+	}
+
+	if ret != input {
+		t.Errorf("Did not get expected script output: %s\n", ret)
 	}
 
 	if _, err = ScriptGet(rm, script.Name); err == nil {

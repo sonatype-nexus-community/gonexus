@@ -133,7 +133,8 @@ func CreateHostedRepository(rm RM, format repositoryFormat, config repositoryHos
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }
 
 // CreateProxyRepository creates a proxy repository of the indicated format
@@ -177,7 +178,8 @@ func CreateProxyRepository(rm RM, format repositoryFormat, config repositoryProx
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }
 
 // CreateGroupRepository creates a group repository of the indicated format
@@ -221,5 +223,6 @@ func CreateGroupRepository(rm RM, format repositoryFormat, config repositoryGrou
 		return err
 	}
 
-	return ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
+	return err
 }
