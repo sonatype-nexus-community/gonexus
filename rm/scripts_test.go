@@ -1,48 +1,124 @@
 package nexusrm
 
 import (
-	// "encoding/json"
-	// "fmt"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"strings"
 	"testing"
 )
 
-// const groovyEcho = `return args`
 var dummyScripts = []Script{
-	Script{Name: "script1", Content: "", Type: "groovy"},
-	Script{Name: "script2", Content: "", Type: "groovy"},
-	Script{Name: "script3", Content: "", Type: "groovy"},
-	Script{Name: "script4", Content: "", Type: "groovy"},
+	Script{Name: "script1", Content: "log.info('script1')", Type: "groovy"},
+	Script{Name: "script2", Content: "log.info('script2')", Type: "groovy"},
+	Script{Name: "script3", Content: "log.info('script3')", Type: "groovy"},
+	Script{Name: "script4", Content: "log.info('script4')", Type: "groovy"},
 }
 
 func scriptsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		getDummyScriptByName := func(scriptName string) (int, Script, bool) {
+			for i, s := range dummyScripts {
+				if s.Name == scriptName {
+					return i, s, true
+				}
+			}
+			return 0, Script{}, false
+		}
+
 		dump, _ := httputil.DumpRequest(r, true)
 		t.Logf("%q\n", dump)
 
 		switch {
-		/*
-			case r.Method == http.MethodGet:
-				repo := r.URL.Query().Get("repository")
+		case r.Method == http.MethodGet && r.URL.Path[1:] == restScript:
+			resp, err := json.Marshal(dummyScripts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-				lastComponentIdx := len(dummyComponents[repo]) - 1
-				var components listComponentsResponse
-				if r.URL.Query().Get("continuationToken") == "" {
-					components.Items = dummyComponents[repo][:lastComponentIdx]
-					components.ContinuationToken = dummyContinuationToken
-				} else {
-					components.Items = dummyComponents[repo][lastComponentIdx:]
-				}
-
-				resp, err := json.Marshal(components)
+			fmt.Fprintln(w, string(resp))
+		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restScript):
+			scriptName := strings.Replace(r.URL.Path[1:], restScript+"/", "", 1)
+			if _, s, ok := getDummyScriptByName(scriptName); ok {
+				resp, err := json.Marshal(s)
 				if err != nil {
 					t.Fatal(err)
 				}
 
 				fmt.Fprintln(w, string(resp))
-		*/
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		case r.Method == http.MethodPost && r.URL.Path[1:] == restScript:
+			defer r.Body.Close()
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			var uploadedScript Script
+			if err = json.Unmarshal(body, &uploadedScript); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+
+			dummyScripts = append(dummyScripts, uploadedScript)
+
+		case r.Method == http.MethodPut:
+			scriptName := strings.Replace(r.URL.Path[1:], restScript+"/", "", 1)
+			if i, _, ok := getDummyScriptByName(scriptName); ok {
+				defer r.Body.Close()
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+				}
+
+				var updatedScript Script
+				if err = json.Unmarshal(body, &updatedScript); err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+				}
+				dummyScripts[i] = updatedScript
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path[1:], restScript) && strings.HasSuffix(r.URL.Path, "/run"):
+			scriptName := strings.Replace(r.URL.Path[1:], restScript+"/", "", 1)
+			scriptName = strings.Replace(scriptName, "/run", "", 1)
+
+			if _, _, ok := getDummyScriptByName(scriptName); ok {
+				defer r.Body.Close()
+				args, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+				}
+
+				resp, err := json.Marshal(runResponse{Name: scriptName, Result: string(args)})
+				if err != nil {
+					w.WriteHeader(http.StatusTeapot)
+				}
+
+				fmt.Fprintln(w, string(resp))
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		case r.Method == http.MethodDelete:
+			scriptName := strings.Replace(r.URL.Path[1:], restScript+"/", "", 1)
+			var found bool
+			for i, s := range dummyScripts {
+				if s.Name == scriptName {
+					found = true
+					copy(dummyScripts[i:], dummyScripts[i+1:])
+					dummyScripts[len(dummyScripts)-1] = Script{}
+					dummyScripts = dummyScripts[:len(dummyScripts)-1]
+
+					w.WriteHeader(http.StatusNoContent)
+				}
+			}
+
+			if !found {
+				w.WriteHeader(http.StatusNotFound)
+			}
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -50,8 +126,6 @@ func scriptsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 }
 
 func TestScriptList(t *testing.T) {
-	t.Skip("Needs new framework")
-	// rm := getTestRM(t)
 	rm, mock, err := scriptsTestRM(t)
 	if err != nil {
 		t.Fatal(err)
@@ -63,35 +137,154 @@ func TestScriptList(t *testing.T) {
 		t.Error(err)
 	}
 	t.Logf("%v\n", scripts)
+
+	if len(scripts) != len(dummyScripts) {
+		t.Errorf("Received %d scripts but expected %d\n", len(scripts), len(dummyScripts))
+	}
+
+	for i, s := range scripts {
+		if !s.Equals(&dummyScripts[i]) {
+			t.Fatal("Did not receive the expected scripts")
+		}
+	}
 }
 
 func TestScriptGet(t *testing.T) {
-	t.Skip("TODO")
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
 
-	// ScriptGet(rm RM, name string)
+	dummyScriptsIdx := 1
+
+	script, err := ScriptGet(rm, dummyScripts[dummyScriptsIdx].Name)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("%v\n", script)
+
+	if !script.Equals(&dummyScripts[dummyScriptsIdx]) {
+		t.Fatal("Did not receive the expected script")
+	}
 }
 
 func TestScriptUpload(t *testing.T) {
-	t.Skip("TODO")
-	// ScriptUpload(rm RM, script Script)
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	newScript := Script{Name: "newScript", Content: "log.info('I am new!')", Type: "groovy"}
+
+	if err = ScriptUpload(rm, newScript); err != nil {
+		t.Error(err)
+	}
+
+	script, err := ScriptGet(rm, newScript.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("%v\n", script)
+
+	if !script.Equals(&newScript) {
+		t.Fatal("Did not receive the expected script")
+	}
 }
 
 func TestScriptUpdate(t *testing.T) {
-	t.Skip("TODO")
-	// ScriptUpdate(rm RM, script Script)
-}
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
 
-func TestScriptRun(t *testing.T) {
-	t.Skip("TODO")
-	// ScriptRun(rm RM, name string, arguments []byte)
-}
+	updatedScript := Script{
+		Name:    dummyScripts[0].Name,
+		Content: "log.info('I have been updated!')",
+		Type:    dummyScripts[0].Type,
+	}
 
-func TestScriptRunOnce(t *testing.T) {
-	t.Skip("TODO")
-	// ScriptRunOnce(rm RM, script Script, arguments []byte) (err error)
+	if updatedScript.Equals(&dummyScripts[0]) {
+		t.Fatal("I am an idiot")
+	}
+
+	if err = ScriptUpdate(rm, updatedScript); err != nil {
+		t.Error(err)
+	}
+
+	script, err := ScriptGet(rm, updatedScript.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("%v\n", script)
+
+	if !script.Equals(&updatedScript) {
+		t.Fatal("Did not receive the expected script")
+	}
 }
 
 func TestScriptDelete(t *testing.T) {
-	t.Skip("TODO")
-	// ScriptDelete(rm RM, name string)
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	deleteMe := Script{Name: "deleteMe", Content: "log.info('Existence is pain!')", Type: "groovy"}
+
+	if err = ScriptUpload(rm, deleteMe); err != nil {
+		t.Error(err)
+	}
+
+	if err = ScriptDelete(rm, deleteMe.Name); err != nil {
+		t.Error(err)
+	}
+
+	if _, err = ScriptGet(rm, deleteMe.Name); err == nil {
+		t.Error("Found script which should have been deleted")
+	}
+}
+
+func TestScriptRun(t *testing.T) {
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	script := Script{Name: "scriptArgsTest", Content: "return args", Type: "groovy"}
+	input := "this is a test"
+
+	if err = ScriptUpload(rm, script); err != nil {
+		t.Error(err)
+	}
+
+	if err = ScriptRun(rm, script.Name, []byte(input)); err != nil {
+		t.Error(err)
+	}
+
+	if err = ScriptDelete(rm, script.Name); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestScriptRunOnce(t *testing.T) {
+	rm, mock, err := scriptsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	script := Script{Name: "scriptArgsTest", Content: "return args", Type: "groovy"}
+	input := "this is a test"
+
+	if err = ScriptRunOnce(rm, script, []byte(input)); err != nil {
+		t.Error(err)
+	}
+
+	if _, err = ScriptGet(rm, script.Name); err == nil {
+		t.Error("Found script which should have been deleted")
+	}
 }
