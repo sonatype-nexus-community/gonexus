@@ -5,7 +5,7 @@ Provides a go library for connecting to, and interacting with, [Sonatype](//www.
 ## Organization of this library
 The library is broken into two packages. One for each application.
 
-### nexusrm [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/rm?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/rm)
+### nexusrm [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/rm?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/rm) [![nexusrm coverage](https://gocover.io/_badge/github.com/hokiegeek/gonexus/rm?0 "nexusrm coverage")](http://gocover.io/github.com/hokiegeek/gonexus/rm)
 
 Create a connection to an instance of Nexus Repository Manager
 ```go
@@ -17,7 +17,7 @@ if err != nil {
 }
 ```
 
-### nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq)
+### nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq) [![nexusiq coverage](https://gocover.io/_badge/github.com/hokiegeek/gonexus/iq?0 "nexusiq coverage")](http://gocover.io/github.com/hokiegeek/gonexus/iq)
 
 Create a connection to an instance of Nexus IQ Server
 ```go
