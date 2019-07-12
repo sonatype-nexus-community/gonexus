@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"time"
 )
 
 // ServerInfo contains the information needed to connect to a Nexus server
@@ -55,7 +56,9 @@ func (s DefaultClient) Do(request *http.Request) (body []byte, resp *http.Respon
 		fmt.Printf("%q\n", dump)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	resp, err = client.Do(request)
 	if err != nil {
 		return nil, nil, err
