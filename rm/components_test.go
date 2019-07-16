@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
-	// "strings"
+	"strings"
 	"testing"
 )
 
@@ -25,11 +25,22 @@ const dummyContinuationToken = "go_on..."
 
 func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		getComponentByID := func(id string) (c RepositoryItem, i int, ok bool) {
+			for repo := range dummyComponents {
+				for i, c = range dummyComponents[repo] {
+					if c.ID == id {
+						return c, i, true
+					}
+				}
+			}
+			return
+		}
+
 		dump, _ := httputil.DumpRequest(r, true)
 		t.Logf("%q\n", dump)
 
 		switch {
-		case r.Method == http.MethodGet:
+		case r.Method == http.MethodGet && r.URL.Path[1:] == restComponents:
 			repo := r.URL.Query().Get("repository")
 
 			lastComponentIdx := len(dummyComponents[repo]) - 1
@@ -47,6 +58,27 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 			}
 
 			fmt.Fprintln(w, string(resp))
+		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restComponents[:len(restComponents)-2]):
+			cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
+			t.Log(cID)
+			if c, _, ok := getComponentByID(cID); ok {
+				resp, err := json.Marshal(c)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				fmt.Fprintln(w, string(resp))
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		case r.Method == http.MethodPost:
+			if err := r.ParseMultipartForm(32 << 20); err != nil {
+				w.WriteHeader(http.StatusInsufficientStorage)
+			}
+			for k, v := range r.Form {
+				t.Logf("[%s] = %s\n", k, v)
+			}
+			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -84,6 +116,85 @@ func TestGetComponentsNoPaging(t *testing.T) {
 
 func TestGetComponentsPaging(t *testing.T) {
 	getComponentsTester(t, "test-repo1")
+}
+
+func TestGetComponentByID(t *testing.T) {
+	rm, mock, err := componentsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	expectedComponent := dummyComponents["test-repo1"][0]
+
+	component, err := GetComponentByID(rm, expectedComponent.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%q\n", component)
+
+	if !component.Equals(&expectedComponent) {
+		t.Error("Did not receive expected component")
+	}
+}
+
+func componentUploader(t *testing.T, expected RepositoryItem, upload uploadComponent) {
+	rm, mock, err := componentsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	if err = UploadComponent(rm, expected.Repository, upload); err != nil {
+		t.Error(err)
+	}
+
+	// TODO
+}
+
+func TestUploadComponentMaven(t *testing.T) {
+	expected := RepositoryItem{
+		ID:         "newComponent",
+		Repository: "test-repo1",
+		Format:     "maven2",
+		Group:      "org.test",
+		Name:       "testComponent3",
+		Version:    "3.0.0"}
+
+	upload := UploadComponentMaven{
+		GroupID:    expected.Group,
+		ArtifactID: expected.Name,
+		Version:    expected.Version}
+	// Assets                                       [3]UploadAssetMaven
+
+	componentUploader(t, expected, upload)
+}
+
+func TestDeleteComponentByID(t *testing.T) {
+	t.Skip("TODO")
+	/*
+		rm, mock, err := componentsTestRM(t)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer mock.Close()
+
+			deleteMe := RepositoryItem{Repository: "no-repo", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0"}
+
+			deleteMe.ID, err = CreateApplication(iq, deleteMe.Name, deleteMe.OrganizationID)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := DeleteApplication(iq, deleteMe.PublicID); err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := GetApplicationByPublicID(iq, deleteMe.PublicID); err == nil {
+				t.Fatal("App was not deleted")
+			}
+	*/
 }
 
 func ExampleGetComponents() {

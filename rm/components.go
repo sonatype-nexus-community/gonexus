@@ -1,64 +1,19 @@
 package nexusrm
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 )
 
-// http://localhost:8081/service/rest/v1/components?continuationToken=foo&repository=bar
-const restListComponentsByRepo = "service/rest/v1/components?repository=%s"
-
-// RepositoryItemAssets describes the assets associated with a component
-type RepositoryItemAssets struct {
-	DownloadURL string `json:"downloadUrl"`
-	Path        string `json:"path"`
-	ID          string `json:"id"`
-	Repository  string `json:"repository"`
-	Format      string `json:"format"`
-	Checksum    struct {
-		Sha1 string `json:"sha1"`
-		Md5  string `json:"md5"`
-	} `json:"checksum"`
-}
-
-// Equals compares two RepositoryItemAssets objects
-func (a *RepositoryItemAssets) Equals(b *RepositoryItemAssets) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.DownloadURL != b.DownloadURL {
-		return
-	}
-
-	if a.Path != b.Path {
-		return
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Checksum.Sha1 != b.Checksum.Sha1 {
-		return
-	}
-
-	if a.Checksum.Md5 != b.Checksum.Md5 {
-		return
-	}
-
-	return true
-}
+const (
+	restComponents           = "service/rest/v1/components"
+	restListComponentsByRepo = "service/rest/v1/components?repository=%s"
+)
 
 // RepositoryItem holds the data of a component in a repository
 type RepositoryItem struct {
@@ -191,4 +146,61 @@ func GetComponents(rm RM, repo string) (items []RepositoryItem, err error) {
 	}
 
 	return
+}
+
+// GetComponentByID returns a component by ID
+func GetComponentByID(rm RM, id string) (item RepositoryItem, err error) {
+	url := fmt.Sprintf("%s/%s", restComponents, id)
+
+	body, resp, err := rm.Get(url)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return
+	}
+
+	err = json.Unmarshal(body, &item)
+
+	return
+}
+
+// DeleteComponentByID uploads a component to repository manager
+func DeleteComponentByID(rm RM, id string) error {
+	url := fmt.Sprintf("%s/%s", restComponents, id)
+
+	if resp, err := rm.Del(url); err != nil && resp.StatusCode != http.StatusNoContent {
+		return err
+	}
+
+	return nil
+}
+
+// UploadComponent uploads a component to repository manager
+func UploadComponent(rm RM, repo string, component uploadComponent) error {
+	fields, files := component.formData()
+
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	defer w.Close()
+
+	for k, v := range fields {
+		w.WriteField(k, v)
+	}
+
+	for k, v := range files {
+		fw, err := w.CreateFormFile(k, v.Name())
+		if err != nil {
+			return err
+		}
+
+		if _, err = io.Copy(fw, v); err != nil {
+			return err
+		}
+	}
+
+	url := fmt.Sprintf(restListComponentsByRepo, repo)
+	_, resp, err := rm.Post(url, &b)
+	if err != nil && resp.StatusCode != http.StatusNoContent {
+		return err
+	}
+
+	return nil
 }
