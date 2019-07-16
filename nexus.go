@@ -1,7 +1,6 @@
 package nexus
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -21,8 +20,8 @@ type Client interface {
 	NewRequest(method, endpoint string, payload io.Reader) (*http.Request, error)
 	Do(request *http.Request) ([]byte, *http.Response, error)
 	Get(endpoint string) ([]byte, *http.Response, error)
-	Post(endpoint string, payload []byte) ([]byte, *http.Response, error)
-	Put(endpoint string, payload []byte) (*http.Response, error)
+	Post(endpoint string, payload io.Reader) ([]byte, *http.Response, error)
+	Put(endpoint string, payload io.Reader) (*http.Response, error)
 	Del(endpoint string) (*http.Response, error)
 	Info() ServerInfo
 }
@@ -90,13 +89,13 @@ func (s DefaultClient) Get(endpoint string) ([]byte, *http.Response, error) {
 }
 
 // Post performs an HTTP POST against the indicated endpoint
-func (s DefaultClient) Post(endpoint string, payload []byte) ([]byte, *http.Response, error) {
-	return s.http(http.MethodPost, endpoint, bytes.NewBuffer(payload))
+func (s DefaultClient) Post(endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
+	return s.http(http.MethodPost, endpoint, payload)
 }
 
 // Put performs an HTTP PUT against the indicated endpoint
-func (s DefaultClient) Put(endpoint string, payload []byte) (resp *http.Response, err error) {
-	_, resp, err = s.http(http.MethodPut, endpoint, bytes.NewBuffer(payload))
+func (s DefaultClient) Put(endpoint string, payload io.Reader) (resp *http.Response, err error) {
+	_, resp, err = s.http(http.MethodPut, endpoint, payload)
 	return
 }
 

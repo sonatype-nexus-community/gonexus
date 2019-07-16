@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -71,7 +72,7 @@ func CreateOrganization(iq IQ, name string) (orgID string, err error) {
 		return
 	}
 
-	body, _, err := iq.Post(restOrganization, request)
+	body, _, err := iq.Post(restOrganization, bytes.NewBuffer(request))
 	if err != nil {
 		return
 	}

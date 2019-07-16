@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -171,7 +172,7 @@ func EvaluateComponents(iq IQ, components []Component, applicationID string) (ev
 	}
 
 	requestEndpoint := fmt.Sprintf(restEvaluation, applicationID)
-	body, _, err := iq.Post(requestEndpoint, request)
+	body, _, err := iq.Post(requestEndpoint, bytes.NewBuffer(request))
 	if err != nil {
 		return
 	}

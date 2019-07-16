@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -116,7 +117,7 @@ func CreateApplication(iq IQ, name, organizationID string) (appID string, err er
 		return
 	}
 
-	body, _, err := iq.Post(restApplication, request)
+	body, _, err := iq.Post(restApplication, bytes.NewBuffer(request))
 	if err != nil {
 		return
 	}

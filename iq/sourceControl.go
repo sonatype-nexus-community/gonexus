@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -96,7 +97,7 @@ func CreateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 	}
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
-	if _, _, err = iq.Post(endpoint, request); err != nil {
+	if _, _, err = iq.Post(endpoint, bytes.NewBuffer(request)); err != nil {
 		return err
 	}
 
@@ -116,7 +117,7 @@ func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 	}
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
-	if _, err = iq.Put(endpoint, request); err != nil {
+	if _, err = iq.Put(endpoint, bytes.NewBuffer(request)); err != nil {
 		return err
 	}
 

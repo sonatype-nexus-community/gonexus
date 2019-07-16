@@ -1,6 +1,7 @@
 package nexusrm
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -76,7 +77,7 @@ func ScriptUpload(rm RM, script Script) error {
 		return err
 	}
 
-	_, resp, err := rm.Post(restScript, json)
+	_, resp, err := rm.Post(restScript, bytes.NewBuffer(json))
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
@@ -92,7 +93,7 @@ func ScriptUpdate(rm RM, script Script) error {
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restScript, script.Name)
-	resp, err := rm.Put(endpoint, json)
+	resp, err := rm.Put(endpoint, bytes.NewBuffer(json))
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
@@ -103,7 +104,7 @@ func ScriptUpdate(rm RM, script Script) error {
 // ScriptRun executes the named Script
 func ScriptRun(rm RM, name string, arguments []byte) (ret string, err error) {
 	endpoint := fmt.Sprintf(restScriptRun, name)
-	body, _, err := rm.Post(endpoint, arguments) // TODO: Better response handling
+	body, _, err := rm.Post(endpoint, bytes.NewBuffer(arguments)) // TODO: Better response handling
 	if err != nil {
 		return
 	}
