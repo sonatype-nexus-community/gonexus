@@ -73,11 +73,16 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 			}
 		case r.Method == http.MethodPost:
 			if err := r.ParseMultipartForm(32 << 20); err != nil {
-				w.WriteHeader(http.StatusInsufficientStorage)
+				// if err := r.ParseForm(); err != nil {
+				t.Error(err)
+				w.WriteHeader(http.StatusBadRequest)
 			}
 			for k, v := range r.Form {
 				t.Logf("[%s] = %s\n", k, v)
 			}
+			// for k, v := range r.PostForm {
+			// 	t.Logf("[%s] = %s\n", k, v)
+			// }
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)

@@ -182,7 +182,9 @@ func UploadComponent(rm RM, repo string, component uploadComponent) error {
 	defer w.Close()
 
 	for k, v := range fields {
-		w.WriteField(k, v)
+		if v != "" {
+			w.WriteField(k, v)
+		}
 	}
 
 	for k, v := range files {
@@ -190,14 +192,26 @@ func UploadComponent(rm RM, repo string, component uploadComponent) error {
 		if err != nil {
 			return err
 		}
+		// fw.Write(
 
 		if _, err = io.Copy(fw, v); err != nil {
 			return err
 		}
 	}
 
+	if err := w.Close(); err != nil {
+		return err
+	}
+
 	url := fmt.Sprintf(restListComponentsByRepo, repo)
-	_, resp, err := rm.Post(url, &b)
+	req, err := rm.NewRequest("POST", url, &b)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	if err != nil {
+		return err
+	}
+
+	_, resp, err := rm.Do(req)
+	// _, resp, err := rm.Post(url, &b)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return err
 	}
