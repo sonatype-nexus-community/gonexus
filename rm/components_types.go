@@ -29,7 +29,6 @@ func (a UploadComponentMaven) formData() (map[string]string, map[string]*os.File
 
 	fields["maven2.groupId"] = a.GroupID
 	fields["maven2.artifactId"] = a.ArtifactID
-	fields["maven2.artifactId"] = a.ArtifactID
 	fields["maven2.version"] = a.Version
 	fields["maven2.packaging"] = a.Packaging
 	fields["maven2.tag"] = a.Tag

@@ -21,7 +21,10 @@ var dummyComponents = map[string][]RepositoryItem{
 	},
 }
 
-const dummyContinuationToken = "go_on..."
+const (
+	dummyContinuationToken = "go_on..."
+	dummyNewComponentID    = "newComponentID"
+)
 
 func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -72,17 +75,37 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 				w.WriteHeader(http.StatusNotFound)
 			}
 		case r.Method == http.MethodPost:
+			repo := r.URL.Query().Get("repository")
+			// TODO check that is valid repository. http 422 if no repo
+			// 403 no perms
+			// ... might get 100 too
+
 			if err := r.ParseMultipartForm(32 << 20); err != nil {
-				// if err := r.ParseForm(); err != nil {
-				t.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
 			}
+
+			component := RepositoryItem{ID: dummyNewComponentID, Repository: repo}
+
 			for k, v := range r.Form {
-				t.Logf("[%s] = %s\n", k, v)
+				switch k {
+				case "maven2.groupId":
+					component.Format = "maven2"
+					component.Group = v[0]
+				case "maven2.artifactId":
+					component.Format = "maven2"
+					component.Name = v[0]
+				case "maven2.version":
+					component.Format = "maven2"
+					component.Version = v[0]
+					// case "maven2.packaging":
+					// case "maven2.tag":
+					// case "maven2.generate-pom":
+				}
+				// t.Logf("%s = %s\n", k, v)
 			}
-			// for k, v := range r.PostForm {
-			// 	t.Logf("[%s] = %s\n", k, v)
-			// }
+
+			dummyComponents[repo] = append(dummyComponents[repo], component)
+
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -155,7 +178,18 @@ func componentUploader(t *testing.T, expected RepositoryItem, upload uploadCompo
 		t.Error(err)
 	}
 
-	// TODO
+	expected.ID = dummyNewComponentID
+
+	component, err := GetComponentByID(rm, expected.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%q\n", component)
+
+	if !component.Equals(&expected) {
+		t.Error("Did not receive expected component")
+	}
 }
 
 func TestUploadComponentMaven(t *testing.T) {
