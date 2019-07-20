@@ -1,7 +1,7 @@
 package nexusiq
 
 import (
-	"github.com/hokiegeek/gonexus"
+	"github.com/sonatype-nexus-community/gonexus"
 )
 
 // IQ is the interface which allows interacting with an IQ server

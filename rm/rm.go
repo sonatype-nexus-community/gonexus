@@ -1,7 +1,7 @@
 package nexusrm
 
 import (
-	"github.com/hokiegeek/gonexus"
+	"github.com/sonatype-nexus-community/gonexus"
 )
 
 // RM is the interface which any Repository Manager implementation would need to satisfy
