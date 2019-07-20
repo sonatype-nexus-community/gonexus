@@ -46,40 +46,59 @@ type runResponse struct {
 }
 
 // ScriptList lists all of the uploaded scripts in Repository Manager
-func ScriptList(rm RM) (scripts []Script, err error) {
-	body, _, err := rm.Get(restScript)
-	if err != nil {
-		return
+func ScriptList(rm RM) ([]Script, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("could not list scripts: %v", err)
 	}
 
-	err = json.Unmarshal(body, &scripts)
+	body, _, err := rm.Get(restScript)
+	if err != nil {
+		return nil, doError(err)
+	}
 
-	return
+	scripts := make([]Script, 0)
+	if err = json.Unmarshal(body, &scripts); err != nil {
+		return nil, doError(err)
+	}
+
+	return scripts, nil
 }
 
 // ScriptGet returns the named script
-func ScriptGet(rm RM, name string) (script Script, err error) {
+func ScriptGet(rm RM, name string) (Script, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("could not find script '%s': %v", name, err)
+	}
+
+	var script Script
+
 	endpoint := fmt.Sprintf("%s/%s", restScript, name)
 	body, _, err := rm.Get(endpoint)
 	if err != nil {
-		return
+		return script, doError(err)
 	}
 
-	err = json.Unmarshal(body, &script)
+	if err = json.Unmarshal(body, &script); err != nil {
+		return script, doError(err)
+	}
 
-	return
+	return script, nil
 }
 
 // ScriptUpload uploads the given Script to Repository Manager
 func ScriptUpload(rm RM, script Script) error {
+	doError := func(err error) error {
+		return fmt.Errorf("could not upload script '%s': %v", script.Name, err)
+	}
+
 	json, err := json.Marshal(script)
 	if err != nil {
-		return err
+		return doError(err)
 	}
 
 	_, resp, err := rm.Post(restScript, bytes.NewBuffer(json))
 	if err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return doError(err)
 	}
 
 	return nil
@@ -87,35 +106,42 @@ func ScriptUpload(rm RM, script Script) error {
 
 // ScriptUpdate update the contents of the given script
 func ScriptUpdate(rm RM, script Script) error {
+	doError := func(err error) error {
+		return fmt.Errorf("could not update script '%s': %v", script.Name, err)
+	}
+
 	json, err := json.Marshal(script)
 	if err != nil {
-		return err
+		return doError(err)
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restScript, script.Name)
 	resp, err := rm.Put(endpoint, bytes.NewBuffer(json))
 	if err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return doError(err)
 	}
 
 	return nil
 }
 
 // ScriptRun executes the named Script
-func ScriptRun(rm RM, name string, arguments []byte) (ret string, err error) {
+func ScriptRun(rm RM, name string, arguments []byte) (string, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("could not run script '%s': %v", name, err)
+	}
+
 	endpoint := fmt.Sprintf(restScriptRun, name)
 	body, _, err := rm.Post(endpoint, bytes.NewBuffer(arguments)) // TODO: Better response handling
 	if err != nil {
-		return
+		return "", doError(err)
 	}
 
 	var resp runResponse
-	if err = json.Unmarshal(body, &resp); err != nil {
-		return
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return "", doError(err)
 	}
-	ret = resp.Result
 
-	return
+	return resp.Result, nil
 }
 
 // ScriptRunOnce takes the given Script, uploads it, executes it, and deletes it
@@ -133,7 +159,7 @@ func ScriptDelete(rm RM, name string) error {
 	endpoint := fmt.Sprintf("%s/%s", restScript, name)
 	resp, err := rm.Del(endpoint)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return fmt.Errorf("could not delete '%s': %v", name, err)
 	}
 	return nil
 }

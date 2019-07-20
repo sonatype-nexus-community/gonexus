@@ -165,31 +165,36 @@ type iqEvaluationRequest struct {
 }
 
 // EvaluateComponents evaluates the list of components
-func EvaluateComponents(iq IQ, components []Component, applicationID string) (eval *Evaluation, err error) {
+func EvaluateComponents(iq IQ, components []Component, applicationID string) (*Evaluation, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("components not evaluated: %v", err)
+	}
+
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
-		return
+		return nil, doError(err)
 	}
 
 	requestEndpoint := fmt.Sprintf(restEvaluation, applicationID)
 	body, _, err := iq.Post(requestEndpoint, bytes.NewBuffer(request))
 	if err != nil {
-		return
+		return nil, doError(err)
 	}
 
 	var results iqEvaluationRequestResponse
 	if err = json.Unmarshal(body, &results); err != nil {
-		return
+		return nil, doError(err)
 	}
 
+	var eval *Evaluation
 	ticker := time.NewTicker(5 * time.Second)
 	done := make(chan bool, 1)
 	go func() {
 		getEvaluationResults := func() (*Evaluation, error) {
-			body, resp, err := iq.Get(results.ResultsURL)
-			if err != nil {
+			body, resp, e := iq.Get(results.ResultsURL)
+			if e != nil {
 				if resp.StatusCode != http.StatusNotFound {
-					return nil, err
+					return nil, e
 				}
 				return nil, nil
 			}
@@ -218,5 +223,5 @@ func EvaluateComponents(iq IQ, components []Component, applicationID string) (ev
 	}()
 	<-done
 
-	return
+	return eval, err
 }

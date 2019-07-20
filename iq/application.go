@@ -92,65 +92,69 @@ func (a *Application) Equals(b *Application) (_ bool) {
 
 // GetApplicationByPublicID returns details on the named IQ application
 func GetApplicationByPublicID(iq IQ, applicationPublicID string) (*Application, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("application '%s' not found: %v", applicationPublicID, err)
+	}
 	endpoint := fmt.Sprintf(restApplicationByPublic, applicationPublicID)
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
-		return nil, err
+		return nil, doError(err)
 	}
 
 	var resp iqAppDetailsResponse
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return nil, err
+		return nil, doError(err)
 	}
 
 	if len(resp.Applications) == 0 {
-		return nil, errors.New("Application not found")
+		return nil, errors.New("application not found")
 	}
 
 	return &resp.Applications[0], nil
 }
 
 // CreateApplication creates an application in IQ with the given name
-func CreateApplication(iq IQ, name, organizationID string) (appID string, err error) {
+func CreateApplication(iq IQ, name, organizationID string) (string, error) {
+	doError := func(err error) (string, error) {
+		return "", fmt.Errorf("application '%s' not created: %v", name, err)
+	}
 	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
 	if err != nil {
-		return
+		return doError(err)
 	}
 
 	body, _, err := iq.Post(restApplication, bytes.NewBuffer(request))
 	if err != nil {
-		return
+		return doError(err)
 	}
 
 	var resp Application
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return
+		return doError(err)
 	}
-	appID = resp.ID
 
-	return
+	return resp.ID, nil
 }
 
 // DeleteApplication deletes an application in IQ with the given id
 func DeleteApplication(iq IQ, applicationID string) error {
 	if resp, err := iq.Del(fmt.Sprintf("%s/%s", restApplication, applicationID)); err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return fmt.Errorf("application '%s' not deleted: %v", applicationID, err)
 	}
 	return nil
 }
 
 // GetAllApplications returns a slice of all of the applications in an IQ instance
-func GetAllApplications(iq IQ) (apps []Application, err error) {
+func GetAllApplications(iq IQ) ([]Application, error) {
 	body, _, err := iq.Get(restApplication)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("applications not found: %v", err)
 	}
 
 	var resp allAppsResponse
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return
+		return nil, fmt.Errorf("applications not found: %v", err)
 	}
-	apps = resp.Applications
 
-	return
+	return resp.Applications, nil
 }

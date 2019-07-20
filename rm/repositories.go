@@ -2,6 +2,7 @@ package nexusrm
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -74,13 +75,20 @@ func (a *Repository) Equals(b *Repository) (_ bool) {
 }
 
 // GetRepositories returns a list of components in the indicated repository
-func GetRepositories(rm RM) (repos []Repository, err error) {
-	body, resp, err := rm.Get(restListRepositories)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
+func GetRepositories(rm RM) ([]Repository, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("could not find repositories: %v", err)
 	}
 
-	err = json.Unmarshal(body, &repos)
+	body, resp, err := rm.Get(restListRepositories)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, doError(err)
+	}
 
-	return
+	repos := make([]Repository, 0)
+	if err := json.Unmarshal(body, &repos); err != nil {
+		return nil, doError(err)
+	}
+
+	return repos, nil
 }

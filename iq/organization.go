@@ -54,7 +54,7 @@ func (a *Organization) Equals(b *Organization) (_ bool) {
 func GetOrganizationByName(iq IQ, organizationName string) (*Organization, error) {
 	orgs, err := GetAllOrganizations(iq)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("organization '%s' not found: %v", organizationName, err)
 	}
 	for _, org := range orgs {
 		if org.Name == organizationName {
@@ -62,42 +62,48 @@ func GetOrganizationByName(iq IQ, organizationName string) (*Organization, error
 		}
 	}
 
-	return nil, fmt.Errorf("Did not find organization with name %s", organizationName)
+	return nil, fmt.Errorf("organization '%s' not found", organizationName)
 }
 
 // CreateOrganization creates an organization in IQ with the given name
-func CreateOrganization(iq IQ, name string) (orgID string, err error) {
+func CreateOrganization(iq IQ, name string) (string, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("organization '%s' not created: %v", name, err)
+	}
+
 	request, err := json.Marshal(iqNewOrgRequest{Name: name})
 	if err != nil {
-		return
+		return "", doError(err)
 	}
 
 	body, _, err := iq.Post(restOrganization, bytes.NewBuffer(request))
 	if err != nil {
-		return
+		return "", doError(err)
 	}
 
 	var org Organization
 	if err = json.Unmarshal(body, &org); err != nil {
-		return
+		return "", doError(err)
 	}
-	orgID = org.ID
 
-	return
+	return org.ID, nil
 }
 
 // GetAllOrganizations returns a slice of all of the organizations in an IQ instance
-func GetAllOrganizations(iq IQ) (orgs []Organization, err error) {
+func GetAllOrganizations(iq IQ) ([]Organization, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("organizations not found: %v", err)
+	}
+
 	body, _, err := iq.Get(restOrganization)
 	if err != nil {
-		return
+		return nil, doError(err)
 	}
 
 	var resp allOrgsResponse
 	if err = json.Unmarshal(body, &resp); err != nil {
-		return
+		return nil, doError(err)
 	}
-	orgs = resp.Organizations
 
-	return
+	return resp.Organizations, nil
 }

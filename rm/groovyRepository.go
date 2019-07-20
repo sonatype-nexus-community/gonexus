@@ -2,6 +2,7 @@ package nexusrm
 
 import (
 	"bytes"
+	"fmt"
 	"text/template"
 )
 
@@ -124,17 +125,17 @@ func CreateHostedRepository(rm RM, format repositoryFormat, config repositoryHos
 
 	tmpl, err := template.New("hosted").Parse(groovyTmpl)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not parse template: %v", err)
 	}
 
 	buf := new(bytes.Buffer)
 	err = tmpl.Execute(buf, config)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create hosted repository from template: %v", err)
 	}
 
 	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
-	return err
+	return fmt.Errorf("could not create hosted repository: %v", err)
 }
 
 // CreateProxyRepository creates a proxy repository of the indicated format
@@ -169,17 +170,17 @@ func CreateProxyRepository(rm RM, format repositoryFormat, config repositoryProx
 
 	tmpl, err := template.New("proxy").Parse(groovyTmpl)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not parse template: %v", err)
 	}
 
 	buf := new(bytes.Buffer)
 	err = tmpl.Execute(buf, config)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create proxy repository from template: %v", err)
 	}
 
 	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
-	return err
+	return fmt.Errorf("could not create proxy repository: %v", err)
 }
 
 // CreateGroupRepository creates a group repository of the indicated format
@@ -214,15 +215,15 @@ func CreateGroupRepository(rm RM, format repositoryFormat, config repositoryGrou
 
 	tmpl, err := template.New("group").Parse(groovyTmpl)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not parse template: %v", err)
 	}
 
 	buf := new(bytes.Buffer)
 	err = tmpl.Execute(buf, config)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create group repository from template: %v", err)
 	}
 
 	_, err = ScriptRunOnce(rm, newAnonGroovyScript(buf.String()), nil)
-	return err
+	return fmt.Errorf("could not create group repository: %v", err)
 }

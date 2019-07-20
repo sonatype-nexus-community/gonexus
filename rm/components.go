@@ -110,7 +110,7 @@ type listComponentsResponse struct {
 }
 
 // GetComponents returns a list of components in the indicated repository
-func GetComponents(rm RM, repo string) (items []RepositoryItem, err error) {
+func GetComponents(rm RM, repo string) ([]RepositoryItem, error) {
 	continuation := ""
 
 	getComponents := func() (listResp listComponentsResponse, err error) {
@@ -130,10 +130,11 @@ func GetComponents(rm RM, repo string) (items []RepositoryItem, err error) {
 		return
 	}
 
+	items := make([]RepositoryItem, 0)
 	for {
 		resp, err := getComponents()
 		if err != nil {
-			return items, err
+			return items, fmt.Errorf("could not get components: %v", err)
 		}
 
 		items = append(items, resp.Items...)
@@ -145,29 +146,36 @@ func GetComponents(rm RM, repo string) (items []RepositoryItem, err error) {
 		continuation = resp.ContinuationToken
 	}
 
-	return
+	return items, nil
 }
 
 // GetComponentByID returns a component by ID
-func GetComponentByID(rm RM, id string) (item RepositoryItem, err error) {
-	url := fmt.Sprintf("%s/%s", restComponents, id)
-
-	body, resp, err := rm.Get(url)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return
+func GetComponentByID(rm RM, id string) (RepositoryItem, error) {
+	doError := func(err error) error {
+		return fmt.Errorf("no component with id '%s': %v", id, err)
 	}
 
-	err = json.Unmarshal(body, &item)
+	var item RepositoryItem
 
-	return
+	url := fmt.Sprintf("%s/%s", restComponents, id)
+	body, resp, err := rm.Get(url)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return item, doError(err)
+	}
+
+	if err := json.Unmarshal(body, &item); err != nil {
+		return item, doError(err)
+	}
+
+	return item, nil
 }
 
-// DeleteComponentByID uploads a component to repository manager
+// DeleteComponentByID deletes the indicated component
 func DeleteComponentByID(rm RM, id string) error {
 	url := fmt.Sprintf("%s/%s", restComponents, id)
 
 	if resp, err := rm.Del(url); err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return fmt.Errorf("component not deleted '%s': %v", id, err)
 	}
 
 	return nil
@@ -175,6 +183,9 @@ func DeleteComponentByID(rm RM, id string) error {
 
 // UploadComponent uploads a component to repository manager
 func UploadComponent(rm RM, repo string, component uploadComponent) error {
+	doError := func(err error) error {
+		return fmt.Errorf("component not uploaded: %v", err)
+	}
 	fields, files := component.formData()
 
 	var b bytes.Buffer
@@ -190,30 +201,30 @@ func UploadComponent(rm RM, repo string, component uploadComponent) error {
 	for k, v := range files {
 		fw, err := w.CreateFormFile(k, v.Name())
 		if err != nil {
-			return err
+			return doError(err)
 		}
 		// fw.Write(
 
 		if _, err = io.Copy(fw, v); err != nil {
-			return err
+			return doError(err)
 		}
 	}
 
 	if err := w.Close(); err != nil {
-		return err
+		return doError(err)
 	}
 
 	url := fmt.Sprintf(restListComponentsByRepo, repo)
 	req, err := rm.NewRequest("POST", url, &b)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	if err != nil {
-		return err
+		return doError(err)
 	}
 
 	_, resp, err := rm.Do(req)
 	// _, resp, err := rm.Post(url, &b)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
-		return err
+		return doError(err)
 	}
 
 	return nil
