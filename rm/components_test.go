@@ -86,8 +86,11 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 
 			component := RepositoryItem{ID: dummyNewComponentID, Repository: repo}
 
+			// I have no idea how I want to do this, moving forward
 			for k, v := range r.Form {
 				switch k {
+				case "repository":
+					repo = v[0]
 				case "maven2.groupId":
 					component.Format = "maven2"
 					component.Group = v[0]
@@ -97,16 +100,42 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 				case "maven2.version":
 					component.Format = "maven2"
 					component.Version = v[0]
-					// case "maven2.packaging":
-					// case "maven2.tag":
-					// case "maven2.generate-pom":
+				case "maven2.packaging":
+					component.Format = "maven2"
+				case "maven2.tag":
+					component.Format = "maven2"
+				case "maven2.generate-pom":
+					component.Format = "maven2"
+				default:
+					t.Logf("Did not recognize form field: %s\n", k)
+					w.WriteHeader(http.StatusBadRequest)
 				}
 				// t.Logf("%s = %s\n", k, v)
 			}
 
 			dummyComponents[repo] = append(dummyComponents[repo], component)
+			t.Log("UPLOADED", component)
 
 			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodDelete:
+			cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
+			t.Log(cID)
+			if c, i, ok := getComponentByID(cID); ok {
+				copy(dummyComponents[c.Repository][i:], dummyComponents[c.Repository][i+1:])
+				dummyComponents[c.Repository][len(dummyComponents)-1] = RepositoryItem{}
+				dummyComponents[c.Repository] = dummyComponents[c.Repository][:len(dummyComponents)-1]
+
+				w.WriteHeader(http.StatusNoContent)
+
+				resp, err := json.Marshal(c)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				fmt.Fprintln(w, string(resp))
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -157,7 +186,7 @@ func TestGetComponentByID(t *testing.T) {
 
 	component, err := GetComponentByID(rm, expectedComponent.ID)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	fmt.Printf("%q\n", component)
@@ -182,7 +211,7 @@ func componentUploader(t *testing.T, expected RepositoryItem, upload uploadCompo
 
 	component, err := GetComponentByID(rm, expected.ID)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	fmt.Printf("%q\n", component)
@@ -194,7 +223,6 @@ func componentUploader(t *testing.T, expected RepositoryItem, upload uploadCompo
 
 func TestUploadComponentMaven(t *testing.T) {
 	expected := RepositoryItem{
-		ID:         "newComponent",
 		Repository: "test-repo1",
 		Format:     "maven2",
 		Group:      "org.test",
@@ -211,29 +239,38 @@ func TestUploadComponentMaven(t *testing.T) {
 }
 
 func TestDeleteComponentByID(t *testing.T) {
-	t.Skip("TODO")
-	/*
-		rm, mock, err := componentsTestRM(t)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer mock.Close()
+	rm, mock, err := componentsTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
 
-			deleteMe := RepositoryItem{Repository: "no-repo", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0"}
+	deleteMe := RepositoryItem{
+		ID:         "deleteMe",
+		Repository: "test-repo1",
+		Format:     "maven2",
+		Group:      "org.delete",
+		Name:       "componentDelete",
+		Version:    "0.0.0"}
 
-			deleteMe.ID, err = CreateApplication(iq, deleteMe.Name, deleteMe.OrganizationID)
-			if err != nil {
-				t.Fatal(err)
-			}
+	upload := UploadComponentMaven{
+		GroupID:    deleteMe.Group,
+		ArtifactID: deleteMe.Name,
+		Version:    deleteMe.Version}
 
-			if err := DeleteApplication(iq, deleteMe.PublicID); err != nil {
-				t.Fatal(err)
-			}
+	if err = UploadComponent(rm, deleteMe.Repository, upload); err != nil {
+		t.Error(err)
+	}
 
-			if _, err := GetApplicationByPublicID(iq, deleteMe.PublicID); err == nil {
-				t.Fatal("App was not deleted")
-			}
-	*/
+	deleteMe.ID = dummyNewComponentID
+
+	if err = DeleteComponentByID(rm, deleteMe.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := GetComponentByID(rm, deleteMe.ID); err == nil {
+		t.Errorf("Component not deleted: %v\n", err)
+	}
 }
 
 func ExampleGetComponents() {
