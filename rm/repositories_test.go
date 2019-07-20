@@ -54,3 +54,23 @@ func TestGetRepositories(t *testing.T) {
 		}
 	}
 }
+
+func TestGetRepositoryByName(t *testing.T) {
+	rm, mock, err := repositoriesTestRM(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	dummyRepoIdx := 0
+
+	repo, err := GetRepositoryByName(rm, dummyRepos[dummyRepoIdx].Name)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("%q\n", repo)
+
+	if !repo.Equals(&dummyRepos[dummyRepoIdx]) {
+		t.Error("Did not receive the expected repositories")
+	}
+}

@@ -92,3 +92,19 @@ func GetRepositories(rm RM) ([]Repository, error) {
 
 	return repos, nil
 }
+
+// GetRepositoryByName returns information on a named repository
+func GetRepositoryByName(rm RM, name string) (repo Repository, err error) {
+	repos, err := GetRepositories(rm)
+	if err != nil {
+		return repo, fmt.Errorf("could not get list of repositories: %v", err)
+	}
+
+	for _, repo = range repos {
+		if repo.Name == name {
+			return
+		}
+	}
+
+	return repo, fmt.Errorf("did not find repository '%s': %v", name, err)
+}
