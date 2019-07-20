@@ -5,11 +5,11 @@ Provides a go client library for connecting to, and interacting with, [Sonatype]
 ## Organization of this library
 The library is broken into two packages. One for each application.
 
-### nexusrm [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/rm?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/rm) [![nexusrm coverage](https://gocover.io/_badge/github.com/hokiegeek/gonexus/rm?0 "nexusrm coverage")](http://gocover.io/github.com/hokiegeek/gonexus/rm)
+### nexusrm [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/rm?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/rm) [![nexusrm coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/rm?0 "nexusrm coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/rm)
 
 Create a connection to an instance of Nexus Repository Manager
 ```go
-import "github.com/hokiegeek/gonexus/rm"
+import "github.com/sonatype-nexus-community/gonexus/rm"
 
 rm, err := nexusrm.New("http://localhost:8081", "username", "password")
 if err != nil {
@@ -17,11 +17,11 @@ if err != nil {
 }
 ```
 
-### nexusiq [![GoDoc](http://godoc.org/github.com/hokiegeek/gonexus/iq?status.png)](http://godoc.org/github.com/hokiegeek/gonexus/iq) [![nexusiq coverage](https://gocover.io/_badge/github.com/hokiegeek/gonexus/iq?0 "nexusiq coverage")](http://gocover.io/github.com/hokiegeek/gonexus/iq)
+### nexusiq [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq) [![nexusiq coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq?0 "nexusiq coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq)
 
 Create a connection to an instance of Nexus IQ Server
 ```go
-import "github.com/hokiegeek/gonexus/iq"
+import "github.com/sonatype-nexus-community/gonexus/iq"
 
 iq, err := nexusiq.New("http://localhost:8070", "username", "password")
 if err != nil {
