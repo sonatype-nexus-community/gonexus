@@ -1,6 +1,6 @@
 # gonexus
 
-Provides a go library for connecting to, and interacting with, [Sonatype](//www.sonatype.com) Nexus applications such as Nexus Repository Manager and Nexus IQ Server.
+Provides a go client library for connecting to, and interacting with, [Sonatype](//www.sonatype.com) Nexus applications such as Nexus Repository Manager and Nexus IQ Server.
 
 ## Organization of this library
 The library is broken into two packages. One for each application.
