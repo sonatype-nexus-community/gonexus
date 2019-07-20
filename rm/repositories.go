@@ -8,17 +8,17 @@ import (
 
 const restListRepositories = "service/rest/v1/repositories"
 
-// RepositoryType enumerates the types of repositories in RM
 /*
-type RepositoryType int
+// RepositoryType enumerates the types of repositories in RM
+type repositoryType int
 
 const (
-	proxy = iota
-	hosted
-	group
+	Hosted = iota
+	Proxy
+	Group
 )
 
-func (r RepositoryType) String() string {
+func (r repositoryType) String() string {
 	switch r {
 	case proxy:
 		return "proxy"
@@ -31,6 +31,24 @@ func (r RepositoryType) String() string {
 	}
 }
 */
+
+type repositoryFormat int
+
+// Enumerates the formats which can be created as Repository Manager repositories
+const (
+	Maven repositoryFormat = iota
+	Npm
+	Nuget
+	Apt
+	Docker
+	Golang
+	Raw
+	Rubygems
+	Bower
+	Pypi
+	Yum
+	GitLfs
+)
 
 // Repository collects the information returned by RM about a repository
 type Repository struct {

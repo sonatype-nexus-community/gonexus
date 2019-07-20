@@ -3,17 +3,19 @@ package nexusrm
 // http://localhost:8081/service/rest/v1/assets?continuationToken=foo&repository=bar
 const restListAssetsByRepo = "service/rest/v1/assets?repository=%s"
 
+type repositoryItemAssetsChecksum struct {
+	Sha1 string `json:"sha1"`
+	Md5  string `json:"md5"`
+}
+
 // RepositoryItemAssets describes the assets associated with a component
 type RepositoryItemAssets struct {
-	DownloadURL string `json:"downloadUrl"`
-	Path        string `json:"path"`
-	ID          string `json:"id"`
-	Repository  string `json:"repository"`
-	Format      string `json:"format"`
-	Checksum    struct {
-		Sha1 string `json:"sha1"`
-		Md5  string `json:"md5"`
-	} `json:"checksum"`
+	DownloadURL string                       `json:"downloadUrl"`
+	Path        string                       `json:"path"`
+	ID          string                       `json:"id"`
+	Repository  string                       `json:"repository"`
+	Format      string                       `json:"format"`
+	Checksum    repositoryItemAssetsChecksum `json:"checksum"`
 }
 
 // Equals compares two RepositoryItemAssets objects

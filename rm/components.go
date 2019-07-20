@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -181,8 +182,7 @@ func DeleteComponentByID(rm RM, id string) error {
 	return nil
 }
 
-// UploadComponent uploads a component to repository manager
-func UploadComponent(rm RM, repo string, component uploadComponent) error {
+func uploadComponent(rm RM, repo string, component uploadComponentFormMapper) error {
 	doError := func(err error) error {
 		return fmt.Errorf("component not uploaded: %v", err)
 	}
@@ -199,14 +199,20 @@ func UploadComponent(rm RM, repo string, component uploadComponent) error {
 	}
 
 	for k, v := range files {
-		fw, err := w.CreateFormFile(k, v.Name())
-		if err != nil {
-			return doError(err)
-		}
-		// fw.Write(
+		if v != "" {
+			file, err := os.Open(v)
+			if err != nil {
+				return doError(err)
+			}
 
-		if _, err = io.Copy(fw, v); err != nil {
-			return doError(err)
+			fw, err := w.CreateFormFile(k, file.Name())
+			if err != nil {
+				return doError(err)
+			}
+
+			if _, err = io.Copy(fw, file); err != nil {
+				return doError(err)
+			}
 		}
 	}
 
@@ -221,11 +227,45 @@ func UploadComponent(rm RM, repo string, component uploadComponent) error {
 		return doError(err)
 	}
 
-	_, resp, err := rm.Do(req)
-	// _, resp, err := rm.Post(url, &b)
-	if err != nil && resp.StatusCode != http.StatusNoContent {
+	if _, resp, err := rm.Do(req); err != nil && resp.StatusCode != http.StatusNoContent {
 		return doError(err)
 	}
 
 	return nil
+}
+
+func createComponentFromCoordinate(coordinate, filePath, format string) (upload uploadComponentFormMapper, err error) {
+	coordSlice := strings.Split(coordinate, ":")
+
+	switch format {
+	case "maven2":
+		upload = UploadComponentMaven{
+			GroupID:     coordSlice[0],
+			ArtifactID:  coordSlice[1],
+			Version:     coordSlice[2],
+			GeneratePom: true,
+			Assets: []UploadAssetMaven{
+				UploadAssetMaven{Extension: "jar", File: filePath},
+			},
+		}
+	default:
+		err = fmt.Errorf("format %s not supported", format)
+	}
+
+	return
+}
+
+// UploadComponent uploads a component to repository manager
+func UploadComponent(rm RM, repoName, coordinate, filePath string) error {
+	repo, err := GetRepositoryByName(rm, repoName)
+	if err != nil {
+		return fmt.Errorf("could not find repository: %v", err)
+	}
+
+	upload, err := createComponentFromCoordinate(coordinate, filePath, repo.Format)
+	if err != nil {
+		return fmt.Errorf("could not create upload artifact from coordinate '%s': %v", coordinate, err)
+	}
+
+	return uploadComponent(rm, repoName, upload)
 }

@@ -2,18 +2,16 @@ package nexusrm
 
 import (
 	"fmt"
-	"os"
 )
 
-// UploadComponent defines the interface which describes a component to upload
-type uploadComponent interface {
-	formData() (fields map[string]string, files map[string]*os.File)
+// uploadComponentFormMapper defines the interface which describes a component to upload
+type uploadComponentFormMapper interface {
+	formData() (fields map[string]string, files map[string]string)
 }
 
 // UploadAssetMaven encapsulates data needed to upload an maven2 asset
 type UploadAssetMaven struct {
-	File                  *os.File
-	Classifier, Extension string
+	File, Classifier, Extension string
 }
 
 // UploadComponentMaven encapsulates data needed to upload an maven2 component
@@ -23,9 +21,9 @@ type UploadComponentMaven struct {
 	Assets                                       []UploadAssetMaven
 }
 
-func (a UploadComponentMaven) formData() (map[string]string, map[string]*os.File) {
+func (a UploadComponentMaven) formData() (map[string]string, map[string]string) {
 	fields := make(map[string]string)
-	files := make(map[string]*os.File)
+	files := make(map[string]string)
 
 	fields["maven2.groupId"] = a.GroupID
 	fields["maven2.artifactId"] = a.ArtifactID
@@ -35,7 +33,7 @@ func (a UploadComponentMaven) formData() (map[string]string, map[string]*os.File
 	fields["maven2.generate-pom"] = fmt.Sprintf("%T", a.GeneratePom)
 
 	for i, a := range a.Assets {
-		fieldName := fmt.Sprintf("maven2.asset%d", i)
+		fieldName := fmt.Sprintf("maven2.asset%d", i+1)
 		files[fieldName] = a.File
 		fields[fieldName+".classifier"] = a.Classifier
 		fields[fieldName+".extension"] = a.Extension
@@ -46,6 +44,9 @@ func (a UploadComponentMaven) formData() (map[string]string, map[string]*os.File
 
 // UploadComponentNpm encapsulates data needed to upload an NPM component
 type UploadComponentNpm struct {
-	File *os.File
-	Tag  string
+	File, Tag string
+}
+
+func (a UploadComponentNpm) formData() (map[string]string, map[string]string) {
+	return map[string]string{"npm.tag": a.Tag}, map[string]string{"npm.asset": a.File}
 }

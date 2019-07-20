@@ -6,34 +6,6 @@ import (
 	"text/template"
 )
 
-/*
-type repositoryType int
-
-const (
-	Hosted = iota
-	Proxy
-	Group
-)
-*/
-
-type repositoryFormat int
-
-// Enumerates the formats which can be created as Repository Manager repositories
-const (
-	Maven repositoryFormat = iota
-	Npm
-	Nuget
-	Apt
-	Docker
-	Golang
-	Raw
-	Rubygems
-	Bower
-	Pypi
-	Yum
-	GitLfs
-)
-
 const groovyCreateHostedMaven = "repository.createMavenHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
 const groovyCreateHostedNpm = "repository.createNpmHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
 const groovyCreateHostedNuget = "repository.createNugetHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"

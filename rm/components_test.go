@@ -88,33 +88,35 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 
 			// I have no idea how I want to do this, moving forward
 			for k, v := range r.Form {
-				switch k {
-				case "repository":
+				switch {
+				case k == "repository":
 					repo = v[0]
-				case "maven2.groupId":
+				case k == "maven2.groupId":
 					component.Format = "maven2"
 					component.Group = v[0]
-				case "maven2.artifactId":
+				case k == "maven2.artifactId":
 					component.Format = "maven2"
 					component.Name = v[0]
-				case "maven2.version":
+				case k == "maven2.version":
 					component.Format = "maven2"
 					component.Version = v[0]
-				case "maven2.packaging":
+				case k == "maven2.packaging":
 					component.Format = "maven2"
-				case "maven2.tag":
+				case k == "maven2.tag":
 					component.Format = "maven2"
-				case "maven2.generate-pom":
+				case k == "maven2.generate-pom":
+					component.Format = "maven2"
+				case strings.HasPrefix(k, "maven2.asset"):
 					component.Format = "maven2"
 				default:
 					t.Logf("Did not recognize form field: %s\n", k)
 					w.WriteHeader(http.StatusBadRequest)
 				}
+				// nContent-Disposition: form-data; name=\"maven2.asset1\" ; filename=\"/tmp/test.jar\"\r\nContent-Type: application/octet-stream\
 				// t.Logf("%s = %s\n", k, v)
 			}
 
 			dummyComponents[repo] = append(dummyComponents[repo], component)
-			t.Log("UPLOADED", component)
 
 			w.WriteHeader(http.StatusNoContent)
 		case r.Method == http.MethodDelete:
@@ -196,14 +198,16 @@ func TestGetComponentByID(t *testing.T) {
 	}
 }
 
-func componentUploader(t *testing.T, expected RepositoryItem, upload uploadComponent) {
+// func componentUploader(t *testing.T, expected RepositoryItem, upload uploadComponent) {
+func componentUploader(t *testing.T, expected RepositoryItem, coordinate, filePath string) {
 	rm, mock, err := componentsTestRM(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
 
-	if err = UploadComponent(rm, expected.Repository, upload); err != nil {
+	// if err = UploadComponent(rm, expected.Repository, upload); err != nil {
+	if err = UploadComponent(rm, expected.Repository, coordinate, filePath); err != nil {
 		t.Error(err)
 	}
 
@@ -222,20 +226,37 @@ func componentUploader(t *testing.T, expected RepositoryItem, upload uploadCompo
 }
 
 func TestUploadComponentMaven(t *testing.T) {
+	coord := "org.test:testComponent3:3.0.0"
+	coordSlice := strings.Split(coord, ":")
 	expected := RepositoryItem{
 		Repository: "test-repo1",
 		Format:     "maven2",
-		Group:      "org.test",
-		Name:       "testComponent3",
-		Version:    "3.0.0"}
+		Group:      coordSlice[0],
+		Name:       coordSlice[1],
+		Version:    coordSlice[2],
+		/*
+			Assets: []RepositoryItemAssets{RepositoryItemAssets{
+				DownloadURL: "",
+				Path:        "",
+				ID:          "",
+				Repository:  "test-repo1",
+				Format:      "maven2",
+				Checksum:    repositoryItemAssetsChecksum{Sha1: ""},
+			},
+			},
+		*/
+	}
 
-	upload := UploadComponentMaven{
-		GroupID:    expected.Group,
-		ArtifactID: expected.Name,
-		Version:    expected.Version}
-	// Assets                                       [3]UploadAssetMaven
+	/*
+		upload := UploadComponentMaven{
+			GroupID:    expected.Group,
+			ArtifactID: expected.Name,
+			Version:    expected.Version,
+			Assets:     []UploadAssetMaven{UploadAssetMaven{Extension: "jar", File: "/tmp/test.jar"}},
+		}
+	*/
 
-	componentUploader(t, expected, upload)
+	componentUploader(t, expected, coord, "/tmp/test.jar")
 }
 
 func TestDeleteComponentByID(t *testing.T) {
@@ -245,20 +266,17 @@ func TestDeleteComponentByID(t *testing.T) {
 	}
 	defer mock.Close()
 
+	coord := "org.delete:componentDelete:0.0.0"
+	coordSlice := strings.Split(coord, ":")
 	deleteMe := RepositoryItem{
 		ID:         "deleteMe",
 		Repository: "test-repo1",
 		Format:     "maven2",
-		Group:      "org.delete",
-		Name:       "componentDelete",
-		Version:    "0.0.0"}
+		Group:      coordSlice[0],
+		Name:       coordSlice[1],
+		Version:    coordSlice[2]}
 
-	upload := UploadComponentMaven{
-		GroupID:    deleteMe.Group,
-		ArtifactID: deleteMe.Name,
-		Version:    deleteMe.Version}
-
-	if err = UploadComponent(rm, deleteMe.Repository, upload); err != nil {
+	if err = UploadComponent(rm, deleteMe.Repository, coord, ""); err != nil {
 		t.Error(err)
 	}
 
