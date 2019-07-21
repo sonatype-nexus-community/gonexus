@@ -3,6 +3,7 @@ package nexusrm
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -11,13 +12,13 @@ import (
 )
 
 var dummyComponents = map[string][]RepositoryItem{
-	"test-repo1": []RepositoryItem{
-		RepositoryItem{ID: "component1id", Repository: "test-repo1", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0"},
-		RepositoryItem{ID: "component2id", Repository: "test-repo1", Format: "maven2", Group: "org.test", Name: "testComponent2", Version: "2.0.0"},
-		RepositoryItem{ID: "component3id", Repository: "test-repo1", Format: "maven2", Group: "org.test", Name: "testComponent3", Version: "3.0.0"},
+	"repo-maven": []RepositoryItem{
+		RepositoryItem{ID: "component1id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0"},
+		RepositoryItem{ID: "component2id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent2", Version: "2.0.0"},
+		RepositoryItem{ID: "component3id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent3", Version: "3.0.0"},
 	},
-	"test-repo2": []RepositoryItem{
-		RepositoryItem{ID: "component4id", Repository: "test-repo2", Format: "maven2", Group: "org.test", Name: "testComponent4", Version: "4.0.0"},
+	"repo-npm": []RepositoryItem{
+		RepositoryItem{ID: "component4id", Repository: "repo-npm", Format: "maven2", Group: "org.test", Name: "testComponent4", Version: "4.0.0"},
 	},
 }
 
@@ -43,6 +44,13 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 		t.Logf("%q\n", dump)
 
 		switch {
+		case r.Method == http.MethodGet && r.URL.Path[1:] == restRepositories:
+			repos, err := json.Marshal(dummyRepos)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			fmt.Fprintln(w, string(repos))
 		case r.Method == http.MethodGet && r.URL.Path[1:] == restComponents:
 			repo := r.URL.Query().Get("repository")
 
@@ -170,11 +178,11 @@ func getComponentsTester(t *testing.T, repo string) {
 }
 
 func TestGetComponentsNoPaging(t *testing.T) {
-	getComponentsTester(t, "test-repo2")
+	getComponentsTester(t, "repo-npm")
 }
 
 func TestGetComponentsPaging(t *testing.T) {
-	getComponentsTester(t, "test-repo1")
+	getComponentsTester(t, "repo-maven")
 }
 
 func TestGetComponentByID(t *testing.T) {
@@ -184,7 +192,7 @@ func TestGetComponentByID(t *testing.T) {
 	}
 	defer mock.Close()
 
-	expectedComponent := dummyComponents["test-repo1"][0]
+	expectedComponent := dummyComponents["repo-maven"][0]
 
 	component, err := GetComponentByID(rm, expectedComponent.ID)
 	if err != nil {
@@ -199,15 +207,14 @@ func TestGetComponentByID(t *testing.T) {
 }
 
 // func componentUploader(t *testing.T, expected RepositoryItem, upload uploadComponent) {
-func componentUploader(t *testing.T, expected RepositoryItem, coordinate, filePath string) {
+func componentUploader(t *testing.T, expected RepositoryItem, coordinate string, file io.Reader) {
 	rm, mock, err := componentsTestRM(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
 
-	// if err = UploadComponent(rm, expected.Repository, upload); err != nil {
-	if err = UploadComponent(rm, expected.Repository, coordinate, filePath); err != nil {
+	if err = UploadComponent(rm, expected.Repository, coordinate, file); err != nil {
 		t.Error(err)
 	}
 
@@ -229,7 +236,7 @@ func TestUploadComponentMaven(t *testing.T) {
 	coord := "org.test:testComponent3:3.0.0"
 	coordSlice := strings.Split(coord, ":")
 	expected := RepositoryItem{
-		Repository: "test-repo1",
+		Repository: "repo-maven",
 		Format:     "maven2",
 		Group:      coordSlice[0],
 		Name:       coordSlice[1],
@@ -239,7 +246,7 @@ func TestUploadComponentMaven(t *testing.T) {
 				DownloadURL: "",
 				Path:        "",
 				ID:          "",
-				Repository:  "test-repo1",
+				Repository:  "repo-maven",
 				Format:      "maven2",
 				Checksum:    repositoryItemAssetsChecksum{Sha1: ""},
 			},
@@ -247,16 +254,9 @@ func TestUploadComponentMaven(t *testing.T) {
 		*/
 	}
 
-	/*
-		upload := UploadComponentMaven{
-			GroupID:    expected.Group,
-			ArtifactID: expected.Name,
-			Version:    expected.Version,
-			Assets:     []UploadAssetMaven{UploadAssetMaven{Extension: "jar", File: "/tmp/test.jar"}},
-		}
-	*/
+	dummyFile := strings.NewReader("foobar")
 
-	componentUploader(t, expected, coord, "/tmp/test.jar")
+	componentUploader(t, expected, coord, dummyFile)
 }
 
 func TestDeleteComponentByID(t *testing.T) {
@@ -270,13 +270,13 @@ func TestDeleteComponentByID(t *testing.T) {
 	coordSlice := strings.Split(coord, ":")
 	deleteMe := RepositoryItem{
 		ID:         "deleteMe",
-		Repository: "test-repo1",
+		Repository: "repo-maven",
 		Format:     "maven2",
 		Group:      coordSlice[0],
 		Name:       coordSlice[1],
 		Version:    coordSlice[2]}
 
-	if err = UploadComponent(rm, deleteMe.Repository, coord, ""); err != nil {
+	if err = UploadComponent(rm, deleteMe.Repository, coord, nil); err != nil {
 		t.Error(err)
 	}
 

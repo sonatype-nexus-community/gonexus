@@ -7,7 +7,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -199,20 +198,13 @@ func uploadComponent(rm RM, repo string, component uploadComponentFormMapper) er
 	}
 
 	for k, v := range files {
-		if v != "" {
-			file, err := os.Open(v)
-			if err != nil {
-				return doError(err)
-			}
+		fw, err := w.CreateFormFile(k, "") // The name seems to not matter
+		if err != nil {
+			return doError(err)
+		}
 
-			fw, err := w.CreateFormFile(k, file.Name())
-			if err != nil {
-				return doError(err)
-			}
-
-			if _, err = io.Copy(fw, file); err != nil {
-				return doError(err)
-			}
+		if _, err = io.Copy(fw, v); err != nil {
+			return doError(err)
 		}
 	}
 
@@ -234,35 +226,47 @@ func uploadComponent(rm RM, repo string, component uploadComponentFormMapper) er
 	return nil
 }
 
-func createComponentFromCoordinate(coordinate, filePath, format string) (upload uploadComponentFormMapper, err error) {
+func createComponentFromCoordinate(format, coordinate string, assets ...io.Reader) (uploadComponentFormMapper, error) {
 	coordSlice := strings.Split(coordinate, ":")
 
 	switch format {
 	case "maven2":
-		upload = UploadComponentMaven{
-			GroupID:     coordSlice[0],
-			ArtifactID:  coordSlice[1],
-			Version:     coordSlice[2],
-			GeneratePom: true,
-			Assets: []UploadAssetMaven{
-				UploadAssetMaven{Extension: "jar", File: filePath},
-			},
+		if len(coordSlice) < 3 {
+			return nil, fmt.Errorf("invalid coordinate for target repo format %s", format)
 		}
+
+		comp := UploadComponentMaven{
+			GroupID:    coordSlice[0],
+			ArtifactID: coordSlice[1],
+			Version:    coordSlice[2],
+			Assets:     make([]UploadAssetMaven, len(assets)),
+		}
+
+		var havePom bool
+		for i, a := range assets {
+			comp.Assets[i] = UploadAssetMaven{Extension: "jar", File: a} // FIXME: highly assumed extension
+		}
+
+		if !havePom {
+			comp.GeneratePom = true
+		}
+
+		return comp, nil
 	default:
-		err = fmt.Errorf("format %s not supported", format)
+		return nil, fmt.Errorf("format %s not supported", format)
 	}
 
-	return
+	return nil, nil
 }
 
 // UploadComponent uploads a component to repository manager
-func UploadComponent(rm RM, repoName, coordinate, filePath string) error {
+func UploadComponent(rm RM, repoName, coordinate string, assets ...io.Reader) error {
 	repo, err := GetRepositoryByName(rm, repoName)
 	if err != nil {
 		return fmt.Errorf("could not find repository: %v", err)
 	}
 
-	upload, err := createComponentFromCoordinate(coordinate, filePath, repo.Format)
+	upload, err := createComponentFromCoordinate(repo.Format, coordinate, assets...)
 	if err != nil {
 		return fmt.Errorf("could not create upload artifact from coordinate '%s': %v", coordinate, err)
 	}

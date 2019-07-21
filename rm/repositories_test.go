@@ -10,7 +10,7 @@ import (
 )
 
 var dummyRepos = []Repository{
-	{Name: "repo-maven", Format: "maven", Type: "hosted", URL: "http://localhost:8081/blah/repo-maven"},
+	{Name: "repo-maven", Format: "maven2", Type: "hosted", URL: "http://localhost:8081/blah/repo-maven"},
 	{Name: "repo-nuget", Format: "nuget", Type: "hosted", URL: "http://localhost:8081/blah/repo-nuget"},
 	{Name: "repo-pypi", Format: "pypi", Type: "group", URL: "http://localhost:8081/blah/repo-pypi"},
 	{Name: "repo-npm", Format: "npm", Type: "proxy", URL: "http://localhost:8081/blah/repo-npm"}, //, Attributes: {Proxy: {RemoteURL: "http://bestest.repo"}}},

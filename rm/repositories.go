@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const restListRepositories = "service/rest/v1/repositories"
+const restRepositories = "service/rest/v1/repositories"
 
 /*
 // RepositoryType enumerates the types of repositories in RM
@@ -98,7 +98,7 @@ func GetRepositories(rm RM) ([]Repository, error) {
 		return fmt.Errorf("could not find repositories: %v", err)
 	}
 
-	body, resp, err := rm.Get(restListRepositories)
+	body, resp, err := rm.Get(restRepositories)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, doError(err)
 	}
