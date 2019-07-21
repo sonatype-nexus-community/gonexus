@@ -4,105 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"net/http"
-	"strings"
 )
 
 const (
 	restComponents           = "service/rest/v1/components"
 	restListComponentsByRepo = "service/rest/v1/components?repository=%s"
 )
-
-// RepositoryItem holds the data of a component in a repository
-type RepositoryItem struct {
-	ID         string                 `json:"id"`
-	Repository string                 `json:"repository"`
-	Format     string                 `json:"format"`
-	Group      string                 `json:"group"`
-	Name       string                 `json:"name"`
-	Version    string                 `json:"version"`
-	Assets     []RepositoryItemAssets `json:"assets"`
-	Tags       []interface{}          `json:"tags"`
-}
-
-// Equals compares two RepositoryItem objects
-func (a *RepositoryItem) Equals(b *RepositoryItem) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Group != b.Group {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Version != b.Version {
-		return
-	}
-
-	if len(a.Assets) != len(b.Assets) {
-		return
-	}
-
-	for i, asset := range a.Assets {
-		if !asset.Equals(&b.Assets[i]) {
-			return
-		}
-	}
-
-	return true
-}
-
-const hashPart = 20
-
-// Hash is a hack which returns the most appopriate IQable hash of a repo item
-func (a *RepositoryItem) Hash() string {
-	var hash string
-
-	sumByExt := func(exts []string) string {
-		ext := exts[0]
-		for _, ass := range a.Assets {
-			if strings.HasSuffix(ass.Path, ext) {
-				return ass.Checksum.Sha1
-			}
-		}
-		return ""
-	}
-
-	switch a.Format {
-	case "maven2":
-		hash = sumByExt([]string{"jar"})
-	case "rubygems":
-		hash = sumByExt([]string{"gem"})
-	case "npm":
-		hash = sumByExt([]string{"tar.gz"})
-	case "pipy":
-		hash = sumByExt([]string{"whl", "tar.gz"})
-	default:
-		hash = ""
-	}
-	if len(hash) < hashPart {
-		return hash
-	}
-	return hash[0:hashPart]
-}
 
 type listComponentsResponse struct {
 	Items             []RepositoryItem `json:"items"`
@@ -181,32 +90,20 @@ func DeleteComponentByID(rm RM, id string) error {
 	return nil
 }
 
-func uploadComponent(rm RM, repo string, component uploadComponentFormMapper) error {
+// UploadComponent uploads a component to repository manager
+func UploadComponent(rm RM, repo string, component UploadComponentWriter) error {
+	if _, err := GetRepositoryByName(rm, repo); err != nil {
+		return fmt.Errorf("could not find repository: %v", err)
+	}
+
 	doError := func(err error) error {
 		return fmt.Errorf("component not uploaded: %v", err)
 	}
-	fields, files := component.formData()
 
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
-	defer w.Close()
 
-	for k, v := range fields {
-		if v != "" {
-			w.WriteField(k, v)
-		}
-	}
-
-	for k, v := range files {
-		fw, err := w.CreateFormFile(k, "") // The name seems to not matter
-		if err != nil {
-			return doError(err)
-		}
-
-		if _, err = io.Copy(fw, v); err != nil {
-			return doError(err)
-		}
-	}
+	component.write(w)
 
 	if err := w.Close(); err != nil {
 		return doError(err)
@@ -224,52 +121,4 @@ func uploadComponent(rm RM, repo string, component uploadComponentFormMapper) er
 	}
 
 	return nil
-}
-
-func createComponentFromCoordinate(format, coordinate string, assets ...io.Reader) (uploadComponentFormMapper, error) {
-	coordSlice := strings.Split(coordinate, ":")
-
-	switch format {
-	case "maven2":
-		if len(coordSlice) < 3 {
-			return nil, fmt.Errorf("invalid coordinate for target repo format %s", format)
-		}
-
-		comp := UploadComponentMaven{
-			GroupID:    coordSlice[0],
-			ArtifactID: coordSlice[1],
-			Version:    coordSlice[2],
-			Assets:     make([]UploadAssetMaven, len(assets)),
-		}
-
-		var havePom bool
-		for i, a := range assets {
-			comp.Assets[i] = UploadAssetMaven{Extension: "jar", File: a} // FIXME: highly assumed extension
-		}
-
-		if !havePom {
-			comp.GeneratePom = true
-		}
-
-		return comp, nil
-	default:
-		return nil, fmt.Errorf("format %s not supported", format)
-	}
-
-	return nil, nil
-}
-
-// UploadComponent uploads a component to repository manager
-func UploadComponent(rm RM, repoName, coordinate string, assets ...io.Reader) error {
-	repo, err := GetRepositoryByName(rm, repoName)
-	if err != nil {
-		return fmt.Errorf("could not find repository: %v", err)
-	}
-
-	upload, err := createComponentFromCoordinate(repo.Format, coordinate, assets...)
-	if err != nil {
-		return fmt.Errorf("could not create upload artifact from coordinate '%s': %v", coordinate, err)
-	}
-
-	return uploadComponent(rm, repoName, upload)
 }

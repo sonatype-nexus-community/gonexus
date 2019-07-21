@@ -3,7 +3,6 @@ package nexusrm
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -89,7 +88,9 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 			// ... might get 100 too
 
 			if err := r.ParseMultipartForm(32 << 20); err != nil {
+				t.Log("crap")
 				w.WriteHeader(http.StatusBadRequest)
+				return
 			}
 
 			component := RepositoryItem{ID: dummyNewComponentID, Repository: repo}
@@ -206,15 +207,16 @@ func TestGetComponentByID(t *testing.T) {
 	}
 }
 
-// func componentUploader(t *testing.T, expected RepositoryItem, upload uploadComponent) {
-func componentUploader(t *testing.T, expected RepositoryItem, coordinate string, file io.Reader) {
+func componentUploader(t *testing.T, expected RepositoryItem, upload UploadComponentWriter) {
+	// func componentUploader(t *testing.T, expected RepositoryItem, coordinate string, file io.Reader) {
 	rm, mock, err := componentsTestRM(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mock.Close()
 
-	if err = UploadComponent(rm, expected.Repository, coordinate, file); err != nil {
+	// if err = UploadComponent(rm, expected.Repository, coordinate, file); err != nil {
+	if err = UploadComponent(rm, expected.Repository, upload); err != nil {
 		t.Error(err)
 	}
 
@@ -256,7 +258,38 @@ func TestUploadComponentMaven(t *testing.T) {
 
 	dummyFile := strings.NewReader("foobar")
 
-	componentUploader(t, expected, coord, dummyFile)
+	upload, err := NewUploadComponentMaven(coord, dummyFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	componentUploader(t, expected, upload)
+}
+
+func TestUploadComponentNpm(t *testing.T) {
+	t.Skip("TODO")
+	expected := RepositoryItem{
+		Repository: "repo-npm",
+		Format:     "npm",
+		/*
+			Group:      coordSlice[0],
+			Name:       coordSlice[1],
+			Version:    coordSlice[2],
+				Assets: []RepositoryItemAssets{RepositoryItemAssets{
+					DownloadURL: "",
+					Path:        "",
+					ID:          "",
+					Repository:  "repo-maven",
+					Format:      "maven2",
+					Checksum:    repositoryItemAssetsChecksum{Sha1: ""},
+				},
+				},
+		*/
+	}
+
+	dummyFile := strings.NewReader("foobar")
+
+	componentUploader(t, expected, UploadComponentNpm{File: dummyFile})
 }
 
 func TestDeleteComponentByID(t *testing.T) {
@@ -276,7 +309,13 @@ func TestDeleteComponentByID(t *testing.T) {
 		Name:       coordSlice[1],
 		Version:    coordSlice[2]}
 
-	if err = UploadComponent(rm, deleteMe.Repository, coord, nil); err != nil {
+	upload, err := NewUploadComponentMaven(coord, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// if err = UploadComponent(rm, deleteMe.Repository, coord, nil); err != nil {
+	if err = UploadComponent(rm, deleteMe.Repository, upload); err != nil {
 		t.Error(err)
 	}
 
