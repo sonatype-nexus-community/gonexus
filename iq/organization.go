@@ -16,11 +16,18 @@ type allOrgsResponse struct {
 	Organizations []Organization `json:"organizations"`
 }
 
+// IQCaterogy encapsulates the category that can be created in IQ
+type IQCategory struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
 // Organization describes the data in IQ about a given organization
 type Organization struct {
-	ID   string   `json:"id"`
-	Name string   `json:"name"`
-	Tags []string `json:"tags"`
+	ID   string       `json:"id"`
+	Name string       `json:"name"`
+	Tags []IQCategory `json:"tags,omitempty"`
 }
 
 // Equals compares two Organization objects
