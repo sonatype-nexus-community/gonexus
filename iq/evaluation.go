@@ -186,42 +186,35 @@ func EvaluateComponents(iq IQ, components []Component, applicationID string) (*E
 		return nil, doError(err)
 	}
 
+	getEvaluationResults := func() (*Evaluation, error) {
+		body, resp, e := iq.Get(results.ResultsURL)
+		if e != nil {
+			if resp.StatusCode != http.StatusNotFound {
+				return nil, e
+			}
+			return nil, nil
+		}
+
+		var ev Evaluation
+		if err = json.Unmarshal(body, &ev); err != nil {
+			return nil, err
+		}
+
+		return &ev, nil
+	}
+
 	var eval *Evaluation
 	ticker := time.NewTicker(5 * time.Second)
-	done := make(chan bool, 1)
-	go func() {
-		getEvaluationResults := func() (*Evaluation, error) {
-			body, resp, e := iq.Get(results.ResultsURL)
-			if e != nil {
-				if resp.StatusCode != http.StatusNotFound {
-					return nil, e
-				}
-				return nil, nil
-			}
-
-			var eval Evaluation
-			if err = json.Unmarshal(body, &eval); err != nil {
-				return nil, err
-			}
-
-			return &eval, nil
-		}
-
-		for {
-			select {
-			case <-ticker.C:
-				if eval, err = getEvaluationResults(); eval != nil || err != nil {
-					ticker.Stop()
-					done <- true
-				}
-			case <-time.After(5 * time.Minute):
+	for {
+		select {
+		case <-ticker.C:
+			if eval, err = getEvaluationResults(); eval != nil || err != nil {
 				ticker.Stop()
-				err = errors.New("Timed out waiting for valid results")
-				done <- true
+				return eval, err
 			}
+		case <-time.After(5 * time.Minute):
+			ticker.Stop()
+			return nil, errors.New("timed out waiting for valid evaluation results")
 		}
-	}()
-	<-done
-
-	return eval, err
+	}
 }
