@@ -17,9 +17,9 @@ if err != nil {
 ```
 
 #### Supported Endpoints
-| Endpoint | Status |
-|----------|--------|
-| [Assets](https://help.sonatype.com/repomanager3/rest-and-integration-api/assets-api) | :new_moon: |
+| Endpoint |  Status  |
+|----------|:--------:|
+| [Assets](https://help.sonatype.com/repomanager3/rest-and-integration-api/assets-api) | :waning_crescent_moon: |
 | [Components](https://help.sonatype.com/repomanager3/rest-and-integration-api/components-api) | :waning_gibbous_moon: |
 | [Lifecycle](https://help.sonatype.com/repomanager3/rest-and-integration-api/lifecycle-api) | :new_moon: |
 | [Maintenance](https://help.sonatype.com/repomanager3/rest-and-integration-api/maintenance-api) | :new_moon: |
@@ -27,7 +27,7 @@ if err != nil {
 | [Read-Only](https://help.sonatype.com/repomanager3/rest-and-integration-api/read-only-api) | :full_moon: |
 | [Repositories](https://help.sonatype.com/repomanager3/rest-and-integration-api/repositories-api) | :full_moon: |
 | [Script](https://help.sonatype.com/repomanager3/rest-and-integration-api/script-api) | :full_moon: |
-| [Search](https://help.sonatype.com/repomanager3/rest-and-integration-api/search-api) | :waning_crescent_moon: |
+| [Search](https://help.sonatype.com/repomanager3/rest-and-integration-api/search-api) | :waning_gibbous_moon: |
 | [Staging](https://help.sonatype.com/repomanager3/staging) *pro* | :new_moon: |
 | [Status](https://help.sonatype.com/repomanager3/rest-and-integration-api/status-api) | :full_moon: |
 | [Support](https://help.sonatype.com/repomanager3/rest-and-integration-api/support-api) | :new_moon: |
@@ -35,8 +35,8 @@ if err != nil {
 | [Tasks](https://help.sonatype.com/repomanager3/rest-and-integration-api/tasks-api) | :new_moon: |
 
 #### Supported Provisioning API
-| API | Status |
-|-----|--------|
+| API |  Status  |
+|-----|:--------:|
 | Core | :new_moon: |
 | Security | :new_moon: |
 | Blob Store | :waning_gibbous_moon: |
@@ -56,8 +56,8 @@ if err != nil {
 
 ```
 #### Supported Endpoints
-| Endpoint | Status |
-|----------|--------|
+| Endpoint |  Status  |
+|----------|:--------:|
 | [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2) | :last_quarter_moon: |
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2) | :new_moon: |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2) | :full_moon: |
