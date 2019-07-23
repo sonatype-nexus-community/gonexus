@@ -51,14 +51,17 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 
 			fmt.Fprintln(w, string(repos))
 		case r.Method == http.MethodGet && r.URL.Path[1:] == restComponents:
-			repo := r.URL.Query().Get("repository")
+			query := r.URL.Query()
+			repo := query["repository"][0]
 
 			lastComponentIdx := len(dummyComponents[repo]) - 1
 			var components listComponentsResponse
-			if r.URL.Query().Get("continuationToken") == "" {
+			token, ok := query["continuationToken"]
+			switch {
+			case !ok:
 				components.Items = dummyComponents[repo][:lastComponentIdx]
 				components.ContinuationToken = dummyContinuationToken
-			} else {
+			case token[0] == dummyContinuationToken:
 				components.Items = dummyComponents[repo][lastComponentIdx:]
 			}
 
@@ -331,7 +334,7 @@ func TestDeleteComponentByID(t *testing.T) {
 }
 
 func ExampleGetComponents() {
-	rm, err := New("http://localhost:8081", "user", "password")
+	rm, err := New("http://localhost:8081", "username", "password")
 	if err != nil {
 		panic(err)
 	}

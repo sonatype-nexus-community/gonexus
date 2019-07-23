@@ -9,14 +9,14 @@ import (
 
 // RepositoryItem holds the data of a component in a repository
 type RepositoryItem struct {
-	ID         string                 `json:"id"`
-	Repository string                 `json:"repository"`
-	Format     string                 `json:"format"`
-	Group      string                 `json:"group"`
-	Name       string                 `json:"name"`
-	Version    string                 `json:"version"`
-	Assets     []RepositoryItemAssets `json:"assets"`
-	Tags       []string               `json:"tags"`
+	ID         string                `json:"id"`
+	Repository string                `json:"repository"`
+	Format     string                `json:"format"`
+	Group      string                `json:"group"`
+	Name       string                `json:"name"`
+	Version    string                `json:"version"`
+	Assets     []RepositoryItemAsset `json:"assets"`
+	Tags       []string              `json:"tags"`
 }
 
 // Equals compares two RepositoryItem objects
@@ -148,6 +148,7 @@ func (a UploadComponentMaven) write(w *multipart.Writer) error {
 	return nil
 }
 
+// NewUploadComponentMaven creates a new UploadComponentMaven struct with some defaults
 func NewUploadComponentMaven(coordinate string, assets ...io.Reader) (comp UploadComponentMaven, err error) {
 	coordSlice := strings.Split(coordinate, ":")
 

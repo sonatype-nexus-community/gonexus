@@ -8,8 +8,8 @@ type repositoryItemAssetsChecksum struct {
 	Md5  string `json:"md5"`
 }
 
-// RepositoryItemAssets describes the assets associated with a component
-type RepositoryItemAssets struct {
+// RepositoryItemAsset describes the assets associated with a component
+type RepositoryItemAsset struct {
 	DownloadURL string                       `json:"downloadUrl"`
 	Path        string                       `json:"path"`
 	ID          string                       `json:"id"`
@@ -19,7 +19,7 @@ type RepositoryItemAssets struct {
 }
 
 // Equals compares two RepositoryItemAssets objects
-func (a *RepositoryItemAssets) Equals(b *RepositoryItemAssets) (_ bool) {
+func (a *RepositoryItemAsset) Equals(b *RepositoryItemAsset) (_ bool) {
 	if a == b {
 		return true
 	}
@@ -56,11 +56,11 @@ func (a *RepositoryItemAssets) Equals(b *RepositoryItemAssets) (_ bool) {
 }
 
 type listAssetsResponse struct {
-	Items             []RepositoryItemAssets `json:"items"`
-	ContinuationToken string                 `json:"continuationToken"`
+	Items             []RepositoryItemAsset `json:"items"`
+	ContinuationToken string                `json:"continuationToken"`
 }
 
 // GetAssets returns a list of assets in the indicated repository
-func GetAssets(rm RM, repo string) (items []RepositoryItemAssets, err error) {
+func GetAssets(rm RM, repo string) (items []RepositoryItemAsset, err error) {
 	return
 }

@@ -109,3 +109,8 @@ func (s DefaultClient) Del(endpoint string) (resp *http.Response, err error) {
 func (s DefaultClient) Info() ServerInfo {
 	return ServerInfo{s.Host, s.Username, s.Password}
 }
+
+// SearchQueryBuilder is the interface that a search builder should follow
+type SearchQueryBuilder interface {
+	Build() string
+}
