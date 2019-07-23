@@ -23,7 +23,7 @@ if err != nil {
 | [Components](https://help.sonatype.com/repomanager3/rest-and-integration-api/components-api) | :waning_gibbous_moon: |
 | [Lifecycle](https://help.sonatype.com/repomanager3/rest-and-integration-api/lifecycle-api) | :new_moon: |
 | [Maintenance](https://help.sonatype.com/repomanager3/rest-and-integration-api/maintenance-api) | :new_moon: |
-| [Nodes](https://help.sonatype.com/repomanager3/rest-and-integration-api/nodes-api) | :new_moon: |
+| [Nodes](https://help.sonatype.com/repomanager3/rest-and-integration-api/nodes-api) *pro* | :new_moon: |
 | [Read-Only](https://help.sonatype.com/repomanager3/rest-and-integration-api/read-only-api) | :full_moon: |
 | [Repositories](https://help.sonatype.com/repomanager3/rest-and-integration-api/repositories-api) | :full_moon: |
 | [Script](https://help.sonatype.com/repomanager3/rest-and-integration-api/script-api) | :full_moon: |
