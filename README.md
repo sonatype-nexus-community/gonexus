@@ -9,28 +9,74 @@ The library is broken into two packages. One for each application.
 
 Create a connection to an instance of Nexus Repository Manager
 ```go
-import "github.com/sonatype-nexus-community/gonexus/rm"
-
+// import "github.com/sonatype-nexus-community/gonexus/rm"
 rm, err := nexusrm.New("http://localhost:8081", "username", "password")
 if err != nil {
     panic(err)
 }
 ```
 
+#### Supported Endpoints
+| Endpoint | Status |
+|----------|--------|
+| [Assets](https://help.sonatype.com/repomanager3/rest-and-integration-api/assets-api) | :new_moon: |
+| [Components](https://help.sonatype.com/repomanager3/rest-and-integration-api/components-api) | :waning_gibbous_moon: |
+| [Lifecycle](https://help.sonatype.com/repomanager3/rest-and-integration-api/lifecycle-api) | :new_moon: |
+| [Maintenance](https://help.sonatype.com/repomanager3/rest-and-integration-api/maintenance-api) | :new_moon: |
+| [Nodes](https://help.sonatype.com/repomanager3/rest-and-integration-api/nodes-api) | :new_moon: |
+| [Read-Only](https://help.sonatype.com/repomanager3/rest-and-integration-api/read-only-api) | :full_moon: |
+| [Repositories](https://help.sonatype.com/repomanager3/rest-and-integration-api/repositories-api) | :full_moon: |
+| [Script](https://help.sonatype.com/repomanager3/rest-and-integration-api/script-api) | :full_moon: |
+| [Search](https://help.sonatype.com/repomanager3/rest-and-integration-api/search-api) | :new_moon: |
+| [Staging](https://help.sonatype.com/repomanager3/staging) *pro* | :new_moon: |
+| [Status](https://help.sonatype.com/repomanager3/rest-and-integration-api/status-api) | :full_moon: |
+| [Support](https://help.sonatype.com/repomanager3/rest-and-integration-api/support-api) | :new_moon: |
+| [Tagging](https://help.sonatype.com/repomanager3/tagging) *pro* | :new_moon: |
+| [Tasks](https://help.sonatype.com/repomanager3/rest-and-integration-api/tasks-api) | :new_moon: |
+
+#### Supported Provisioning API
+| API | Status |
+|-----|--------|
+| Core | :new_moon: |
+| Security | :new_moon: |
+| Blob Store | :waning_gibbous_moon: |
+| Repository | :waning_gibbous_moon: |
+
+**Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
+
 ### nexusiq [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq) [![nexusiq coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq?0 "nexusiq coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq)
 
 Create a connection to an instance of Nexus IQ Server
 ```go
-import "github.com/sonatype-nexus-community/gonexus/iq"
-
+// import "github.com/sonatype-nexus-community/gonexus/iq"
 iq, err := nexusiq.New("http://localhost:8070", "username", "password")
 if err != nil {
     panic(err)
 }
+
 ```
+#### Supported Endpoints
+| Endpoint | Status |
+|----------|--------|
+| [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2) | :last_quarter_moon: |
+| [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2) | :new_moon: |
+| [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2) | :full_moon: |
+| [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2) | :new_moon: |
+| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) | :new_moon: |
+| [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2) | :new_moon: |
+| [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2) | :new_moon: |
+| [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) | :new_moon: |
+| [Organization](https://help.sonatype.com/iqserver/automating/rest-apis/organization-rest-apis---v2) | :last_quarter_moon: |
+| [Promote Scan](https://help.sonatype.com/iqserver/automating/rest-apis/promote-scan-rest-api---v2) | :new_moon: |
+| [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2) | :new_moon: |
+| [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github) | :full_moon: |
+| [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2) | :new_moon: |
+| [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2) | :new_moon: |
+
+**Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
 
 ## The Fine Print
-It is worth noting that this is **NOT SUPPORTED** by [Sonatype](//www.sonatype.com), and is a contribution of HokieGeek
+It is worth noting that this is **NOT SUPPORTED** by [Sonatype](//www.sonatype.com), and is a contribution of [@HokieGeek](https://github.com/HokieGeek)
 plus us to the open source community (read: you!)
 
 Remember:
