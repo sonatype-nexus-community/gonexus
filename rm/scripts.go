@@ -116,7 +116,7 @@ func ScriptUpdate(rm RM, script Script) error {
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restScript, script.Name)
-	resp, err := rm.Put(endpoint, bytes.NewBuffer(json))
+	_, resp, err := rm.Put(endpoint, bytes.NewBuffer(json))
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return doError(err)
 	}

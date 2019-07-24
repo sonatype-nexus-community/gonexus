@@ -21,7 +21,7 @@ type Client interface {
 	Do(request *http.Request) ([]byte, *http.Response, error)
 	Get(endpoint string) ([]byte, *http.Response, error)
 	Post(endpoint string, payload io.Reader) ([]byte, *http.Response, error)
-	Put(endpoint string, payload io.Reader) (*http.Response, error)
+	Put(endpoint string, payload io.Reader) ([]byte, *http.Response, error)
 	Del(endpoint string) (*http.Response, error)
 	Info() ServerInfo
 }
@@ -94,9 +94,8 @@ func (s DefaultClient) Post(endpoint string, payload io.Reader) ([]byte, *http.R
 }
 
 // Put performs an HTTP PUT against the indicated endpoint
-func (s DefaultClient) Put(endpoint string, payload io.Reader) (resp *http.Response, err error) {
-	_, resp, err = s.http(http.MethodPut, endpoint, payload)
-	return
+func (s DefaultClient) Put(endpoint string, payload io.Reader) ([]byte, *http.Response, error) {
+	return s.http(http.MethodPut, endpoint, payload)
 }
 
 // Del performs an HTTP DELETE against the indicated endpoint

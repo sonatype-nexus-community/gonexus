@@ -126,7 +126,7 @@ func UpdateSourceControlEntry(iq IQ, applicationID, repositoryURL, token string)
 	}
 
 	endpoint := fmt.Sprintf(restSourceControl, appInfo.ID)
-	if _, err = iq.Put(endpoint, bytes.NewBuffer(request)); err != nil {
+	if _, _, err = iq.Put(endpoint, bytes.NewBuffer(request)); err != nil {
 		return doError(err)
 	}
 
