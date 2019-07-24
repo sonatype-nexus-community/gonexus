@@ -19,7 +19,7 @@ if err != nil {
 #### Supported Endpoints
 | Endpoint |  Status  |
 |----------|:--------:|
-| [Assets](https://help.sonatype.com/repomanager3/rest-and-integration-api/assets-api) | :waning_crescent_moon: |
+| [Assets](https://help.sonatype.com/repomanager3/rest-and-integration-api/assets-api) | :full_moon: |
 | [Components](https://help.sonatype.com/repomanager3/rest-and-integration-api/components-api) | :waning_gibbous_moon: |
 | [Lifecycle](https://help.sonatype.com/repomanager3/rest-and-integration-api/lifecycle-api) | :new_moon: |
 | [Maintenance](https://help.sonatype.com/repomanager3/rest-and-integration-api/maintenance-api) | :new_moon: |

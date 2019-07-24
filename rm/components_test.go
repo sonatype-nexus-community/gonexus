@@ -12,19 +12,28 @@ import (
 
 var dummyComponents = map[string][]RepositoryItem{
 	"repo-maven": []RepositoryItem{
-		RepositoryItem{ID: "component1id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0"},
-		RepositoryItem{ID: "component2id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent2", Version: "2.0.0"},
-		RepositoryItem{ID: "component3id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent3", Version: "3.0.0"},
+		{
+			ID: "component1id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent1", Version: "1.0.0",
+			Assets: []RepositoryItemAsset{dummyAssets["repo-maven"][0]},
+		},
+		{
+			ID: "component2id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent2", Version: "2.0.0",
+			Assets: []RepositoryItemAsset{dummyAssets["repo-maven"][1]},
+		},
+		{
+			ID: "component3id", Repository: "repo-maven", Format: "maven2", Group: "org.test", Name: "testComponent3", Version: "3.0.0",
+			Assets: []RepositoryItemAsset{dummyAssets["repo-maven"][2]},
+		},
 	},
 	"repo-npm": []RepositoryItem{
-		RepositoryItem{ID: "component4id", Repository: "repo-npm", Format: "maven2", Group: "org.test", Name: "testComponent4", Version: "4.0.0"},
+		{
+			ID: "component4id", Repository: "repo-npm", Format: "maven2", Group: "org.test", Name: "testComponent4", Version: "4.0.0",
+			Assets: []RepositoryItemAsset{dummyAssets["repo-npm"][0]},
+		},
 	},
 }
 
-const (
-	dummyContinuationToken = "go_on..."
-	dummyNewComponentID    = "newComponentID"
-)
+const dummyNewComponentID = "newComponentID"
 
 func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
 	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

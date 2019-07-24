@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+const dummyContinuationToken = "go_on..."
+
 func newTestRM(handler http.Handler) (rm RM, mock *httptest.Server, err error) {
 	mock = httptest.NewServer(handler)
 
