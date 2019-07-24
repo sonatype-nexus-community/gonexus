@@ -30,7 +30,7 @@ if err != nil {
 | [Search](https://help.sonatype.com/repomanager3/rest-and-integration-api/search-api) | :waning_gibbous_moon: |
 | [Staging](https://help.sonatype.com/repomanager3/staging) *pro* | :new_moon: |
 | [Status](https://help.sonatype.com/repomanager3/rest-and-integration-api/status-api) | :full_moon: |
-| [Support](https://help.sonatype.com/repomanager3/rest-and-integration-api/support-api) | :waning_crescent_moon: |
+| [Support](https://help.sonatype.com/repomanager3/rest-and-integration-api/support-api) | :full_moon: |
 | [Tagging](https://help.sonatype.com/repomanager3/tagging) *pro* | :new_moon: |
 | [Tasks](https://help.sonatype.com/repomanager3/rest-and-integration-api/tasks-api) | :new_moon: |
 

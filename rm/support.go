@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"mime"
 	"net/http"
 )
 
 const restSupportZip = "service/rest/v1/support/supportzip"
 
+// SupportZipOptions encapsulates the various information you can toggle for inclusion in a support zip
 type SupportZipOptions struct {
 	SystemInformation bool `json:"systemInformation"`
 	ThreadDump        bool `json:"threadDump"`
@@ -24,6 +25,7 @@ type SupportZipOptions struct {
 	LimitZipSize      bool `json:"limitZipSize"`
 }
 
+// NewSupportZipOptions creates a SupportZipOptions intance with all options enabled
 func NewSupportZipOptions() (o SupportZipOptions) {
 	o.SystemInformation = true
 	o.ThreadDump = true
@@ -39,19 +41,25 @@ func NewSupportZipOptions() (o SupportZipOptions) {
 	return
 }
 
-func GetSupportZip(rm RM, options SupportZipOptions) (io.Reader, error) {
+// GetSupportZip generates a support zip with the given options
+func GetSupportZip(rm RM, options SupportZipOptions) ([]byte, string, error) {
 	request, err := json.Marshal(options)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving support zip: %v", err)
+		return nil, "", fmt.Errorf("error retrieving support zip: %v", err)
 	}
 
 	body, resp, err := rm.Post(restSupportZip, bytes.NewBuffer(request))
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving support zip: %v", err)
+		return nil, "", fmt.Errorf("error retrieving support zip: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error retrieving support zip: %s", resp.Status)
+		return nil, "", fmt.Errorf("error retrieving support zip: %s", resp.Status)
 	}
 
-	return bytes.NewBuffer(body), nil
+	_, params, err := mime.ParseMediaType(resp.Header["Content-Disposition"][0])
+	if err != nil {
+		return nil, "", fmt.Errorf("error determining name of support zip: %v", err)
+	}
+
+	return body, params["filename"], nil
 }
