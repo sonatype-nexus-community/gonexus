@@ -1,5 +1,13 @@
 package nexusrm
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+)
+
 const restSupportZip = "service/rest/v1/support/supportzip"
 
 type SupportZipOptions struct {
@@ -37,7 +45,7 @@ func GetSupportZip(rm RM, options SupportZipOptions) (io.Reader, error) {
 		return nil, fmt.Errorf("error retrieving support zip: %v", err)
 	}
 
-	body, resp, err := iq.Post(restSupportZip, bytes.NewBuffer(request))
+	body, resp, err := rm.Post(restSupportZip, bytes.NewBuffer(request))
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving support zip: %v", err)
 	}
