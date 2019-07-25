@@ -113,6 +113,7 @@ type PolicyViolation struct {
 	} `json:"constraintViolations"`
 }
 
+// LicenseData encapsulates the information on the different licenses of a component
 type LicenseData struct {
 	DeclaredLicenses []struct {
 		LicenseID   string `json:"licenseId"`
@@ -131,6 +132,7 @@ type LicenseData struct {
 	Status             string        `json:"status"`
 }
 
+// SecurityIssue encapsulates a security issue in the Sonatype database
 type SecurityIssue struct {
 	Source         string  `json:"source"`
 	Reference      string  `json:"reference"`
@@ -195,31 +197,27 @@ type iqEvaluationRequest struct {
 
 // EvaluateComponents evaluates the list of components
 func EvaluateComponents(iq IQ, components []Component, applicationID string) (*Evaluation, error) {
-	doError := func(err error) error {
-		return fmt.Errorf("components not evaluated: %v", err)
-	}
-
 	request, err := json.Marshal(iqEvaluationRequest{Components: components})
 	if err != nil {
-		return nil, doError(err)
+		return nil, fmt.Errorf("could not build the request: %v", err)
 	}
 
 	requestEndpoint := fmt.Sprintf(restEvaluation, applicationID)
 	body, _, err := iq.Post(requestEndpoint, bytes.NewBuffer(request))
 	if err != nil {
-		return nil, doError(err)
+		return nil, fmt.Errorf("components not evaluated: %v", err)
 	}
 
 	var results iqEvaluationRequestResponse
 	if err = json.Unmarshal(body, &results); err != nil {
-		return nil, doError(err)
+		return nil, fmt.Errorf("could not parse evaluation response: %v", err)
 	}
 
 	getEvaluationResults := func() (*Evaluation, error) {
 		body, resp, e := iq.Get(results.ResultsURL)
 		if e != nil {
 			if resp.StatusCode != http.StatusNotFound {
-				return nil, e
+				return nil, fmt.Errorf("could not retrieve evaluation results: %v", err)
 			}
 			return nil, nil
 		}
