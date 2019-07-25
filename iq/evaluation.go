@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -49,6 +50,25 @@ func (a *ComponentIdentifier) Equals(b *ComponentIdentifier) (_ bool) {
 	}
 
 	return true
+}
+
+// NewComponentIdentifierFromString creates a new ComponentIdentifier object by parsing
+// a string in the expected format; format:group:name:version:ext
+func NewComponentIdentifierFromString(str string) (*ComponentIdentifier, error) {
+	split := strings.Split(str, ":")
+
+	if len(split) != 5 {
+		return nil, fmt.Errorf("string not in expected form (format:group:name:version:ext)")
+	}
+
+	c := new(ComponentIdentifier)
+	c.Format = split[0]
+	c.Coordinates.ArtifactID = split[1]
+	c.Coordinates.GroupID = split[2]
+	c.Coordinates.Version = split[3]
+	c.Coordinates.Extension = split[4]
+
+	return c, nil
 }
 
 // Component encapsulates the details of a component in IQ
