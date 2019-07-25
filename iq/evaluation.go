@@ -113,32 +113,41 @@ type PolicyViolation struct {
 	} `json:"constraintViolations"`
 }
 
+type LicenseData struct {
+	DeclaredLicenses []struct {
+		LicenseID   string `json:"licenseId"`
+		LicenseName string `json:"licenseName"`
+	} `json:"declaredLicenses"`
+	EffectiveLicenseThreats []struct {
+		LicenseThreatGroupCategory string `json:"licenseThreatGroupCategory"`
+		LicenseThreatGroupLevel    int64  `json:"licenseThreatGroupLevel"`
+		LicenseThreatGroupName     string `json:"licenseThreatGroupName"`
+	} `json:"effectiveLicenseThreats,omitempty"`
+	ObservedLicenses []struct {
+		LicenseID   string `json:"licenseId"`
+		LicenseName string `json:"licenseName"`
+	} `json:"observedLicenses"`
+	OverriddenLicenses []interface{} `json:"overriddenLicenses"`
+	Status             string        `json:"status"`
+}
+
+type SecurityIssue struct {
+	Source         string  `json:"source"`
+	Reference      string  `json:"reference"`
+	Severity       float64 `json:"severity"`
+	Status         string  `json:"status"`
+	URL            string  `json:"url"`
+	ThreatCategory string  `json:"threatCategory"`
+}
+
 // ComponentEvaluationResult is also a struct
 type ComponentEvaluationResult struct {
-	Component   Component `json:"component"`
-	MatchState  string    `json:"matchState"`
-	CatalogDate string    `json:"catalogDate"`
-	LicenseData struct {
-		DeclaredLicenses []struct {
-			LicenseID   string `json:"licenseId"`
-			LicenseName string `json:"licenseName"`
-		} `json:"declaredLicenses"`
-		ObservedLicenses []struct {
-			LicenseID   string `json:"licenseId"`
-			LicenseName string `json:"licenseName"`
-		} `json:"observedLicenses"`
-		OverriddenLicenses []interface{} `json:"overriddenLicenses"`
-		Status             string        `json:"status"`
-	} `json:"licenseData"`
+	Component    Component   `json:"component"`
+	MatchState   string      `json:"matchState"`
+	CatalogDate  string      `json:"catalogDate"`
+	LicensesData LicenseData `json:"licenseData"`
 	SecurityData struct {
-		SecurityIssues []struct {
-			Source         string  `json:"source"`
-			Reference      string  `json:"reference"`
-			Severity       float64 `json:"severity"`
-			Status         string  `json:"status"`
-			URL            string  `json:"url"`
-			ThreatCategory string  `json:"threatCategory"`
-		} `json:"securityIssues"`
+		SecurityIssues []SecurityIssue `json:"securityIssues"`
 	} `json:"securityData"`
 	PolicyData struct {
 		PolicyViolations []PolicyViolation `json:"policyViolations"`
