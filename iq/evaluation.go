@@ -20,7 +20,7 @@ type ComponentIdentifier struct {
 		GroupID    string `json:"groupId,omitempty"`
 		Version    string `json:"version,omitempty"`
 		Extension  string `json:"extension,omitempty"`
-	} `json:"coordinates"`
+	} `json:"coordinates,omitempty"`
 }
 
 // Equals compares two ComponentIdentifier objects
@@ -52,30 +52,12 @@ func (a *ComponentIdentifier) Equals(b *ComponentIdentifier) (_ bool) {
 	return true
 }
 
-// NewComponentIdentifierFromString creates a new ComponentIdentifier object by parsing
-// a string in the expected format; format:group:name:version:ext
-func NewComponentIdentifierFromString(str string) (*ComponentIdentifier, error) {
-	split := strings.Split(str, ":")
-
-	if len(split) != 5 {
-		return nil, fmt.Errorf("string not in expected form (format:group:name:version:ext)")
-	}
-
-	c := new(ComponentIdentifier)
-	c.Format = split[0]
-	c.Coordinates.ArtifactID = split[1]
-	c.Coordinates.GroupID = split[2]
-	c.Coordinates.Version = split[3]
-	c.Coordinates.Extension = split[4]
-
-	return c, nil
-}
-
 // Component encapsulates the details of a component in IQ
 type Component struct {
-	Hash        string              `json:"hash,omitempty"`
-	ComponentID ComponentIdentifier `json:"componentIdentifier,omitempty"`
-	Proprietary bool                `json:"proprietary,omitempty"`
+	Hash        string               `json:"hash,omitempty"`
+	ComponentID *ComponentIdentifier `json:"componentIdentifier,omitempty"`
+	Proprietary bool                 `json:"proprietary,omitempty"`
+	PackageURL  string               `json:"packageUrl,omitempty"`
 }
 
 // Equals compares two Component objects
@@ -88,7 +70,7 @@ func (a *Component) Equals(b *Component) (_ bool) {
 		return
 	}
 
-	if !a.ComponentID.Equals(&b.ComponentID) {
+	if !a.ComponentID.Equals(b.ComponentID) {
 		return
 	}
 
@@ -97,6 +79,57 @@ func (a *Component) Equals(b *Component) (_ bool) {
 	}
 
 	return true
+}
+
+type versionDetailsRubyGem struct {
+	Authors        string      `json:"authors"`
+	BuiltAt        time.Time   `json:"built_at"`
+	CreatedAt      time.Time   `json:"created_at"`
+	Description    string      `json:"description"`
+	DownloadsCount int         `json:"downloads_count"`
+	Metadata       struct{}    `json:"metadata"`
+	Number         string      `json:"number"`
+	Summary        string      `json:"summary"`
+	Platform       string      `json:"platform"`
+	RubyVersion    interface{} `json:"ruby_version"`
+	Prerelease     bool        `json:"prerelease"`
+	Licenses       interface{} `json:"licenses"`
+	Requirements   interface{} `json:"requirements"`
+	Sha            string      `json:"sha"`
+}
+
+// NewComponentFromString creates a new Component object by parsing
+// a string in the expected format; format:group:name:version:ext
+func NewComponentFromString(str string) (*Component, error) {
+	split := strings.Split(str, ":")
+
+	c := new(Component)
+	if len(split) == 1 {
+		c.Hash = str
+	} else {
+		switch split[0] {
+		case "maven":
+			// c.PackageURL = fmt.Sprintf("pkg:maven/%s/%s@%s?type=%s", split[1], split[2], split[3], split[4])
+			c.ComponentID.Format = split[0]
+			c.ComponentID.Coordinates.GroupID = split[1]
+			c.ComponentID.Coordinates.ArtifactID = split[2]
+			c.ComponentID.Coordinates.Version = split[3]
+			c.ComponentID.Coordinates.Extension = split[4]
+		case "gem":
+			c.PackageURL = fmt.Sprintf("pkg:gem/%s@%s?platform=ruby", split[1], split[2])
+		case "npm":
+			c.PackageURL = fmt.Sprintf("pkg:npm/%s@%s", split[1], split[2])
+		case "pypi":
+			c.PackageURL = fmt.Sprintf("pkg:pypi/%s@%s?extension=%s", split[1], split[2], split[3])
+		case "nuget":
+			c.PackageURL = fmt.Sprintf("pkg:nuget/%s@%s", split[1], split[2])
+		// case "go":
+		default:
+			return c, fmt.Errorf("format %s unsupported", split[0])
+		}
+	}
+
+	return c, nil
 }
 
 // PolicyViolation is a struct

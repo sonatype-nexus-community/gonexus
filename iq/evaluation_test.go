@@ -89,6 +89,7 @@ func TestEvaluateComponents(t *testing.T) {
 
 	var dummy Component
 	dummy.Hash = "045c37a03be19f3e0db8"
+	dummy.ComponentID = new(ComponentIdentifier)
 	dummy.ComponentID.Format = "maven"
 	dummy.ComponentID.Coordinates.ArtifactID = "jackson-databind"
 	dummy.ComponentID.Coordinates.GroupID = "com.fasterxml.jackson.core"
