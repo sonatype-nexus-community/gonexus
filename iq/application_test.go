@@ -12,10 +12,10 @@ import (
 )
 
 var dummyApps = []Application{
-	Application{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "app1OrgId"},
-	Application{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "app2OrgId"},
-	Application{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "app3OrgId"},
-	Application{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
+	{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "app1OrgId"},
+	{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "app2OrgId"},
+	{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "app3OrgId"},
+	{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
 }
 
 func getAppByPublicID(pubID string) (app Application, i int, ok bool) {

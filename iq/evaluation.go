@@ -58,6 +58,8 @@ type Component struct {
 	ComponentID *ComponentIdentifier `json:"componentIdentifier,omitempty"`
 	Proprietary bool                 `json:"proprietary,omitempty"`
 	PackageURL  string               `json:"packageUrl,omitempty"`
+	MatchState  string               `json:"matchState,omitempty"`
+	Pathnames   []string             `json:"pathnames,omitempty"`
 }
 
 // Equals compares two Component objects
@@ -76,6 +78,24 @@ func (a *Component) Equals(b *Component) (_ bool) {
 
 	if a.Proprietary != b.Proprietary {
 		return
+	}
+
+	if a.PackageURL != b.PackageURL {
+		return
+	}
+
+	if a.MatchState != b.MatchState {
+		return
+	}
+
+	if len(a.Pathnames) != len(b.Pathnames) {
+		return
+	}
+
+	for i, p := range a.Pathnames {
+		if p != b.Pathnames[i] {
+			return
+		}
 	}
 
 	return true
@@ -132,7 +152,7 @@ func NewComponentFromString(str string) (*Component, error) {
 	return c, nil
 }
 
-// PolicyViolation is a struct
+// PolicyViolation is the policies violated by a component
 type PolicyViolation struct {
 	PolicyID             string `json:"policyId"`
 	PolicyName           string `json:"policyName"`
@@ -146,23 +166,102 @@ type PolicyViolation struct {
 	} `json:"constraintViolations"`
 }
 
+// License identifier an OSS license recognized by Sonatype
+type License struct {
+	LicenseID   string `json:"licenseId"`
+	LicenseName string `json:"licenseName"`
+}
+
+// Equals compares two License objects
+func (a *License) Equals(b *License) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.LicenseID != b.LicenseID {
+		return
+	}
+
+	if a.LicenseName != b.LicenseName {
+		return
+	}
+
+	return true
+}
+
 // LicenseData encapsulates the information on the different licenses of a component
 type LicenseData struct {
-	DeclaredLicenses []struct {
-		LicenseID   string `json:"licenseId"`
-		LicenseName string `json:"licenseName"`
-	} `json:"declaredLicenses"`
+	Status                  string    `json:"status"`
+	DeclaredLicenses        []License `json:"declaredLicenses"`
+	ObservedLicenses        []License `json:"observedLicenses"`
+	OverriddenLicenses      []License `json:"overriddenLicenses"`
 	EffectiveLicenseThreats []struct {
 		LicenseThreatGroupCategory string `json:"licenseThreatGroupCategory"`
 		LicenseThreatGroupLevel    int64  `json:"licenseThreatGroupLevel"`
 		LicenseThreatGroupName     string `json:"licenseThreatGroupName"`
 	} `json:"effectiveLicenseThreats,omitempty"`
-	ObservedLicenses []struct {
-		LicenseID   string `json:"licenseId"`
-		LicenseName string `json:"licenseName"`
-	} `json:"observedLicenses"`
-	OverriddenLicenses []interface{} `json:"overriddenLicenses"`
-	Status             string        `json:"status"`
+}
+
+// Equals compares two LicenseData objects
+func (a *LicenseData) Equals(b *LicenseData) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.Status != b.Status {
+		return
+	}
+
+	if len(a.DeclaredLicenses) != len(b.DeclaredLicenses) {
+		return
+	}
+
+	for i, l := range a.DeclaredLicenses {
+		if !l.Equals(&b.DeclaredLicenses[i]) {
+			return
+		}
+	}
+
+	if len(a.ObservedLicenses) != len(b.ObservedLicenses) {
+		return
+	}
+
+	for i, l := range a.ObservedLicenses {
+		if !l.Equals(&b.ObservedLicenses[i]) {
+			return
+		}
+	}
+
+	if len(a.OverriddenLicenses) != len(b.OverriddenLicenses) {
+		return
+	}
+
+	for i, l := range a.OverriddenLicenses {
+		if !l.Equals(&b.OverriddenLicenses[i]) {
+			return
+		}
+	}
+
+	if len(a.EffectiveLicenseThreats) != len(b.EffectiveLicenseThreats) {
+		return
+	}
+
+	for i, l := range a.EffectiveLicenseThreats {
+		if l.LicenseThreatGroupCategory != b.EffectiveLicenseThreats[i].LicenseThreatGroupCategory {
+			return
+		}
+
+		if l.LicenseThreatGroupLevel != b.EffectiveLicenseThreats[i].LicenseThreatGroupLevel {
+			return
+		}
+
+		if l.LicenseThreatGroupName != b.EffectiveLicenseThreats[i].LicenseThreatGroupName {
+			return
+		}
+
+	}
+
+	return true
 }
 
 // SecurityIssue encapsulates a security issue in the Sonatype database
@@ -175,7 +274,40 @@ type SecurityIssue struct {
 	ThreatCategory string  `json:"threatCategory"`
 }
 
-// ComponentEvaluationResult is also a struct
+// Equals compares two SecurityIssue objects
+func (a *SecurityIssue) Equals(b *SecurityIssue) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.Source != b.Source {
+		return
+	}
+
+	if a.Reference != b.Reference {
+		return
+	}
+
+	if a.Severity != b.Severity {
+		return
+	}
+
+	if a.Status != b.Status {
+		return
+	}
+
+	if a.URL != b.URL {
+		return
+	}
+
+	if a.ThreatCategory != b.ThreatCategory {
+		return
+	}
+
+	return true
+}
+
+// ComponentEvaluationResult holds the results of a component evaluation
 type ComponentEvaluationResult struct {
 	Component    Component   `json:"component"`
 	MatchState   string      `json:"matchState"`

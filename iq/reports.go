@@ -8,10 +8,14 @@ import (
 
 const restReports = "api/v2/reports/applications"
 
+// Provides a constants for the IQ stages
 const (
+	StageProxy       = "proxy"
+	StageDevelop     = "develop"
 	StageBuild       = "build"
 	StageStageRelase = "stage-release"
 	StageRelease     = "release"
+	StageOperate     = "operate"
 )
 
 // ReportInfo encapsulates the summary information on a given report
@@ -25,16 +29,48 @@ type ReportInfo struct {
 	Stage                   string `json:"stage"`
 }
 
+// Equals compares two ReportInfo objects
+func (a *ReportInfo) Equals(b *ReportInfo) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.ApplicationID != b.ApplicationID {
+		return
+	}
+
+	if a.EmbeddableReportHTMLURL != b.EmbeddableReportHTMLURL {
+		return
+	}
+
+	if a.EvaluationDate != b.EvaluationDate {
+		return
+	}
+
+	if a.ReportDataURL != b.ReportDataURL {
+		return
+	}
+
+	if a.ReportHTMLURL != b.ReportHTMLURL {
+		return
+	}
+
+	if a.ReportPdfURL != b.ReportPdfURL {
+		return
+	}
+
+	if a.Stage != b.Stage {
+		return
+	}
+
+	return true
+}
+
 // ReportRaw descrpibes the raw data of an application report
 type ReportRaw struct {
 	Components []struct {
-		ComponentID  ComponentIdentifier `json:"componentIdentifier,omitempty"`
-		Hash         string              `json:"hash"`
-		MatchState   string              `json:"matchState"`
-		PackageURL   string              `json:"packageUrl"`
-		Pathnames    []string            `json:"pathnames"`
-		Proprietary  bool                `json:"proprietary"`
-		LicensesData LicenseData         `json:"licenseData"`
+		Component
+		LicensesData LicenseData `json:"licenseData"`
 		SecurityData struct {
 			SecurityIssues []SecurityIssue `json:"securityIssues"`
 		} `json:"securityData"`
@@ -45,17 +81,51 @@ type ReportRaw struct {
 	} `json:"matchSummary"`
 }
 
+// Equals compares two ReportRaw objects
+func (a *ReportRaw) Equals(b *ReportRaw) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.MatchSummary.KnownComponentCount != b.MatchSummary.KnownComponentCount {
+		return
+	}
+
+	if a.MatchSummary.TotalComponentCount != b.MatchSummary.TotalComponentCount {
+		return
+	}
+
+	if len(a.Components) != len(b.Components) {
+		return
+	}
+
+	for i, c := range a.Components {
+		// TODO: Component ??
+
+		if !c.LicensesData.Equals(&b.Components[i].LicensesData) {
+			return
+		}
+
+		if len(c.SecurityData.SecurityIssues) != len(b.Components[i].SecurityData.SecurityIssues) {
+			return
+		}
+
+		for j, s := range c.SecurityData.SecurityIssues {
+			if !s.Equals(&b.Components[i].SecurityData.SecurityIssues[j]) {
+				return
+			}
+		}
+	}
+
+	return true
+}
+
 // ReportPolicy descrpibes the policies violated by the components in an application report
 type ReportPolicy struct {
 	Application Application `json:"application"`
 	Components  []struct {
-		ComponentID ComponentIdentifier `json:"componentIdentifier,omitempty"`
-		Hash        string              `json:"hash"`
-		MatchState  string              `json:"matchState"`
-		PackageURL  string              `json:"packageUrl"`
-		Pathnames   []string            `json:"pathnames"`
-		Proprietary bool                `json:"proprietary"`
-		Violations  []struct {
+		Component
+		Violations []struct {
 			Constraints []struct {
 				Conditions []struct {
 					ConditionReason  string `json:"conditionReason"`
@@ -82,10 +152,131 @@ type ReportPolicy struct {
 	ReportTitle string `json:"reportTitle"`
 }
 
+// Equals compares two ReportPolicy objects
+func (a *ReportPolicy) Equals(b *ReportPolicy) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if !a.Application.Equals(&b.Application) {
+		return
+	}
+
+	if a.ReportTime != b.ReportTime {
+		return
+	}
+
+	if a.ReportTitle != b.ReportTitle {
+		return
+	}
+
+	if a.Counts.ExactlyMatchedComponentCount != b.Counts.ExactlyMatchedComponentCount {
+		return
+	}
+
+	if a.Counts.GrandfatheredPolicyViolationCount != b.Counts.GrandfatheredPolicyViolationCount {
+		return
+	}
+
+	if a.Counts.PartiallyMatchedComponentCount != b.Counts.PartiallyMatchedComponentCount {
+		return
+	}
+
+	if a.Counts.TotalComponentCount != b.Counts.TotalComponentCount {
+		return
+	}
+
+	if len(a.Components) != len(b.Components) {
+		return
+	}
+
+	for i, c := range a.Components {
+		// TODO: Component.Equals??
+
+		if len(c.Violations) != len(b.Components[i].Violations) {
+			return
+		}
+
+		for j, v := range c.Violations {
+			if v.Grandfathered != b.Components[i].Violations[j].Grandfathered {
+				return
+			}
+
+			if v.PolicyID != b.Components[i].Violations[j].PolicyID {
+				return
+			}
+
+			if v.PolicyName != b.Components[i].Violations[j].PolicyName {
+				return
+			}
+
+			if v.PolicyThreatCategory != b.Components[i].Violations[j].PolicyThreatCategory {
+				return
+			}
+
+			if v.PolicyThreatLevel != b.Components[i].Violations[j].PolicyThreatLevel {
+				return
+			}
+
+			if v.Waived != b.Components[i].Violations[j].Waived {
+				return
+			}
+
+			if len(v.Constraints) != len(b.Components[i].Violations[j].Constraints) {
+				return
+			}
+
+			for k, d := range v.Constraints {
+				if d.ConstraintID != b.Components[i].Violations[j].Constraints[k].ConstraintID {
+					return
+				}
+
+				if d.ConstraintName != b.Components[i].Violations[j].Constraints[k].ConstraintName {
+					return
+				}
+
+				if len(d.Conditions) != len(b.Components[i].Violations[j].Constraints[k].Conditions) {
+					return
+				}
+
+				for l, t := range d.Conditions {
+					if t.ConditionReason != b.Components[i].Violations[j].Constraints[k].Conditions[l].ConditionReason {
+						return
+					}
+
+					if t.ConditionSummary != b.Components[i].Violations[j].Constraints[k].Conditions[l].ConditionSummary {
+						return
+					}
+				}
+			}
+
+		}
+	}
+
+	return true
+}
+
 // Report encapsulates the policy and raw report of an application
 type Report struct {
 	Policy ReportPolicy
 	Raw    ReportRaw
+}
+
+// Equals compares two Report objects
+func (a *Report) Equals(b *Report) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.Policy.Equals(&b.Policy) {
+		return
+	}
+
+	if a.Raw.Equals(&b.Raw) {
+		return
+	}
+
+	return true
 }
 
 // GetAllReportInfos returns all report infos
