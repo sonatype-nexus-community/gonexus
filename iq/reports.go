@@ -84,8 +84,8 @@ type ReportPolicy struct {
 
 // Report encapsulates the policy and raw report of an application
 type Report struct {
-	PolicyReport ReportPolicy
-	RawReport    ReportRaw
+	Policy ReportPolicy
+	Raw    ReportRaw
 }
 
 // GetAllReportInfos returns all report infos
@@ -101,58 +101,85 @@ func GetAllReportInfos(iq IQ) ([]ReportInfo, error) {
 	return infos, err
 }
 
-// GetReportInfoByAppID returns report information by application public ID
-func GetReportInfoByAppID(iq IQ, appID, stage string) (info ReportInfo, err error) {
+// GetReportInfosByAppID returns report information by application public ID
+func GetReportInfosByAppID(iq IQ, appID string) (infos []ReportInfo, err error) {
 	app, err := GetApplicationByPublicID(iq, appID)
 	if err != nil {
-		return info, fmt.Errorf("could not get application: %v", err)
+		return nil, fmt.Errorf("could not get application: %v", err)
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restReports, app.ID)
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
-		return info, fmt.Errorf("could not get report info: %v", err)
+		return nil, fmt.Errorf("could not get report infos: %v", err)
 	}
 
-	err = json.Unmarshal(body, &info)
+	infos = make([]ReportInfo, 0)
+	if err = json.Unmarshal(body, &infos); err != nil {
+		return infos, fmt.Errorf("could not get report infos: %v", err)
+	}
 
 	return
 }
 
 // GetRawReportByAppID returns report information by application public ID
 func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
-	info, err := GetReportInfoByAppID(iq, appID, stage)
+	infos, err := GetReportInfosByAppID(iq, appID)
 	if err != nil {
-		return ReportRaw{}, fmt.Errorf("could not report info for app '%s': %v", appID, err)
+		return ReportRaw{}, fmt.Errorf("could not get report info for app '%s': %v", appID, err)
 	}
 
-	fmt.Println(info.ReportDataURL)
-	// body, resp, err := iq.Get(info.ReportDataURL)
+	for _, info := range infos {
+		if info.Stage == stage {
+			body, _, err := iq.Get(info.ReportDataURL)
+			if err != nil {
+				return ReportRaw{}, fmt.Errorf("could not get raw report: %v", err)
+			}
 
-	return ReportRaw{}, nil
+			var report ReportRaw
+			if err = json.Unmarshal(body, &report); err != nil {
+				return report, fmt.Errorf("could not unmarshal raw report: %v", err)
+			}
+			return report, nil
+		}
+	}
+
+	return ReportRaw{}, fmt.Errorf("could not find raw report for stage %s", stage)
 }
 
 // GetPolicyReportByAppID returns report information by application public ID
 func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
-	info, err := GetReportInfoByAppID(iq, appID, stage)
+	infos, err := GetReportInfosByAppID(iq, appID)
 	if err != nil {
-		return ReportPolicy{}, fmt.Errorf("could not report info for app '%s': %v", appID, err)
+		return ReportPolicy{}, fmt.Errorf("could not get report info for app '%s': %v", appID, err)
 	}
 
-	fmt.Println(strings.Replace(info.ReportDataURL, "/raw", "/policy", 1))
-	// body, resp, err := iq.Get(policyURL)
+	for _, info := range infos {
+		if info.Stage == stage {
+			body, _, err := iq.Get(strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+			if err != nil {
+				return ReportPolicy{}, fmt.Errorf("could not get policy report: %v", err)
+			}
 
-	return ReportPolicy{}, nil
+			var report ReportPolicy
+			if err = json.Unmarshal(body, &report); err != nil {
+				return report, fmt.Errorf("could not unmarshal policy report: %v", err)
+			}
+			return report, nil
+		}
+	}
+
+	return ReportPolicy{}, fmt.Errorf("could not find policy report for stage %s", stage)
 }
 
 // GetReportByAppID returns report information by application public ID
 func GetReportByAppID(iq IQ, appID, stage string) (report Report, err error) {
-	report.PolicyReport, err = GetPolicyReportByAppID(iq, appID, stage)
+	report.Policy, err = GetPolicyReportByAppID(iq, appID, stage)
 	if err != nil {
 		return report, fmt.Errorf("could not retrieve policy report: %v", err)
 	}
 
-	report.RawReport, err = GetRawReportByAppID(iq, appID, stage)
+	report.Raw, err = GetRawReportByAppID(iq, appID, stage)
 	if err != nil {
 		return report, fmt.Errorf("could not retrieve raw report: %v", err)
 	}
