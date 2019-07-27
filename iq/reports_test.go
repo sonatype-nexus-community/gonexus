@@ -148,7 +148,7 @@ func reportsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 }
 
 func reportsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
-	return newTestIQ2(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasPrefix(r.URL.Path[1:], restApplication):
 			applicationTestFunc(t, w, r)

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 )
@@ -20,114 +19,97 @@ var dummyEntries = []SourceControlEntry{
 
 const newEntryID = "newEntryInternalId"
 
-func sourceControlTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
-	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
+func sourceControlTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restSourceControl[:len(restSourceControl)-2]):
+		appID := strings.Replace(r.URL.Path[1:], restSourceControl[:len(restSourceControl)-2], "", 1)
 
-		switch {
-		case r.Method == http.MethodGet && r.URL.String()[1:] == restApplication:
-			apps, err := json.Marshal(allAppsResponse{dummyApps})
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(apps))
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restApplicationByPublic[:len(restApplicationByPublic)-2]):
-			pubID := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
-			if app, _, ok := getAppByPublicID(pubID); ok {
-				resp, err := json.Marshal(iqAppDetailsResponse{[]Application{app}})
+		var found bool
+		for _, entry := range dummyEntries {
+			if entry.ApplicationID == appID {
+				resp, err := json.Marshal(entry)
 				if err != nil {
-					t.Fatal(err)
+					t.Error(err)
+					http.Error(w, "WTF?", http.StatusTeapot)
 				}
-
+				found = true
 				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
 			}
-
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restSourceControl[:len(restSourceControl)-2]):
-			appID := strings.Replace(r.URL.Path[1:], restSourceControl[:len(restSourceControl)-2], "", 1)
-
-			var found bool
-			for _, entry := range dummyEntries {
-				if entry.ApplicationID == appID {
-					resp, err := json.Marshal(entry)
-					if err != nil {
-						t.Error(err)
-						http.Error(w, "WTF?", http.StatusTeapot)
-					}
-					found = true
-					fmt.Fprintln(w, string(resp))
-				}
-			}
-			if !found {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		case r.Method == http.MethodPost:
-			defer r.Body.Close()
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-
-			var entry SourceControlEntry
-			if err = json.Unmarshal(body, &entry); err != nil {
-				t.Error(err)
-				w.WriteHeader(http.StatusTeapot)
-			}
-			entry.ID = newEntryID
-			dummyEntries = append(dummyEntries, entry)
-		case r.Method == http.MethodPut:
-			defer r.Body.Close()
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-
-			var entry SourceControlEntry
-			if err = json.Unmarshal(body, &entry); err != nil {
-				t.Error(err)
-				w.WriteHeader(http.StatusTeapot)
-			}
-			for i, e := range dummyEntries {
-				if e.ID == entry.ID {
-					dummyEntries[i].ApplicationID = entry.ApplicationID
-					dummyEntries[i].RepositoryURL = entry.RepositoryURL
-					dummyEntries[i].Token = entry.Token
-				}
-			}
-			dummyEntries = append(dummyEntries, entry)
-		case r.Method == http.MethodDelete:
-			splt := strings.Split(r.URL.Path, "/")
-			id := splt[len(splt)-1]
-
-			var found bool
-			for i, e := range dummyEntries {
-				if e.ID == id {
-					found = true
-					copy(dummyEntries[i:], dummyEntries[i+1:])
-					dummyEntries[len(dummyEntries)-1] = SourceControlEntry{}
-					dummyEntries = dummyEntries[:len(dummyEntries)-1]
-
-					w.WriteHeader(http.StatusNoContent)
-				}
-			}
-
-			if !found {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	}))
+		if !found {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	case r.Method == http.MethodPost:
+		defer r.Body.Close()
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		var entry SourceControlEntry
+		if err = json.Unmarshal(body, &entry); err != nil {
+			t.Error(err)
+			w.WriteHeader(http.StatusTeapot)
+		}
+		entry.ID = newEntryID
+		dummyEntries = append(dummyEntries, entry)
+	case r.Method == http.MethodPut:
+		defer r.Body.Close()
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		var entry SourceControlEntry
+		if err = json.Unmarshal(body, &entry); err != nil {
+			t.Error(err)
+			w.WriteHeader(http.StatusTeapot)
+		}
+		for i, e := range dummyEntries {
+			if e.ID == entry.ID {
+				dummyEntries[i].ApplicationID = entry.ApplicationID
+				dummyEntries[i].RepositoryURL = entry.RepositoryURL
+				dummyEntries[i].Token = entry.Token
+			}
+		}
+		dummyEntries = append(dummyEntries, entry)
+	case r.Method == http.MethodDelete:
+		splt := strings.Split(r.URL.Path, "/")
+		id := splt[len(splt)-1]
+
+		var found bool
+		for i, e := range dummyEntries {
+			if e.ID == id {
+				found = true
+				copy(dummyEntries[i:], dummyEntries[i+1:])
+				dummyEntries[len(dummyEntries)-1] = SourceControlEntry{}
+				dummyEntries = dummyEntries[:len(dummyEntries)-1]
+
+				w.WriteHeader(http.StatusNoContent)
+			}
+		}
+
+		if !found {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func sourceControlTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
+	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path[1:], restApplication):
+			applicationTestFunc(t, w, r)
+		default:
+			sourceControlTestFunc(t, w, r)
+		}
+	})
 }
 
 func TestGetSourceControlEntryByInternalID(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	dummyEntryIdx := 2
@@ -145,10 +127,7 @@ func TestGetSourceControlEntryByInternalID(t *testing.T) {
 }
 
 func TestGetAllSourceControlEntries(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	entries, err := GetAllSourceControlEntries(iq)
@@ -176,10 +155,7 @@ func TestGetAllSourceControlEntries(t *testing.T) {
 }
 
 func TestGetSourceControlEntry(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	dummyEntryIdx := 0
@@ -197,15 +173,12 @@ func TestGetSourceControlEntry(t *testing.T) {
 }
 
 func TestCreateSourceControlEntry(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	createdEntry := SourceControlEntry{newEntryID, dummyApps[len(dummyApps)-1].ID, "createdEntryURL", "createEntryToken"}
 
-	err = CreateSourceControlEntry(iq, dummyApps[len(dummyApps)-1].PublicID, createdEntry.RepositoryURL, createdEntry.Token)
+	err := CreateSourceControlEntry(iq, dummyApps[len(dummyApps)-1].PublicID, createdEntry.RepositoryURL, createdEntry.Token)
 	if err != nil {
 		t.Error(err)
 	}
@@ -222,16 +195,13 @@ func TestCreateSourceControlEntry(t *testing.T) {
 }
 
 func TestUpdateSourceControlEntry(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	updatedEntryRepositoryURL := "updatedRepoURL"
 	updatedEntryToken := "updatedToken"
 
-	err = UpdateSourceControlEntry(iq, dummyApps[len(dummyApps)-2].PublicID, updatedEntryRepositoryURL, updatedEntryToken)
+	err := UpdateSourceControlEntry(iq, dummyApps[len(dummyApps)-2].PublicID, updatedEntryRepositoryURL, updatedEntryToken)
 	if err != nil {
 		t.Error(err)
 	}
@@ -252,47 +222,41 @@ func TestUpdateSourceControlEntry(t *testing.T) {
 }
 
 func TestDeleteSourceControlEntry(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	app := dummyApps[len(dummyApps)-1]
 	deleteMe := SourceControlEntry{newEntryID, app.ID, "deleteMeURL", "deleteMeToken"}
 
-	if err = CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
+	if err := CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
 		t.Error(err)
 	}
 
-	if err = DeleteSourceControlEntry(iq, app.PublicID, newEntryID); err != nil {
+	if err := DeleteSourceControlEntry(iq, app.PublicID, newEntryID); err != nil {
 		t.Error(err)
 	}
 
-	if _, err = GetSourceControlEntry(iq, app.PublicID); err == nil {
+	if _, err := GetSourceControlEntry(iq, app.PublicID); err == nil {
 		t.Error("Unexpectedly found entry which should have been deleted")
 	}
 }
 
 func TestDeleteSourceControlEntryByApp(t *testing.T) {
-	iq, mock, err := sourceControlTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := sourceControlTestIQ(t)
 	defer mock.Close()
 
 	app := dummyApps[len(dummyApps)-1]
 	deleteMe := SourceControlEntry{newEntryID, app.ID, "deleteMeURL", "deleteMeToken"}
 
-	if err = CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
+	if err := CreateSourceControlEntry(iq, app.PublicID, deleteMe.RepositoryURL, deleteMe.Token); err != nil {
 		t.Error(err)
 	}
 
-	if err = DeleteSourceControlEntryByApp(iq, app.PublicID); err != nil {
+	if err := DeleteSourceControlEntryByApp(iq, app.PublicID); err != nil {
 		t.Error(err)
 	}
 
-	if _, err = GetSourceControlEntry(iq, app.PublicID); err == nil {
+	if _, err := GetSourceControlEntry(iq, app.PublicID); err == nil {
 		t.Error("Unexpectedly found entry which should have been deleted")
 	}
 }

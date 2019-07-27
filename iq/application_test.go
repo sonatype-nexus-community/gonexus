@@ -94,7 +94,7 @@ func applicationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 }
 
 func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
-	return newTestIQ2(t, applicationTestFunc)
+	return newTestIQ(t, applicationTestFunc)
 }
 
 func TestGetAllApplications(t *testing.T) {

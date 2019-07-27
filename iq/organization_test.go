@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"testing"
 )
 
@@ -17,57 +16,53 @@ var dummyOrgs = []Organization{
 	Organization{ID: "org4InternalId", Name: "org4Name"},
 }
 
-func organizationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
-	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
-
-		switch {
-		case r.Method == http.MethodGet && r.URL.String()[1:] == restOrganization:
-			orgs, err := json.Marshal(allOrgsResponse{dummyOrgs})
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(orgs))
-		case r.Method == http.MethodPost:
-			defer r.Body.Close()
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			var orgReq iqNewOrgRequest
-			if err = json.Unmarshal(body, &orgReq); err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			org := Organization{
-				ID:   orgReq.Name + "InternalId",
-				Name: orgReq.Name,
-			}
-
-			// for _, t := range orgReq.Tags {
-			// 	org.Tags = append(org.Tags, t)
-			// }
-
-			dummyOrgs = append(dummyOrgs, org)
-
-			resp, err := json.Marshal(org)
-			if err != nil {
-				w.WriteHeader(http.StatusTeapot)
-			}
-
-			fmt.Fprintln(w, string(resp))
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
+func organizationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method == http.MethodGet && r.URL.String()[1:] == restOrganization:
+		orgs, err := json.Marshal(allOrgsResponse{dummyOrgs})
+		if err != nil {
+			t.Fatal(err)
 		}
-	}))
+
+		fmt.Fprintln(w, string(orgs))
+	case r.Method == http.MethodPost:
+		defer r.Body.Close()
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		var orgReq iqNewOrgRequest
+		if err = json.Unmarshal(body, &orgReq); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		org := Organization{
+			ID:   orgReq.Name + "InternalId",
+			Name: orgReq.Name,
+		}
+
+		// for _, t := range orgReq.Tags {
+		// 	org.Tags = append(org.Tags, t)
+		// }
+
+		dummyOrgs = append(dummyOrgs, org)
+
+		resp, err := json.Marshal(org)
+		if err != nil {
+			w.WriteHeader(http.StatusTeapot)
+		}
+
+		fmt.Fprintln(w, string(resp))
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func organizationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
+	return newTestIQ(t, organizationTestFunc)
 }
 
 func TestGetOranizationByName(t *testing.T) {
-	iq, mock, err := organizationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := organizationTestIQ(t)
 	defer mock.Close()
 
 	dummyOrgsIdx := 2
@@ -85,14 +80,12 @@ func TestGetOranizationByName(t *testing.T) {
 }
 
 func TestCreateOrganization(t *testing.T) {
-	iq, mock, err := organizationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := organizationTestIQ(t)
 	defer mock.Close()
 
 	createdOrg := Organization{Name: "createdOrg"}
 
+	var err error
 	createdOrg.ID, err = CreateOrganization(iq, createdOrg.Name)
 	if err != nil {
 		t.Fatal(err)
@@ -109,10 +102,7 @@ func TestCreateOrganization(t *testing.T) {
 }
 
 func TestGetAllOrganizations(t *testing.T) {
-	iq, mock, err := organizationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := organizationTestIQ(t)
 	defer mock.Close()
 
 	organizations, err := GetAllOrganizations(iq)
