@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 )
@@ -27,83 +26,79 @@ func getAppByPublicID(pubID string) (app Application, i int, ok bool) {
 	return
 }
 
-func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server, err error) {
-	return newTestIQ(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
+func applicationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method == http.MethodGet && r.URL.String()[1:] == restApplication:
+		apps, err := json.Marshal(allAppsResponse{dummyApps})
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		switch {
-		case r.Method == http.MethodGet && r.URL.String()[1:] == restApplication:
-			apps, err := json.Marshal(allAppsResponse{dummyApps})
+		fmt.Fprintln(w, string(apps))
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restApplicationByPublic[:len(restApplicationByPublic)-2]):
+		pubID := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
+		if app, _, ok := getAppByPublicID(pubID); ok {
+			resp, err := json.Marshal(iqAppDetailsResponse{[]Application{app}})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			fmt.Fprintln(w, string(apps))
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restApplicationByPublic[:len(restApplicationByPublic)-2]):
-			pubID := strings.Replace(r.URL.RawQuery, "publicId=", "", -1)
-			if app, _, ok := getAppByPublicID(pubID); ok {
-				resp, err := json.Marshal(iqAppDetailsResponse{[]Application{app}})
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		case r.Method == http.MethodPost:
-			defer r.Body.Close()
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			var appReq iqNewAppRequest
-			if err = json.Unmarshal(body, &appReq); err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			app := Application{
-				ID:              appReq.Name + "InternalId",
-				PublicID:        appReq.PublicID,
-				Name:            appReq.Name,
-				OrganizationID:  appReq.OrganizationID,
-				ContactUserName: appReq.ContactUserName,
-			}
-
-			// for _, t := range appReq.ApplicationTags {
-			// 	app.ApplicationTags = append(app.ApplicationTags, t)
-			// }
-
-			dummyApps = append(dummyApps, app)
-
-			resp, err := json.Marshal(app)
-			if err != nil {
-				w.WriteHeader(http.StatusTeapot)
-			}
-
 			fmt.Fprintln(w, string(resp))
-		case r.Method == http.MethodDelete:
-			pubID := strings.Replace(r.URL.Path[1:], restApplication+"/", "", 1)
-			if _, i, ok := getAppByPublicID(pubID); ok {
-				copy(dummyApps[i:], dummyApps[i+1:])
-				dummyApps[len(dummyApps)-1] = Application{}
-				dummyApps = dummyApps[:len(dummyApps)-1]
-
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
 		}
-	}))
+	case r.Method == http.MethodPost:
+		defer r.Body.Close()
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		var appReq iqNewAppRequest
+		if err = json.Unmarshal(body, &appReq); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		app := Application{
+			ID:              appReq.Name + "InternalId",
+			PublicID:        appReq.PublicID,
+			Name:            appReq.Name,
+			OrganizationID:  appReq.OrganizationID,
+			ContactUserName: appReq.ContactUserName,
+		}
+
+		// for _, t := range appReq.ApplicationTags {
+		// 	app.ApplicationTags = append(app.ApplicationTags, t)
+		// }
+
+		dummyApps = append(dummyApps, app)
+
+		resp, err := json.Marshal(app)
+		if err != nil {
+			w.WriteHeader(http.StatusTeapot)
+		}
+
+		fmt.Fprintln(w, string(resp))
+	case r.Method == http.MethodDelete:
+		pubID := strings.Replace(r.URL.Path[1:], restApplication+"/", "", 1)
+		if _, i, ok := getAppByPublicID(pubID); ok {
+			copy(dummyApps[i:], dummyApps[i+1:])
+			dummyApps[len(dummyApps)-1] = Application{}
+			dummyApps = dummyApps[:len(dummyApps)-1]
+
+			w.WriteHeader(http.StatusNoContent)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
+	return newTestIQ2(t, applicationTestFunc)
 }
 
 func TestGetAllApplications(t *testing.T) {
-	iq, mock, err := applicationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := applicationTestIQ(t)
 	defer mock.Close()
 
 	applications, err := GetAllApplications(iq)
@@ -125,10 +120,7 @@ func TestGetAllApplications(t *testing.T) {
 }
 
 func TestGetApplicationByPublicID(t *testing.T) {
-	iq, mock, err := applicationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := applicationTestIQ(t)
 	defer mock.Close()
 
 	dummyAppsIdx := 2
@@ -146,14 +138,12 @@ func TestGetApplicationByPublicID(t *testing.T) {
 }
 
 func TestCreateApplication(t *testing.T) {
-	iq, mock, err := applicationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := applicationTestIQ(t)
 	defer mock.Close()
 
 	createdApp := Application{PublicID: "createdApp", Name: "createdApp", OrganizationID: "createdAppOrgId"}
 
+	var err error
 	createdApp.ID, err = CreateApplication(iq, createdApp.Name, createdApp.OrganizationID)
 	if err != nil {
 		t.Fatal(err)
@@ -170,14 +160,12 @@ func TestCreateApplication(t *testing.T) {
 }
 
 func TestDeleteApplication(t *testing.T) {
-	iq, mock, err := applicationTestIQ(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	iq, mock := applicationTestIQ(t)
 	defer mock.Close()
 
 	deleteMeApp := Application{PublicID: "deleteMeApp", Name: "deleteMeApp", OrganizationID: "deleteMeAppOrgId"}
 
+	var err error
 	deleteMeApp.ID, err = CreateApplication(iq, deleteMeApp.Name, deleteMeApp.OrganizationID)
 	if err != nil {
 		t.Fatal(err)

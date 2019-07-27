@@ -12,15 +12,17 @@ import (
 
 const restEvaluation = "api/v2/evaluation/applications/%s"
 
+type componentCoordinates struct {
+	ArtifactID string `json:"artifactId,omitempty"`
+	GroupID    string `json:"groupId,omitempty"`
+	Version    string `json:"version,omitempty"`
+	Extension  string `json:"extension,omitempty"`
+}
+
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
-	Format      string `json:"format,omitempty"`
-	Coordinates struct {
-		ArtifactID string `json:"artifactId,omitempty"`
-		GroupID    string `json:"groupId,omitempty"`
-		Version    string `json:"version,omitempty"`
-		Extension  string `json:"extension,omitempty"`
-	} `json:"coordinates,omitempty"`
+	Format      string               `json:"format,omitempty"`
+	Coordinates componentCoordinates `json:"coordinates,omitempty"`
 }
 
 // Equals compares two ComponentIdentifier objects

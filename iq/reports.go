@@ -66,19 +66,23 @@ func (a *ReportInfo) Equals(b *ReportInfo) (_ bool) {
 	return true
 }
 
+type rawReportComponent struct {
+	Component
+	LicensesData LicenseData `json:"licenseData"`
+	SecurityData struct {
+		SecurityIssues []SecurityIssue `json:"securityIssues"`
+	} `json:"securityData"`
+}
+
+type rawReportMatchSummary struct {
+	KnownComponentCount int64 `json:"knownComponentCount"`
+	TotalComponentCount int64 `json:"totalComponentCount"`
+}
+
 // ReportRaw descrpibes the raw data of an application report
 type ReportRaw struct {
-	Components []struct {
-		Component
-		LicensesData LicenseData `json:"licenseData"`
-		SecurityData struct {
-			SecurityIssues []SecurityIssue `json:"securityIssues"`
-		} `json:"securityData"`
-	} `json:"components"`
-	MatchSummary struct {
-		KnownComponentCount int64 `json:"knownComponentCount"`
-		TotalComponentCount int64 `json:"totalComponentCount"`
-	} `json:"matchSummary"`
+	Components   []rawReportComponent  `json:"components"`
+	MatchSummary rawReportMatchSummary `json:"matchSummary"`
 }
 
 // Equals compares two ReportRaw objects
@@ -120,36 +124,40 @@ func (a *ReportRaw) Equals(b *ReportRaw) (_ bool) {
 	return true
 }
 
+type policyReportComponent struct {
+	Component
+	Violations []struct {
+		Constraints []struct {
+			Conditions []struct {
+				ConditionReason  string `json:"conditionReason"`
+				ConditionSummary string `json:"conditionSummary"`
+			} `json:"conditions"`
+			ConstraintID   string `json:"constraintId"`
+			ConstraintName string `json:"constraintName"`
+		} `json:"constraints"`
+		Grandfathered        bool   `json:"grandfathered"`
+		PolicyID             string `json:"policyId"`
+		PolicyName           string `json:"policyName"`
+		PolicyThreatCategory string `json:"policyThreatCategory"`
+		PolicyThreatLevel    int64  `json:"policyThreatLevel"`
+		Waived               bool   `json:"waived"`
+	} `json:"violations"`
+}
+
+type policyReportCounts struct {
+	ExactlyMatchedComponentCount      int64 `json:"exactlyMatchedComponentCount"`
+	GrandfatheredPolicyViolationCount int64 `json:"grandfatheredPolicyViolationCount"`
+	PartiallyMatchedComponentCount    int64 `json:"partiallyMatchedComponentCount"`
+	TotalComponentCount               int64 `json:"totalComponentCount"`
+}
+
 // ReportPolicy descrpibes the policies violated by the components in an application report
 type ReportPolicy struct {
-	Application Application `json:"application"`
-	Components  []struct {
-		Component
-		Violations []struct {
-			Constraints []struct {
-				Conditions []struct {
-					ConditionReason  string `json:"conditionReason"`
-					ConditionSummary string `json:"conditionSummary"`
-				} `json:"conditions"`
-				ConstraintID   string `json:"constraintId"`
-				ConstraintName string `json:"constraintName"`
-			} `json:"constraints"`
-			Grandfathered        bool   `json:"grandfathered"`
-			PolicyID             string `json:"policyId"`
-			PolicyName           string `json:"policyName"`
-			PolicyThreatCategory string `json:"policyThreatCategory"`
-			PolicyThreatLevel    int64  `json:"policyThreatLevel"`
-			Waived               bool   `json:"waived"`
-		} `json:"violations"`
-	} `json:"components"`
-	Counts struct {
-		ExactlyMatchedComponentCount      int64 `json:"exactlyMatchedComponentCount"`
-		GrandfatheredPolicyViolationCount int64 `json:"grandfatheredPolicyViolationCount"`
-		PartiallyMatchedComponentCount    int64 `json:"partiallyMatchedComponentCount"`
-		TotalComponentCount               int64 `json:"totalComponentCount"`
-	} `json:"counts"`
-	ReportTime  int64  `json:"reportTime"`
-	ReportTitle string `json:"reportTitle"`
+	Application Application             `json:"application"`
+	Components  []policyReportComponent `json:"components"`
+	Counts      policyReportCounts      `json:"counts"`
+	ReportTime  int64                   `json:"reportTime"`
+	ReportTitle string                  `json:"reportTitle"`
 }
 
 // Equals compares two ReportPolicy objects
