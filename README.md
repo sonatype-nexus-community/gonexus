@@ -62,13 +62,13 @@ if err != nil {
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2) | :new_moon: |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2) | :full_moon: |
 | [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2) | :new_moon: |
-| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) | :new_moon: |
+| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) | :full_moon: |
 | [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2) | :new_moon: |
 | [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2) | :new_moon: |
 | [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) | :new_moon: |
 | [Organization](https://help.sonatype.com/iqserver/automating/rest-apis/organization-rest-apis---v2) | :last_quarter_moon: |
 | [Promote Scan](https://help.sonatype.com/iqserver/automating/rest-apis/promote-scan-rest-api---v2) | :new_moon: |
-| [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2) | :waning_gibbous_moon: |
+| [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2) | :full_moon: |
 | [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github) | :full_moon: |
 | [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2) | :new_moon: |
 | [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2) | :new_moon: |

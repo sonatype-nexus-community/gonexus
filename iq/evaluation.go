@@ -132,6 +132,7 @@ func NewComponentFromString(str string) (*Component, error) {
 		switch split[0] {
 		case "maven":
 			// c.PackageURL = fmt.Sprintf("pkg:maven/%s/%s@%s?type=%s", split[1], split[2], split[3], split[4])
+			c.ComponentID = new(ComponentIdentifier)
 			c.ComponentID.Format = split[0]
 			c.ComponentID.Coordinates.GroupID = split[1]
 			c.ComponentID.Coordinates.ArtifactID = split[2]

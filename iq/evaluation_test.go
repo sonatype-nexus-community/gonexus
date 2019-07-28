@@ -19,6 +19,19 @@ var (
 
 const restEvaluationResults = "api/v2/evaluation/applications/%s/results/%s"
 
+var dummyComponent = Component{
+	Hash: "045c37a03be19f3e0db8",
+	ComponentID: &ComponentIdentifier{
+		Format: "maven",
+		Coordinates: componentCoordinates{
+			ArtifactID: "jackson-databind",
+			GroupID:    "com.fasterxml.jackson.core",
+			Version:    "2.6.1",
+			Extension:  "jar",
+		},
+	},
+}
+
 func evaluationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
@@ -82,18 +95,9 @@ func TestEvaluateComponents(t *testing.T) {
 	iq, mock := evaluationTestIQ(t)
 	defer mock.Close()
 
-	var dummy Component
-	dummy.Hash = "045c37a03be19f3e0db8"
-	dummy.ComponentID = new(ComponentIdentifier)
-	dummy.ComponentID.Format = "maven"
-	dummy.ComponentID.Coordinates.ArtifactID = "jackson-databind"
-	dummy.ComponentID.Coordinates.GroupID = "com.fasterxml.jackson.core"
-	dummy.ComponentID.Coordinates.Version = "2.6.1"
-	dummy.ComponentID.Coordinates.Extension = "jar"
-
 	appID := "dummyAppId"
 
-	report, err := EvaluateComponents(iq, []Component{dummy}, appID)
+	report, err := EvaluateComponents(iq, []Component{dummyComponent}, appID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -108,7 +112,7 @@ func TestEvaluateComponents(t *testing.T) {
 	}
 
 	reportComponent := report.Results[0].Component
-	if !dummy.Equals(&reportComponent) {
+	if !dummyComponent.Equals(&reportComponent) {
 		t.Error("Did not find the expected Component in evaluation results")
 	}
 }
