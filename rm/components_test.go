@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 )
@@ -35,141 +34,137 @@ var dummyComponents = map[string][]RepositoryItem{
 
 const dummyNewComponentID = "newComponentID"
 
-func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
-	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		getComponentByID := func(id string) (c RepositoryItem, i int, ok bool) {
-			for repo := range dummyComponents {
-				for i, c = range dummyComponents[repo] {
-					if c.ID == id {
-						return c, i, true
-					}
+func componentsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	getComponentByID := func(id string) (c RepositoryItem, i int, ok bool) {
+		for repo := range dummyComponents {
+			for i, c = range dummyComponents[repo] {
+				if c.ID == id {
+					return c, i, true
 				}
 			}
-			return
+		}
+		return
+	}
+
+	switch {
+	case r.Method == http.MethodGet && r.URL.Path[1:] == restComponents:
+		query := r.URL.Query()
+		repo := query["repository"][0]
+
+		lastComponentIdx := len(dummyComponents[repo]) - 1
+		var components listComponentsResponse
+		token, ok := query["continuationToken"]
+		switch {
+		case !ok:
+			components.Items = dummyComponents[repo][:lastComponentIdx]
+			components.ContinuationToken = dummyContinuationToken
+		case token[0] == dummyContinuationToken:
+			components.Items = dummyComponents[repo][lastComponentIdx:]
 		}
 
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
+		resp, err := json.Marshal(components)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		switch {
-		case r.Method == http.MethodGet && r.URL.Path[1:] == restRepositories:
-			repos, err := json.Marshal(dummyRepos)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(repos))
-		case r.Method == http.MethodGet && r.URL.Path[1:] == restComponents:
-			query := r.URL.Query()
-			repo := query["repository"][0]
-
-			lastComponentIdx := len(dummyComponents[repo]) - 1
-			var components listComponentsResponse
-			token, ok := query["continuationToken"]
-			switch {
-			case !ok:
-				components.Items = dummyComponents[repo][:lastComponentIdx]
-				components.ContinuationToken = dummyContinuationToken
-			case token[0] == dummyContinuationToken:
-				components.Items = dummyComponents[repo][lastComponentIdx:]
-			}
-
-			resp, err := json.Marshal(components)
+		fmt.Fprintln(w, string(resp))
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restComponents[:len(restComponents)-2]):
+		cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
+		t.Log(cID)
+		if c, _, ok := getComponentByID(cID); ok {
+			resp, err := json.Marshal(c)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			fmt.Fprintln(w, string(resp))
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.String()[1:], restComponents[:len(restComponents)-2]):
-			cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
-			t.Log(cID)
-			if c, _, ok := getComponentByID(cID); ok {
-				resp, err := json.Marshal(c)
-				if err != nil {
-					t.Fatal(err)
-				}
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	case r.Method == http.MethodPost:
+		repo := r.URL.Query().Get("repository")
+		// TODO check that is valid repository. http 422 if no repo
+		// 403 no perms
+		// ... might get 100 too
 
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		case r.Method == http.MethodPost:
-			repo := r.URL.Query().Get("repository")
-			// TODO check that is valid repository. http 422 if no repo
-			// 403 no perms
-			// ... might get 100 too
+		if err := r.ParseMultipartForm(32 << 20); err != nil {
+			t.Log("crap")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-			if err := r.ParseMultipartForm(32 << 20); err != nil {
-				t.Log("crap")
+		component := RepositoryItem{ID: dummyNewComponentID, Repository: repo}
+
+		// I have no idea how I want to do this, moving forward
+		for k, v := range r.Form {
+			switch {
+			case k == "repository":
+				repo = v[0]
+			case k == "maven2.groupId":
+				component.Format = "maven2"
+				component.Group = v[0]
+			case k == "maven2.artifactId":
+				component.Format = "maven2"
+				component.Name = v[0]
+			case k == "maven2.version":
+				component.Format = "maven2"
+				component.Version = v[0]
+			case k == "maven2.packaging":
+				component.Format = "maven2"
+			case k == "maven2.tag":
+				component.Format = "maven2"
+			case k == "maven2.generate-pom":
+				component.Format = "maven2"
+			case strings.HasPrefix(k, "maven2.asset"):
+				component.Format = "maven2"
+			default:
+				t.Logf("Did not recognize form field: %s\n", k)
 				w.WriteHeader(http.StatusBadRequest)
-				return
 			}
+			// nContent-Disposition: form-data; name=\"maven2.asset1\" ; filename=\"/tmp/test.jar\"\r\nContent-Type: application/octet-stream\
+			// t.Logf("%s = %s\n", k, v)
+		}
 
-			component := RepositoryItem{ID: dummyNewComponentID, Repository: repo}
+		dummyComponents[repo] = append(dummyComponents[repo], component)
 
-			// I have no idea how I want to do this, moving forward
-			for k, v := range r.Form {
-				switch {
-				case k == "repository":
-					repo = v[0]
-				case k == "maven2.groupId":
-					component.Format = "maven2"
-					component.Group = v[0]
-				case k == "maven2.artifactId":
-					component.Format = "maven2"
-					component.Name = v[0]
-				case k == "maven2.version":
-					component.Format = "maven2"
-					component.Version = v[0]
-				case k == "maven2.packaging":
-					component.Format = "maven2"
-				case k == "maven2.tag":
-					component.Format = "maven2"
-				case k == "maven2.generate-pom":
-					component.Format = "maven2"
-				case strings.HasPrefix(k, "maven2.asset"):
-					component.Format = "maven2"
-				default:
-					t.Logf("Did not recognize form field: %s\n", k)
-					w.WriteHeader(http.StatusBadRequest)
-				}
-				// nContent-Disposition: form-data; name=\"maven2.asset1\" ; filename=\"/tmp/test.jar\"\r\nContent-Type: application/octet-stream\
-				// t.Logf("%s = %s\n", k, v)
-			}
-
-			dummyComponents[repo] = append(dummyComponents[repo], component)
+		w.WriteHeader(http.StatusNoContent)
+	case r.Method == http.MethodDelete:
+		cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
+		t.Log(cID)
+		if c, i, ok := getComponentByID(cID); ok {
+			copy(dummyComponents[c.Repository][i:], dummyComponents[c.Repository][i+1:])
+			dummyComponents[c.Repository][len(dummyComponents)-1] = RepositoryItem{}
+			dummyComponents[c.Repository] = dummyComponents[c.Repository][:len(dummyComponents)-1]
 
 			w.WriteHeader(http.StatusNoContent)
-		case r.Method == http.MethodDelete:
-			cID := strings.Replace(r.URL.Path[1:], restComponents+"/", "", 1)
-			t.Log(cID)
-			if c, i, ok := getComponentByID(cID); ok {
-				copy(dummyComponents[c.Repository][i:], dummyComponents[c.Repository][i+1:])
-				dummyComponents[c.Repository][len(dummyComponents)-1] = RepositoryItem{}
-				dummyComponents[c.Repository] = dummyComponents[c.Repository][:len(dummyComponents)-1]
 
-				w.WriteHeader(http.StatusNoContent)
-
-				resp, err := json.Marshal(c)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
+			resp, err := json.Marshal(c)
+			if err != nil {
+				t.Fatal(err)
 			}
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
+
+			fmt.Fprintln(w, string(resp))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
 		}
-	}))
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server) {
+	return newTestRM(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path[1:], restRepositories):
+			repositoriesTestFunc(t, w, r)
+		default:
+			componentsTestFunc(t, w, r)
+		}
+	})
 }
 
 func getComponentsTester(t *testing.T, repo string) {
-	rm, mock, err := componentsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := componentsTestRM(t)
 	defer mock.Close()
 
 	components, err := GetComponents(rm, repo)
@@ -199,10 +194,7 @@ func TestGetComponentsPaging(t *testing.T) {
 }
 
 func TestGetComponentByID(t *testing.T) {
-	rm, mock, err := componentsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := componentsTestRM(t)
 	defer mock.Close()
 
 	expectedComponent := dummyComponents["repo-maven"][0]
@@ -221,14 +213,11 @@ func TestGetComponentByID(t *testing.T) {
 
 func componentUploader(t *testing.T, expected RepositoryItem, upload UploadComponentWriter) {
 	// func componentUploader(t *testing.T, expected RepositoryItem, coordinate string, file io.Reader) {
-	rm, mock, err := componentsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := componentsTestRM(t)
 	defer mock.Close()
 
-	// if err = UploadComponent(rm, expected.Repository, coordinate, file); err != nil {
-	if err = UploadComponent(rm, expected.Repository, upload); err != nil {
+	// if err := UploadComponent(rm, expected.Repository, coordinate, file); err != nil {
+	if err := UploadComponent(rm, expected.Repository, upload); err != nil {
 		t.Error(err)
 	}
 
@@ -305,10 +294,7 @@ func TestUploadComponentNpm(t *testing.T) {
 }
 
 func TestDeleteComponentByID(t *testing.T) {
-	rm, mock, err := componentsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := componentsTestRM(t)
 	defer mock.Close()
 
 	coord := "org.delete:componentDelete:0.0.0"

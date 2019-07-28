@@ -7,7 +7,8 @@ import (
 /*
 func TestCreateFileBlobStore(t *testing.T) {
 	t.Skip("Needs new framework")
-	rm := getTestRM(t)
+	rm, mock := repositoriesTestRM(t)
+	defer mock.Close()
 
 	err := CreateFileBlobStore(rm, "testname", "testpath")
 	if err != nil {
@@ -21,7 +22,8 @@ func TestCreateFileBlobStore(t *testing.T) {
 /*
 func TestDeleteBlobStore(t *testing.T) {
 	t.Skip("Needs new framework")
-	rm := getTestRM(t)
+	rm, mock := repositoriesTestRM(t)
+	defer mock.Close()
 
 	err := DeleteBlobStore(rm, "testname")
 	if err != nil {

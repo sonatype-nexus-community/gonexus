@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"testing"
 )
 
@@ -16,30 +15,26 @@ var dummyRepos = []Repository{
 	{Name: "repo-npm", Format: "npm", Type: "proxy", URL: "http://localhost:8081/blah/repo-npm"}, //, Attributes: {Proxy: {RemoteURL: "http://bestest.repo"}}},
 }
 
-func repositoriesTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
-	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
-
-		switch {
-		case r.Method == http.MethodGet:
-			repos, err := json.Marshal(dummyRepos)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(repos))
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
+func repositoriesTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method == http.MethodGet:
+		repos, err := json.Marshal(dummyRepos)
+		if err != nil {
+			t.Fatal(err)
 		}
-	}))
+
+		fmt.Fprintln(w, string(repos))
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func repositoriesTestRM(t *testing.T) (rm RM, mock *httptest.Server) {
+	return newTestRM(t, repositoriesTestFunc)
 }
 
 func TestGetRepositories(t *testing.T) {
-	rm, mock, err := repositoriesTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := repositoriesTestRM(t)
 	defer mock.Close()
 
 	repos, err := GetRepositories(rm)
@@ -56,10 +51,7 @@ func TestGetRepositories(t *testing.T) {
 }
 
 func TestGetRepositoryByName(t *testing.T) {
-	rm, mock, err := repositoriesTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := repositoriesTestRM(t)
 	defer mock.Close()
 
 	dummyRepoIdx := 0

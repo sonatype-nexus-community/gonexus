@@ -5,78 +5,73 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 )
 
-func searchTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
-	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
+func searchTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restSearchAssets):
+		// TODO: http.StatusNotAcceptable if only have cont token
 
-		switch {
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restSearchAssets):
-			// TODO: http.StatusNotAcceptable if only have cont token
+		query := r.URL.Query()
+		repo := query["repository"][0]
 
-			query := r.URL.Query()
-			repo := query["repository"][0]
-
-			var assets searchAssetsResponse
-			if _, ok := dummyAssets[repo]; ok {
-				lastComponentIdx := len(dummyAssets[repo]) - 1
-				token, ok := query["continuationToken"]
-				switch {
-				case !ok:
-					assets.Items = dummyAssets[repo][:lastComponentIdx]
-					assets.ContinuationToken = dummyContinuationToken
-				case token[0] == dummyContinuationToken:
-					assets.Items = dummyAssets[repo][lastComponentIdx:]
-				}
+		var assets searchAssetsResponse
+		if _, ok := dummyAssets[repo]; ok {
+			lastComponentIdx := len(dummyAssets[repo]) - 1
+			token, ok := query["continuationToken"]
+			switch {
+			case !ok:
+				assets.Items = dummyAssets[repo][:lastComponentIdx]
+				assets.ContinuationToken = dummyContinuationToken
+			case token[0] == dummyContinuationToken:
+				assets.Items = dummyAssets[repo][lastComponentIdx:]
 			}
-
-			resp, err := json.Marshal(assets)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(resp))
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restSearchComponents):
-			// TODO: http.StatusNotAcceptable if only have cont token
-
-			query := r.URL.Query()
-			repo := query["repository"][0]
-
-			var components searchComponentsResponse
-			if _, ok := dummyComponents[repo]; ok {
-				lastComponentIdx := len(dummyComponents[repo]) - 1
-				token, ok := query["continuationToken"]
-				switch {
-				case !ok:
-					components.Items = dummyComponents[repo][:lastComponentIdx]
-					components.ContinuationToken = dummyContinuationToken
-				case token[0] == dummyContinuationToken:
-					components.Items = dummyComponents[repo][lastComponentIdx:]
-				}
-			}
-
-			resp, err := json.Marshal(components)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Fprintln(w, string(resp))
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	}))
+
+		resp, err := json.Marshal(assets)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Fprintln(w, string(resp))
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restSearchComponents):
+		// TODO: http.StatusNotAcceptable if only have cont token
+
+		query := r.URL.Query()
+		repo := query["repository"][0]
+
+		var components searchComponentsResponse
+		if _, ok := dummyComponents[repo]; ok {
+			lastComponentIdx := len(dummyComponents[repo]) - 1
+			token, ok := query["continuationToken"]
+			switch {
+			case !ok:
+				components.Items = dummyComponents[repo][:lastComponentIdx]
+				components.ContinuationToken = dummyContinuationToken
+			case token[0] == dummyContinuationToken:
+				components.Items = dummyComponents[repo][lastComponentIdx:]
+			}
+		}
+
+		resp, err := json.Marshal(components)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Fprintln(w, string(resp))
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func searchTestRM(t *testing.T) (rm RM, mock *httptest.Server) {
+	return newTestRM(t, searchTestFunc)
 }
 
 func TestSearchComponents(t *testing.T) {
-	rm, mock, err := searchTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := searchTestRM(t)
 	defer mock.Close()
 
 	repo := "repo-maven"
@@ -101,11 +96,7 @@ func TestSearchComponents(t *testing.T) {
 }
 
 func TestSearchAssets(t *testing.T) {
-	t.Skip("Waiting to implement assets endpoint tests")
-	rm, mock, err := searchTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := searchTestRM(t)
 	defer mock.Close()
 
 	repo := "repo-maven"

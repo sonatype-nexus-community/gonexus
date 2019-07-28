@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 )
@@ -51,87 +50,83 @@ var dummyAssets = map[string][]RepositoryItemAsset{
 
 const dummyNewAssetID = "newAssetID"
 
-func assetsTestRM(t *testing.T) (rm RM, mock *httptest.Server, err error) {
-	return newTestRM(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		getAssetByID := func(id string) (a RepositoryItemAsset, i int, ok bool) {
-			for repo := range dummyAssets {
-				for i, a = range dummyAssets[repo] {
-					if a.ID == id {
-						return a, i, true
-					}
+func assetsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	getAssetByID := func(id string) (a RepositoryItemAsset, i int, ok bool) {
+		for repo := range dummyAssets {
+			for i, a = range dummyAssets[repo] {
+				if a.ID == id {
+					return a, i, true
 				}
 			}
-			return
+		}
+		return
+	}
+
+	switch {
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.RequestURI()[1:], restListAssetsByRepo[:len(restListAssetsByRepo)-2]):
+		query := r.URL.Query()
+		repo := query["repository"][0]
+
+		lastAssetIdx := len(dummyAssets[repo]) - 1
+		var assets listAssetsResponse
+		token, ok := query["continuationToken"]
+		switch {
+		case !ok:
+			assets.Items = dummyAssets[repo][:lastAssetIdx]
+			assets.ContinuationToken = dummyContinuationToken
+		case token[0] == dummyContinuationToken:
+			assets.Items = dummyAssets[repo][lastAssetIdx:]
 		}
 
-		dump, _ := httputil.DumpRequest(r, true)
-		t.Logf("%q\n", dump)
+		resp, err := json.Marshal(assets)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		switch {
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.RequestURI()[1:], restListAssetsByRepo[:len(restListAssetsByRepo)-2]):
-			query := r.URL.Query()
-			repo := query["repository"][0]
-
-			lastAssetIdx := len(dummyAssets[repo]) - 1
-			var assets listAssetsResponse
-			token, ok := query["continuationToken"]
-			switch {
-			case !ok:
-				assets.Items = dummyAssets[repo][:lastAssetIdx]
-				assets.ContinuationToken = dummyContinuationToken
-			case token[0] == dummyContinuationToken:
-				assets.Items = dummyAssets[repo][lastAssetIdx:]
-			}
-
-			resp, err := json.Marshal(assets)
+		fmt.Fprintln(w, string(resp))
+	case r.Method == http.MethodGet:
+		aID := strings.Replace(r.URL.Path[1:], restAssets+"/", "", 1)
+		t.Log(aID)
+		if c, _, ok := getAssetByID(aID); ok {
+			resp, err := json.Marshal(c)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			fmt.Fprintln(w, string(resp))
-		case r.Method == http.MethodGet:
-			aID := strings.Replace(r.URL.Path[1:], restAssets+"/", "", 1)
-			t.Log(aID)
-			if c, _, ok := getAssetByID(aID); ok {
-				resp, err := json.Marshal(c)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		case r.Method == http.MethodDelete:
-			aID := strings.Replace(r.URL.Path[1:], restAssets+"/", "", 1)
-			t.Log(aID)
-			if a, i, ok := getAssetByID(aID); ok {
-				copy(dummyAssets[a.Repository][i:], dummyAssets[a.Repository][i+1:])
-				dummyAssets[a.Repository][len(dummyAssets)-1] = RepositoryItemAsset{}
-				dummyAssets[a.Repository] = dummyAssets[a.Repository][:len(dummyAssets)-1]
-
-				w.WriteHeader(http.StatusNoContent)
-
-				resp, err := json.Marshal(a)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
-			}
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
 		}
-	}))
+	case r.Method == http.MethodDelete:
+		aID := strings.Replace(r.URL.Path[1:], restAssets+"/", "", 1)
+		t.Log(aID)
+		if a, i, ok := getAssetByID(aID); ok {
+			copy(dummyAssets[a.Repository][i:], dummyAssets[a.Repository][i+1:])
+			dummyAssets[a.Repository][len(dummyAssets)-1] = RepositoryItemAsset{}
+			dummyAssets[a.Repository] = dummyAssets[a.Repository][:len(dummyAssets)-1]
+
+			w.WriteHeader(http.StatusNoContent)
+
+			resp, err := json.Marshal(a)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			fmt.Fprintln(w, string(resp))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func assetsTestRM(t *testing.T) (rm RM, mock *httptest.Server) {
+	return newTestRM(t, assetsTestFunc)
 }
 
 func getAssetsTester(t *testing.T, repo string) {
-	rm, mock, err := assetsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := assetsTestRM(t)
 	defer mock.Close()
 
 	assets, err := GetAssets(rm, repo)
@@ -161,10 +156,7 @@ func TestGetAssetsPaging(t *testing.T) {
 }
 
 func TestGetAssetByID(t *testing.T) {
-	rm, mock, err := assetsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := assetsTestRM(t)
 	defer mock.Close()
 
 	expectedAsset := dummyAssets["repo-maven"][0]
@@ -182,10 +174,7 @@ func TestGetAssetByID(t *testing.T) {
 }
 
 func TestDeleteAssetByID(t *testing.T) {
-	rm, mock, err := assetsTestRM(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	rm, mock := assetsTestRM(t)
 	defer mock.Close()
 
 	deleteMe := RepositoryItemAsset{
@@ -203,7 +192,7 @@ func TestDeleteAssetByID(t *testing.T) {
 		t.Errorf("Error getting component: %v\n", err)
 	}
 
-	if err = DeleteAssetByID(rm, deleteMe.ID); err != nil {
+	if err := DeleteAssetByID(rm, deleteMe.ID); err != nil {
 		t.Fatal(err)
 	}
 
