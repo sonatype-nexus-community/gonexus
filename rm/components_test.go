@@ -164,6 +164,8 @@ func componentsTestRM(t *testing.T) (rm RM, mock *httptest.Server) {
 }
 
 func getComponentsTester(t *testing.T, repo string) {
+	t.Helper()
+
 	rm, mock := componentsTestRM(t)
 	defer mock.Close()
 
