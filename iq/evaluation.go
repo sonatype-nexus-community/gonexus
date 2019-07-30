@@ -159,6 +159,8 @@ func NewComponentFromString(str string) (*Component, error) {
 type PolicyViolation struct {
 	PolicyID             string `json:"policyId"`
 	PolicyName           string `json:"policyName"`
+	StageID              string `json:"stageId,omitempty"`
+	ReportURL            string `json:"reportUrl,omitempty"`
 	ThreatLevel          int    `json:"threatLevel"`
 	ConstraintViolations []struct {
 		ConstraintID   string `json:"constraintId"`
@@ -166,7 +168,37 @@ type PolicyViolation struct {
 		Reasons        []struct {
 			Reason string `json:"reason"`
 		} `json:"reasons"`
+		Component Component `json:"component,omitempty"`
 	} `json:"constraintViolations"`
+}
+
+// Equals performs a deep comparison between two PolicyViolation objects
+func (a *PolicyViolation) Equals(b *PolicyViolation) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.PolicyID != b.PolicyID {
+		return
+	}
+
+	if a.PolicyName != b.PolicyName {
+		return
+	}
+
+	if a.StageID != b.StageID {
+		return
+	}
+
+	if a.ReportURL != b.ReportURL {
+		return
+	}
+
+	if a.ThreatLevel != b.ThreatLevel {
+		return
+	}
+
+	return true
 }
 
 // License identifier an OSS license recognized by Sonatype

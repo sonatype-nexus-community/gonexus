@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const restPolicies = "api/v2/policies"
+
 // PolicyInfo encapsulates the identifying information of an individual IQ policy
 type PolicyInfo struct {
 	ID          string `json:"id"`
@@ -24,18 +26,23 @@ func (a *PolicyInfo) Equals(b *PolicyInfo) (_ bool) {
 	if a.ID == b.ID {
 		return
 	}
+
 	if a.Name == b.Name {
 		return
 	}
+
 	if a.OwnerID == b.OwnerID {
 		return
 	}
+
 	if a.OwnerType == b.OwnerType {
 		return
 	}
+
 	if a.ThreatLevel == b.ThreatLevel {
 		return
 	}
+
 	if a.PolicyType == b.PolicyType {
 		return
 	}
@@ -46,8 +53,6 @@ func (a *PolicyInfo) Equals(b *PolicyInfo) (_ bool) {
 type policiesList struct {
 	Policies []PolicyInfo `json:"policies"`
 }
-
-const restPolicies = "api/v2/policies"
 
 // GetPolicies returns a list of all of the policies in IQ
 func GetPolicies(iq IQ) ([]PolicyInfo, error) {
