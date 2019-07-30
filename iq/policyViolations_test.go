@@ -9,12 +9,51 @@ import (
 	"testing"
 )
 
-var dummyPolicyViolations = []ApplicationViolation{}
+var dummyPolicyViolations = []ApplicationViolation{
+	{
+		Application: dummyApps[0],
+		PolicyViolations: []PolicyViolation{
+			{
+				PolicyID:    dummyPolicyInfos[0].ID,
+				PolicyName:  dummyPolicyInfos[0].Name,
+				StageID:     StageBuild,
+				ReportURL:   "foobar",
+				ThreatLevel: dummyPolicyInfos[0].ThreatLevel,
+			},
+		},
+	},
+	{
+		Application: dummyApps[1],
+		PolicyViolations: []PolicyViolation{
+			{
+				PolicyID:    dummyPolicyInfos[1].ID,
+				PolicyName:  dummyPolicyInfos[1].Name,
+				StageID:     StageBuild,
+				ReportURL:   "raboof",
+				ThreatLevel: dummyPolicyInfos[1].ThreatLevel,
+			},
+		},
+	},
+}
 
 func policyViolationsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet:
-		violations, err := json.Marshal(violationResponse{dummyPolicyViolations})
+		policies := r.URL.Query()["p"]
+		var resp violationResponse
+		resp.ApplicationViolations = make([]ApplicationViolation, 0)
+		for _, dummy := range dummyPolicyViolations {
+			for _, p := range policies {
+				for _, v := range dummy.PolicyViolations {
+					if v.PolicyID == p {
+						resp.ApplicationViolations = append(resp.ApplicationViolations, dummy)
+					}
+				}
+			}
+		}
+		// TODO: error when a policyID doesn't match any of the violations
+
+		violations, err := json.Marshal(resp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -57,5 +96,21 @@ func TestGetAllPolicyViolations(t *testing.T) {
 }
 
 func TestGetPolicyViolationsByName(t *testing.T) {
-	t.Skip("TODO")
+	iq, mock := policyViolationsTestIQ(t)
+	defer mock.Close()
+
+	expected := dummyPolicyViolations[0]
+
+	violations, err := GetPolicyViolationsByName(iq, expected.PolicyViolations[0].PolicyName)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(violations) != 1 {
+		t.Fatalf("Received %d violations instead of the expected %d", len(violations), 1)
+	}
+
+	if !violations[0].Equals(&expected) {
+		t.Fatal("Did not get expected policy violation")
+	}
 }
