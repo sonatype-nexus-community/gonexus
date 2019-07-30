@@ -97,11 +97,11 @@ func reportsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprintln(w, string(infos))
 	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], restReports):
-		appId := strings.Replace(r.URL.Path[1:], restReports+"/", "", 1)
+		appID := strings.Replace(r.URL.Path[1:], restReports+"/", "", 1)
 
 		var found bool
 		for _, r := range dummyReportInfos {
-			if r.ApplicationID == appId {
+			if r.ApplicationID == appID {
 				found = true
 				resp, err := json.Marshal([]ReportInfo{r})
 				if err != nil {
