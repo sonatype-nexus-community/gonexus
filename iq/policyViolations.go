@@ -50,6 +50,7 @@ func GetAllPolicyViolations(iq IQ) ([]ApplicationViolation, error) {
 
 	var endpoint bytes.Buffer
 	endpoint.WriteString(restPolicyViolations)
+	endpoint.WriteString("?")
 	for _, i := range policyInfos {
 		endpoint.WriteString("&p=")
 		endpoint.WriteString(i.ID)
@@ -70,6 +71,35 @@ func GetAllPolicyViolations(iq IQ) ([]ApplicationViolation, error) {
 }
 
 // GetPolicyViolationsByName returns the policy violations by policy name
-func GetPolicyViolationsByName(iq IQ, policyName string) ([]ApplicationViolation, error) {
-	return nil, nil
+func GetPolicyViolationsByName(iq IQ, policyNames ...string) ([]ApplicationViolation, error) {
+	policies, err := GetPolicies(iq)
+	if err != nil {
+		return nil, fmt.Errorf("did not find policy: %v", err)
+	}
+
+	var endpoint bytes.Buffer
+	endpoint.WriteString(restPolicyViolations)
+	endpoint.WriteString("?")
+
+	for _, p := range policyNames {
+		for _, policy := range policies {
+			if p == policy.Name {
+				endpoint.WriteString("&p=")
+				endpoint.WriteString(policy.ID)
+			}
+		}
+	}
+
+	body, _, err := iq.Get(endpoint.String())
+	if err != nil {
+		return nil, fmt.Errorf("could not get policy violations: %v", err)
+	}
+
+	var resp violationResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("could not read policy violations response: %v", err)
+	}
+
+	return resp.ApplicationViolations, nil
 }
