@@ -68,3 +68,19 @@ func GetPolicies(iq IQ) ([]PolicyInfo, error) {
 
 	return resp.Policies, nil
 }
+
+// GetPolicyInfoByName returns an information object for the named policy
+func GetPolicyInfoByName(iq IQ, policyName string) (PolicyInfo, error) {
+	policies, err := GetPolicies(iq)
+	if err != nil {
+		return PolicyInfo{}, fmt.Errorf("did not find policy with name %s: %v", policyName, err)
+	}
+
+	for _, p := range policies {
+		if p.Name == policyName {
+			return p, nil
+		}
+	}
+
+	return PolicyInfo{}, fmt.Errorf("did not find policy with name %s", policyName)
+}
