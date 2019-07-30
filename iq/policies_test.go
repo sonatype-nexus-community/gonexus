@@ -8,7 +8,16 @@ import (
 	"testing"
 )
 
-var dummyPolicyInfos = []PolicyInfo{}
+var dummyPolicyInfos = []PolicyInfo{
+	{
+		ID:          "TODO",
+		Name:        "TODO",
+		OwnerID:     "TODO",
+		OwnerType:   "TODO",
+		ThreatLevel: 42,
+		PolicyType:  "TODO",
+	},
+}
 
 func policiesTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	switch {
@@ -40,6 +49,8 @@ func TestGetPolicies(t *testing.T) {
 	if len(infos) != len(dummyPolicyInfos) {
 		t.Errorf("Got %d results instead of the expected %d", len(infos), len(dummyPolicyInfos))
 	}
+
+	fmt.Printf("%q\n", infos)
 
 	for i, f := range infos {
 		if !f.Equals(&dummyPolicyInfos[i]) {
