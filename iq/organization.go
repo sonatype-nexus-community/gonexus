@@ -16,7 +16,7 @@ type allOrgsResponse struct {
 	Organizations []Organization `json:"organizations"`
 }
 
-// IQCaterogy encapsulates the category that can be created in IQ
+// IQCategory encapsulates the category that can be created in IQ
 type IQCategory struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
