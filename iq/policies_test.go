@@ -50,8 +50,6 @@ func TestGetPolicies(t *testing.T) {
 		t.Errorf("Got %d results instead of the expected %d", len(infos), len(dummyPolicyInfos))
 	}
 
-	fmt.Printf("%q\n", infos)
-
 	for i, f := range infos {
 		if !f.Equals(&dummyPolicyInfos[i]) {
 			t.Fatal("Did not get expected policy info")

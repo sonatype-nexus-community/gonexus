@@ -23,27 +23,27 @@ func (a *PolicyInfo) Equals(b *PolicyInfo) (_ bool) {
 		return true
 	}
 
-	if a.ID == b.ID {
+	if a.ID != b.ID {
 		return
 	}
 
-	if a.Name == b.Name {
+	if a.Name != b.Name {
 		return
 	}
 
-	if a.OwnerID == b.OwnerID {
+	if a.OwnerID != b.OwnerID {
 		return
 	}
 
-	if a.OwnerType == b.OwnerType {
+	if a.OwnerType != b.OwnerType {
 		return
 	}
 
-	if a.ThreatLevel == b.ThreatLevel {
+	if a.ThreatLevel != b.ThreatLevel {
 		return
 	}
 
-	if a.PolicyType == b.PolicyType {
+	if a.PolicyType != b.PolicyType {
 		return
 	}
 
