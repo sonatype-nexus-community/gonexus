@@ -10,12 +10,20 @@ import (
 
 var dummyPolicyInfos = []PolicyInfo{
 	{
-		ID:          "TODO",
-		Name:        "TODO",
-		OwnerID:     "TODO",
-		OwnerType:   "TODO",
+		ID:          "policyInfo1ID",
+		Name:        "policyInfo1",
+		OwnerID:     "ROOT_ORGANIZATION",
+		OwnerType:   "ORGANIZATION",
 		ThreatLevel: 42,
-		PolicyType:  "TODO",
+		PolicyType:  "license",
+	},
+	{
+		ID:          "policyInfo2ID",
+		Name:        "policyInfo2",
+		OwnerID:     "ROOT_ORGANIZATION",
+		OwnerType:   "ORGANIZATION",
+		ThreatLevel: 42,
+		PolicyType:  "license",
 	},
 }
 
@@ -54,5 +62,21 @@ func TestGetPolicies(t *testing.T) {
 		if !f.Equals(&dummyPolicyInfos[i]) {
 			t.Fatal("Did not get expected policy info")
 		}
+	}
+}
+
+func TestGetPolicyInfoByName(t *testing.T) {
+	iq, mock := policiesTestIQ(t)
+	defer mock.Close()
+
+	expected := dummyPolicyInfos[0]
+
+	info, err := GetPolicyInfoByName(iq, expected.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !info.Equals(&expected) {
+		t.Fatal("Did not get expected policy info")
 	}
 }
