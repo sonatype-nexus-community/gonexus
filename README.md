@@ -18,7 +18,7 @@ if err != nil {
 }
 ```
 
-#### Supported Endpoints
+#### Supported RM Endpoints
 
 | Endpoint                                                                                             |         Status         |
 | ---------------------------------------------------------------------------------------------------- | :--------------------: |
@@ -61,14 +61,14 @@ if err != nil {
 
 ```
 
-#### Supported Endpoints
+#### Supported IQ Endpoints
 
 | Endpoint                                                                                                             |       Status        |
 | -------------------------------------------------------------------------------------------------------------------- | :-----------------: |
 | [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2)                    | :last_quarter_moon: |
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |     :full_moon:     |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |     :full_moon:     |
-| [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |     :new_moon:      |
+| [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |     :full_moon:     |
 | [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |     :full_moon:     |
 | [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2)          |     :full_moon:     |
 | [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       |     :full_moon:     |
