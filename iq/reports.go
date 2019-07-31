@@ -8,14 +8,18 @@ import (
 
 const restReports = "api/v2/reports/applications"
 
+// Stage type describes a pipeline stage
+type Stage string
+
 // Provides a constants for the IQ stages
 const (
-	StageProxy       = "proxy"
-	StageDevelop     = "develop"
-	StageBuild       = "build"
-	StageStageRelase = "stage-release"
-	StageRelease     = "release"
-	StageOperate     = "operate"
+	StageProxy                = "proxy"
+	StageDevelop              = "develop"
+	StageBuild                = "build"
+	StageStageRelase          = "stage-release"
+	StageRelease              = "release"
+	StageOperate              = "operate"
+	StageContinuousMonitoring = "continuous-monitoring"
 )
 
 // ReportInfo encapsulates the summary information on a given report
