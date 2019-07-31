@@ -19,8 +19,8 @@ type searchResponse struct {
 
 type criteria struct {
 	StageID             string              `json:"stageId"`
-	Hash                interface{}         `json:"hash"`
-	PackageURL          interface{}         `json:"packageUrl"`
+	Hash                string              `json:"hash"`
+	PackageURL          string              `json:"packageUrl"`
 	ComponentIdentifier ComponentIdentifier `json:"componentIdentifier"`
 }
 
@@ -67,12 +67,12 @@ func (b *SearchQueryBuilder) Hash(v string) *SearchQueryBuilder {
 	return b.addCriteria("hash", v)
 }
 
-// Format allows specifiying a sha1 hash to filter by
+// Format allows specifiying a format to filter by
 func (b *SearchQueryBuilder) Format(v string) *SearchQueryBuilder {
 	return b.addCriteria("format", v)
 }
 
-// ComponentIdentifier allows specifiying a sha1 hash to filter by
+// ComponentIdentifier allows specifiying a component identifier to filter by
 func (b *SearchQueryBuilder) ComponentIdentifier(c ComponentIdentifier) *SearchQueryBuilder {
 	v, err := json.Marshal(c)
 	if err != nil {
@@ -81,18 +81,30 @@ func (b *SearchQueryBuilder) ComponentIdentifier(c ComponentIdentifier) *SearchQ
 	return b.addCriteriaEncoded("componentIdentifier", string(v))
 }
 
-// PackageURL allows specifiying a sha1 hash to filter by
+// PackageURL allows specifiying a purl to filter by
 func (b *SearchQueryBuilder) PackageURL(v string) *SearchQueryBuilder {
 	return b.addCriteriaEncoded("packageUrl", v)
 }
 
-// Coordinates allows specifiying a sha1 hash to filter by
+// Coordinates allows specifiying component coordinates to filter by
 func (b *SearchQueryBuilder) Coordinates(c Coordinates) *SearchQueryBuilder {
 	v, err := json.Marshal(c)
 	if err != nil {
 		return b
 	}
 	return b.addCriteriaEncoded("coordinates", string(v))
+}
+
+// Stage allows specifiying a stage to filter by
+func (b *SearchQueryBuilder) Stage(v string) *SearchQueryBuilder {
+	return b.addCriteria("stageId", v)
+}
+
+// NewSearchQueryBuilder creates a new instance of SearchQueryBuilder
+func NewSearchQueryBuilder() *SearchQueryBuilder {
+	b := new(SearchQueryBuilder)
+	b.criteria = make(map[string]string)
+	return b
 }
 
 // SearchComponents allows searching the indicated IQ instance for specific components
