@@ -21,6 +21,35 @@ type Coordinates struct {
 	Classifier string `json:"classifier,omitempty"`
 }
 
+// Equals compares two Coordinates objects
+func (a *Coordinates) Equals(b *Coordinates) (_ bool) {
+	if a == b {
+		return true
+	}
+
+	if a.ArtifactID != b.ArtifactID {
+		return
+	}
+
+	if a.GroupID != b.GroupID {
+		return
+	}
+
+	if a.Version != b.Version {
+		return
+	}
+
+	if a.Extension != b.Extension {
+		return
+	}
+
+	if a.Classifier != b.Classifier {
+		return
+	}
+
+	return true
+}
+
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
 	Format      string      `json:"format,omitempty"`
