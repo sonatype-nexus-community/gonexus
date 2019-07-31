@@ -12,17 +12,19 @@ import (
 
 const restEvaluation = "api/v2/evaluation/applications/%s"
 
-type componentCoordinates struct {
+// Coordinates lists the unique values identifing a component
+type Coordinates struct {
 	ArtifactID string `json:"artifactId,omitempty"`
 	GroupID    string `json:"groupId,omitempty"`
 	Version    string `json:"version,omitempty"`
 	Extension  string `json:"extension,omitempty"`
+	Classifier string `json:"classifier,omitempty"`
 }
 
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
-	Format      string               `json:"format,omitempty"`
-	Coordinates componentCoordinates `json:"coordinates,omitempty"`
+	Format      string      `json:"format,omitempty"`
+	Coordinates Coordinates `json:"coordinates,omitempty"`
 }
 
 // Equals compares two ComponentIdentifier objects
@@ -226,14 +228,14 @@ func (a *License) Equals(b *License) (_ bool) {
 
 // LicenseData encapsulates the information on the different licenses of a component
 type LicenseData struct {
-	Status                  string    `json:"status"`
-	DeclaredLicenses        []License `json:"declaredLicenses"`
-	ObservedLicenses        []License `json:"observedLicenses"`
-	OverriddenLicenses      []License `json:"overriddenLicenses"`
+	Status                  string    `json:"status,omitempty"`
+	DeclaredLicenses        []License `json:"declaredLicenses,omitempty"`
+	ObservedLicenses        []License `json:"observedLicenses,omitempty"`
+	OverriddenLicenses      []License `json:"overriddenLicenses,omitempty"`
 	EffectiveLicenseThreats []struct {
-		LicenseThreatGroupCategory string `json:"licenseThreatGroupCategory"`
-		LicenseThreatGroupLevel    int64  `json:"licenseThreatGroupLevel"`
-		LicenseThreatGroupName     string `json:"licenseThreatGroupName"`
+		LicenseThreatGroupCategory string `json:"licenseThreatGroupCategory,omitempty"`
+		LicenseThreatGroupLevel    int64  `json:"licenseThreatGroupLevel,omitempty"`
+		LicenseThreatGroupName     string `json:"licenseThreatGroupName,omitempty"`
 	} `json:"effectiveLicenseThreats,omitempty"`
 }
 
@@ -304,7 +306,7 @@ type SecurityIssue struct {
 	Source         string  `json:"source"`
 	Reference      string  `json:"reference"`
 	Severity       float64 `json:"severity"`
-	Status         string  `json:"status"`
+	Status         string  `json:"status,omitempty"`
 	URL            string  `json:"url"`
 	ThreatCategory string  `json:"threatCategory"`
 }
@@ -353,7 +355,7 @@ type ComponentEvaluationResult struct {
 	} `json:"securityData"`
 	PolicyData struct {
 		PolicyViolations []PolicyViolation `json:"policyViolations"`
-	} `json:"policyData"`
+	} `json:"policyData,omitempty"`
 }
 
 // HighestThreatPolicy returns the policy with the highest threat value

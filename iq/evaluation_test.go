@@ -23,7 +23,7 @@ var dummyComponent = Component{
 	Hash: "045c37a03be19f3e0db8",
 	ComponentID: &ComponentIdentifier{
 		Format: "maven",
-		Coordinates: componentCoordinates{
+		Coordinates: Coordinates{
 			ArtifactID: "jackson-databind",
 			GroupID:    "com.fasterxml.jackson.core",
 			Version:    "2.6.1",
