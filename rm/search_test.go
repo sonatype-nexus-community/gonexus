@@ -79,7 +79,7 @@ func TestSearchComponents(t *testing.T) {
 	query := NewSearchQueryBuilder().Repository(repo)
 	components, err := SearchComponents(rm, query)
 	if err != nil {
-		panic(err)
+		t.Fatalf("Did not complete search: %v", err)
 	}
 
 	t.Logf("%q\n", components)
