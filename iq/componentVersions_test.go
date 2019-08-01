@@ -40,10 +40,12 @@ func componentVersionsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Requ
 		versions, ok := dummyComponentVersions[c.Hash]
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 		resp, err := json.Marshal(versions)
 		if err != nil {
 			w.WriteHeader(http.StatusTeapot)
+			return
 		}
 
 		fmt.Fprintln(w, string(resp))
