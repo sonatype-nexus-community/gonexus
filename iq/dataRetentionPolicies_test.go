@@ -64,6 +64,8 @@ func dataRetentionPoliciesTestFunc(t *testing.T, w http.ResponseWriter, r *http.
 			return
 		}
 
+		t.Logf("policies: %v\n", policies)
+
 		// TODO: when enablePurging is true, at least one purge criteria, maxAge or maxCount, needs to be specified.
 
 		if existing, ok := dummyRetentionPolicies[orgName]; ok {
@@ -110,7 +112,6 @@ func TestSetRetentionPolicies(t *testing.T) {
 	iq, mock := dataRetentionPoliciesTestIQ(t)
 	defer mock.Close()
 
-	// expected :=
 	var expected = DataRetentionPolicies{
 		ApplicationReports: ApplicationReports{
 			Stages: map[Stage]DataRetentionPolicy{
@@ -121,11 +122,7 @@ func TestSetRetentionPolicies(t *testing.T) {
 				},
 			},
 		},
-		SuccessMetrics: DataRetentionPolicy{
-			InheritPolicy: false,
-			EnablePurging: true,
-			MaxAge:        "1 year",
-		},
+		SuccessMetrics: dummyRetentionPolicies[dummyOrgs[0].ID].SuccessMetrics,
 	}
 
 	var retentionRequest = DataRetentionPolicies{
@@ -134,6 +131,7 @@ func TestSetRetentionPolicies(t *testing.T) {
 				StageDevelop: expected.ApplicationReports.Stages[StageDevelop],
 			},
 		},
+		SuccessMetrics: expected.SuccessMetrics,
 	}
 
 	err := SetRetentionPolicies(iq, dummyOrgs[0].Name, retentionRequest)
@@ -147,6 +145,7 @@ func TestSetRetentionPolicies(t *testing.T) {
 	}
 
 	if !got.Equals(&expected) {
+		t.Logf("got: %v\nwant: %v", got, expected)
 		t.Error("Did not find the expected retention policies")
 	}
 }
