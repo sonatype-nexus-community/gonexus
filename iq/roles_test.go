@@ -84,3 +84,19 @@ func TestRoles(t *testing.T) {
 		t.Error("Did not get expected roles")
 	}
 }
+
+func TestRoleByName(t *testing.T) {
+	iq, mock := rolesTestIQ(t)
+	defer mock.Close()
+
+	want := dummyRoles[0]
+
+	got, err := RoleByName(iq, want.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected role")
+	}
+}
