@@ -3,9 +3,13 @@ package nexusiq
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
-const restRoles = "api/v2/applications/roles"
+const (
+	restRolesDeprecated = "api/v2/applications/roles" // Before r70
+	restRoles           = "api/v2/roles"
+)
 
 type rolesResponse struct {
 	Roles []Role `json:"roles"`
@@ -18,36 +22,36 @@ type Role struct {
 	Description string `json:"description"`
 }
 
-const (
-	MemberTypeUser  = "USER"
-	MemberTypeGroup = "GROUP"
-)
-
-type MemberMappings struct {
-	MemberMappings []MemberMapping `json:"memberMappings"`
-}
-
-type MemberMapping struct {
-	RoleID  string   `json:"roleId"`
-	Members []Member `json:"members"`
-}
-
-type Member struct {
-	Type            string `json:"type"`
-	UserOrGroupName string `json:"userOrGroupName"`
-}
-
 // Roles returns a slice of all the roles in the IQ instance
 func Roles(iq IQ) ([]Role, error) {
-	body, _, err := iq.Get(restRoles)
+	body, resp, err := iq.Get(restRoles)
+	if resp.StatusCode == http.StatusNotFound {
+		body, _, err = iq.Get(restRolesDeprecated)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve roles: %v", err)
 	}
 
-	var resp rolesResponse
-	if err = json.Unmarshal(body, &resp); err != nil {
+	var list rolesResponse
+	if err = json.Unmarshal(body, &list); err != nil {
 		return nil, fmt.Errorf("could not marshal roles response: %v", err)
 	}
 
-	return resp.Roles, nil
+	return list.Roles, nil
+}
+
+// RoleByName returns the named role
+func RoleByName(iq IQ, name string) (Role, error) {
+	roles, err := Roles(iq)
+	if err != nil {
+		return Role{}, err
+	}
+
+	for _, r := range roles {
+		if r.Name == name {
+			return r, nil
+		}
+	}
+
+	return Role{}, fmt.Errorf("did not find role with name %s", name)
 }

@@ -6,7 +6,11 @@ import (
 	"fmt"
 )
 
-const restOrganization = "api/v2/organizations"
+const (
+	restOrganization = "api/v2/organizations"
+
+	rootOrganizationID = "ROOT_ORGANIZATION_ID"
+)
 
 type iqNewOrgRequest struct {
 	Name string `json:"name"`
