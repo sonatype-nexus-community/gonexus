@@ -87,14 +87,6 @@ func newMapping(roleID, memberType, memberName string) memberMappings {
 	}
 }
 
-func newUserMapping(roleID, name string) memberMappings {
-	return newMapping(roleID, MemberTypeUser, name)
-}
-
-func newGroupMapping(roleID, name string) memberMappings {
-	return newMapping(roleID, MemberTypeGroup, name)
-}
-
 // OrganizationAuthorizations returns the member mappings of an organization
 func OrganizationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 	org, err := GetOrganizationByName(iq, name)

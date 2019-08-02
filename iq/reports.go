@@ -3,6 +3,7 @@ package nexusiq
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 )
 
@@ -31,6 +32,11 @@ type ReportInfo struct {
 	ReportHTMLURL           string `json:"reportHtmlUrl"`
 	ReportPdfURL            string `json:"reportPdfUrl"`
 	Stage                   string `json:"stage"`
+}
+
+// ReportID compares two ReportInfo objects
+func (a *ReportInfo) ReportID() string {
+	return path.Base(a.ReportHTMLURL)
 }
 
 // Equals compares two ReportInfo objects
@@ -308,7 +314,7 @@ func GetAllReportInfos(iq IQ) ([]ReportInfo, error) {
 func GetReportInfosByAppID(iq IQ, appID string) (infos []ReportInfo, err error) {
 	app, err := GetApplicationByPublicID(iq, appID)
 	if err != nil {
-		return nil, fmt.Errorf("could not get application: %v", err)
+		return nil, fmt.Errorf("could not get info for application: %v", err)
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", restReports, app.ID)
@@ -323,6 +329,19 @@ func GetReportInfosByAppID(iq IQ, appID string) (infos []ReportInfo, err error) 
 	}
 
 	return
+}
+
+// GetReportInfoByAppIDStage returns report information by application public ID and stage
+func GetReportInfoByAppIDStage(iq IQ, appID, stage string) (ReportInfo, error) {
+	if infos, err := GetReportInfosByAppID(iq, appID); err == nil {
+		for _, info := range infos {
+			if info.Stage == stage {
+				return info, nil
+			}
+		}
+	}
+
+	return ReportInfo{}, fmt.Errorf("did not find report for '%s'", appID)
 }
 
 // GetRawReportByAppID returns report information by application public ID

@@ -3,7 +3,6 @@ package nexusiq
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -107,7 +106,7 @@ func GetApplicationByPublicID(iq IQ, applicationPublicID string) (*Application, 
 	}
 
 	if len(resp.Applications) == 0 {
-		return nil, errors.New("application not found")
+		return nil, fmt.Errorf("application %s not found", applicationPublicID)
 	}
 
 	return &resp.Applications[0], nil
