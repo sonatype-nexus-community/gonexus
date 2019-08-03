@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sonatype-nexus-community/gonexus/rm/utils"
 )
 
 const restAssets = "service/rest/v1/assets"
@@ -26,39 +28,7 @@ type RepositoryItemAsset struct {
 
 // Equals compares two RepositoryItemAssets objects
 func (a *RepositoryItemAsset) Equals(b *RepositoryItemAsset) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.DownloadURL != b.DownloadURL {
-		return
-	}
-
-	if a.Path != b.Path {
-		return
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Checksum.Sha1 != b.Checksum.Sha1 {
-		return
-	}
-
-	if a.Checksum.Md5 != b.Checksum.Md5 {
-		return
-	}
-
-	return true
+	return utils.IsEqual(a, b)
 }
 
 type listAssetsResponse struct {

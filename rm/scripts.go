@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sonatype-nexus-community/gonexus/rm/utils"
 )
 
 const (
@@ -21,23 +23,7 @@ type Script struct {
 
 // Equals compares two Script objects
 func (a *Script) Equals(b *Script) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Content != b.Content {
-		return
-	}
-
-	if a.Type != b.Type {
-		return
-	}
-
-	return true
+	return utils.IsEqual(a, b)
 }
 
 type runResponse struct {

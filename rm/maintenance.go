@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sonatype-nexus-community/gonexus/rm/utils"
 )
 
 const restMaintenanceDBCheck = "service/rest/v1/maintenance/%s/check"
@@ -22,19 +24,7 @@ type DatabaseState struct {
 
 // Equals compares two DatabaseState objects
 func (a *DatabaseState) Equals(b *DatabaseState) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.PageCorruption != b.PageCorruption {
-		return
-	}
-
-	if a.IndexErrors != b.IndexErrors {
-		return
-	}
-
-	return true
+	return utils.IsEqual(a, b)
 }
 
 func CheckDatabase(rm RM, dbName string) (DatabaseState, error) {

@@ -8,6 +8,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/sonatype-nexus-community/gonexus/rm/utils"
 )
 
 const (
@@ -34,45 +36,7 @@ type RepositoryItem struct {
 
 // Equals compares two RepositoryItem objects
 func (a *RepositoryItem) Equals(b *RepositoryItem) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Group != b.Group {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Version != b.Version {
-		return
-	}
-
-	if len(a.Assets) != len(b.Assets) {
-		return
-	}
-
-	for i, asset := range a.Assets {
-		if !asset.Equals(&b.Assets[i]) {
-			return
-		}
-	}
-
-	return true
+	return utils.IsEqual(a, b)
 }
 
 const hashPart = 20

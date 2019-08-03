@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sonatype-nexus-community/gonexus/rm/utils"
 )
 
 const restRepositories = "service/rest/v1/repositories"
@@ -65,31 +67,7 @@ type Repository struct {
 
 // Equals compares two Repository objects
 func (a *Repository) Equals(b *Repository) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Type != b.Type {
-		return
-	}
-
-	if a.URL != b.URL {
-		return
-	}
-
-	if a.Attributes.Proxy.RemoteURL != b.Attributes.Proxy.RemoteURL {
-		return
-	}
-
-	return true
+	return utils.IsEqual(a, b)
 }
 
 // GetRepositories returns a list of components in the indicated repository
