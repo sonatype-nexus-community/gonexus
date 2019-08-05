@@ -69,7 +69,6 @@ func roleMembershipsDeprecatedTestFunc(t *testing.T, w http.ResponseWriter, r *h
 		}
 		w.WriteHeader(http.StatusOK)
 	case r.Method == http.MethodGet:
-		fmt.Println("deprecated GET", r.URL.Path)
 		pathParts := strings.Split(r.URL.Path, "/")
 
 		authType := pathParts[3]
