@@ -13,33 +13,20 @@ const (
 	restRoleMembersOrgDeprecated = "api/v2/organizations/%s/roleMembers"
 	restRoleMembersAppDeprecated = "api/v2/applications/%s/roleMembers"
 
+	// After 70
 	restRoleMembersOrgGet = "api/v2/roleMemberships/organization/%s"
 	restRoleMembersAppGet = "api/v2/roleMemberships/application/%s"
-	// restRoleMembersRepos  = "api/v2/roleMemberships/repository_container"
-	// restRoleMembersGlobal = "api/v2/roleMemberships/global"
+	// restRoleMembersReposGet  = "api/v2/roleMemberships/repository_container"
+	// restRoleMembersGlobalGet = "api/v2/roleMemberships/global"
 
-	restRoleMembersOrgUserPut  = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
-	restRoleMembersOrgGroupPut = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
-
-//* GET api/v2/organizations/{organizationInternalId}/roleMembers
-// PUT api/v2/organizations/{organizationInternalId}/roleMembers
-// GET api/v2/applications/{applicationInternalId}/roleMembers
-// PUT api/v2/applications/{applicationInternalId}/roleMembers
-
-// After 70
-//* GET api/v2/roleMemberships/application/{applicationInternalId}
-//* GET api/v2/roleMemberships/organization/{organizationId}
-// GET api/v2/roleMemberships/repository_container
-// GET api/v2/roleMemberships/global
-
-// PUT api/v2/roleMemberships/organization/{organizationId}/role/{roleId}/user/{userName}
-// PUT api/v2/roleMemberships/organization/{organizationId}/role/{roleId}/group/{groupName}
-// PUT api/v2/roleMemberships/application/{applicationInternalId}/role/{roleId}/user/{userName}
-// PUT api/v2/roleMemberships/application/{applicationInternalId}/role/{roleId}/group/{groupName}
-// PUT api/v2/roleMemberships/repository_container/role/{roleId}/user/{userName}
-// PUT api/v2/roleMemberships/repository_container/role/{roleId}/group/{groupName}
-// PUT api/v2/roleMemberships/global/role/{roleId}/user/{userName}
-// PUT api/v2/roleMemberships/global/role/{roleId}/group/{groupName}
+	restRoleMembersOrgUser  = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
+	restRoleMembersOrgGroup = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
+	restRoleMembersAppUser  = "api/v2/roleMemberships/application/%s/role/%s/user/%s"
+	restRoleMembersAppGroup = "api/v2/roleMemberships/application/%s/role/%s/group/%s"
+	// restRoleMembersRepositoryUser  = "api/v2/roleMemberships/repository_container/role/{roleId}/user/{userName}"
+	// restRoleMembersRepositoryGroup = "api/v2/roleMemberships/repository_container/role/{roleId}/group/{groupName}"
+	// restRoleMembersGlobalUser      = "api/v2/roleMemberships/global/role/{roleId}/user/{userName}"
+	// restRoleMembersGlobalGroup     = "api/v2/roleMemberships/global/role/{roleId}/group/{groupName}"
 )
 
 // Constants to describe a Member Type
@@ -103,7 +90,7 @@ func OrganizationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 
 	body, _, err := iq.Get(endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve role mapping: %v", err)
+		return nil, fmt.Errorf("could not retrieve role mapping for organization %s: %v", name, err)
 	}
 
 	var mappings memberMappings
@@ -135,9 +122,9 @@ func setOrganizationAuth(iq IQ, name, roleName, member, memberType string) error
 	} else {
 		switch memberType {
 		case MemberTypeUser:
-			endpoint = fmt.Sprintf(restRoleMembersOrgUserPut, org.ID, role.ID, member)
+			endpoint = fmt.Sprintf(restRoleMembersOrgUser, org.ID, role.ID, member)
 		case MemberTypeGroup:
-			endpoint = fmt.Sprintf(restRoleMembersOrgGroupPut, org.ID, role.ID, member)
+			endpoint = fmt.Sprintf(restRoleMembersOrgGroup, org.ID, role.ID, member)
 		}
 	}
 
@@ -161,17 +148,72 @@ func SetOrganizationGroup(iq IQ, name, roleName, group string) error {
 
 // ApplicationAuthorizations returns the member mappings of an application
 func ApplicationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
-	return nil, nil
+	app, err := GetApplicationByPublicID(iq, name)
+	if err != nil {
+		return nil, fmt.Errorf("could not find application with name %s: %v", name, err)
+	}
+
+	var endpoint string
+	if hasDeprecatedAPI(iq) {
+		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersAppGet, app.ID)
+	}
+
+	body, _, err := iq.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve role mapping for application %s: %v", name, err)
+	}
+
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
+
+	return mappings.MemberMappings, err
+}
+
+func setApplicationAuth(iq IQ, name, roleName, member, memberType string) error {
+	app, err := GetApplicationByPublicID(iq, name)
+	if err != nil {
+		return fmt.Errorf("could not find application with name %s: %v", name, err)
+	}
+
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+
+	var endpoint string
+	var payload io.Reader
+	if hasDeprecatedAPI(iq) {
+		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
+		buf, err := json.Marshal(newMapping(role.ID, memberType, member))
+		if err != nil {
+			return fmt.Errorf("could not create mapping: %v", err)
+		}
+		payload = bytes.NewBuffer(buf)
+	} else {
+		switch memberType {
+		case MemberTypeUser:
+			endpoint = fmt.Sprintf(restRoleMembersAppUser, app.ID, role.ID, member)
+		case MemberTypeGroup:
+			endpoint = fmt.Sprintf(restRoleMembersAppGroup, app.ID, role.ID, member)
+		}
+	}
+
+	_, _, err = iq.Put(endpoint, payload)
+	if err != nil {
+		return fmt.Errorf("could not update organization role mapping: %v", err)
+	}
+
+	return nil
 }
 
 // SetApplicationUser sets the role and user that can have access to an application
-func SetApplicationUser(iq IQ, name, role, user string) error {
-	return nil
+func SetApplicationUser(iq IQ, name, roleName, user string) error {
+	return setApplicationAuth(iq, name, roleName, user, MemberTypeUser)
 }
 
 // SetApplicationGroup sets the role and group that can have access to an application
-func SetApplicationGroup(iq IQ, name, role, group string) error {
-	return nil
+func SetApplicationGroup(iq IQ, name, roleName, group string) error {
+	return setApplicationAuth(iq, name, roleName, group, MemberTypeGroup)
 }
-
-// RoleMemberships returns the member mappings of all the things
