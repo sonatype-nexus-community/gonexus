@@ -3,10 +3,9 @@ package nexusiq
 import (
 	"encoding/json"
 	"fmt"
-
-	// "io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -173,7 +172,7 @@ func TestGetAllReportInfos(t *testing.T) {
 	}
 
 	for i, f := range infos {
-		if !f.Equals(&dummyReportInfos[i]) {
+		if !reflect.DeepEqual(f, dummyReportInfos[i]) {
 			t.Fatal("Did not get expected report info")
 		}
 	}
@@ -194,7 +193,7 @@ func TestGetReportInfosByAppID(t *testing.T) {
 		t.Errorf("Got %d results instead of the expected 1", len(infos))
 	}
 
-	if !infos[0].Equals(&dummyReportInfos[testIdx]) {
+	if !reflect.DeepEqual(infos[0], dummyReportInfos[testIdx]) {
 		t.Fatal("Did not get expected report info")
 	}
 }
@@ -211,7 +210,7 @@ func TestGetRawReportByAppID(t *testing.T) {
 	}
 
 	dummy := dummyRawReports[dummyReportInfos[testIdx].ReportDataURL]
-	if !report.Equals(&dummy) {
+	if !reflect.DeepEqual(report, dummy) {
 		t.Error("Did not get expected raw report")
 	}
 }
@@ -228,7 +227,7 @@ func TestGetPolicyReportByAppID(t *testing.T) {
 	}
 
 	dummy := dummyPolicyReports[strings.Replace(dummyReportInfos[testIdx].ReportDataURL, "/raw", "/policy", 1)]
-	if !report.Equals(&dummy) {
+	if !reflect.DeepEqual(report, dummy) {
 		t.Error("Did not get expected policy report")
 	}
 }
@@ -245,12 +244,12 @@ func TestGetReportByAppID(t *testing.T) {
 	}
 
 	dummyRaw := dummyRawReports[dummyReportInfos[testIdx].ReportDataURL]
-	if !report.Raw.Equals(&dummyRaw) {
+	if !reflect.DeepEqual(report.Raw, dummyRaw) {
 		t.Error("Did not get expected raw report")
 	}
 
 	dummyPolicy := dummyPolicyReports[strings.Replace(dummyReportInfos[testIdx].ReportDataURL, "/raw", "/policy", 1)]
-	if !report.Policy.Equals(&dummyPolicy) {
+	if !reflect.DeepEqual(report.Policy, dummyPolicy) {
 		t.Error("Did not get expected policy report")
 	}
 }

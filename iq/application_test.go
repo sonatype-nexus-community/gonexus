@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -111,7 +112,7 @@ func TestGetAllApplications(t *testing.T) {
 	}
 
 	for i, app := range applications {
-		if !app.Equals(&dummyApps[i]) {
+		if !reflect.DeepEqual(app, dummyApps[i]) {
 			t.Error("Did not get back expected applications")
 		}
 	}
@@ -125,16 +126,20 @@ func TestGetApplicationByPublicID(t *testing.T) {
 
 	dummyAppsIdx := 2
 
-	app, err := GetApplicationByPublicID(iq, dummyApps[dummyAppsIdx].PublicID)
+	got, err := GetApplicationByPublicID(iq, dummyApps[dummyAppsIdx].PublicID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !dummyApps[dummyAppsIdx].Equals(app) {
-		t.Errorf("Did not retrieve the expected app: %v\n", app)
+	want := dummyApps[dummyAppsIdx]
+	// if !dummyApps[dummyAppsIdx].Equals(app) {
+	if !reflect.DeepEqual(*got, want) {
+		t.Error("Did not retrieve the expected app")
+		t.Error("got", got)
+		t.Error("want", want)
 	}
 
-	t.Log(app)
+	t.Log(got)
 }
 
 func TestCreateApplication(t *testing.T) {
@@ -149,13 +154,16 @@ func TestCreateApplication(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := GetApplicationByPublicID(iq, createdApp.PublicID)
+	got, err := GetApplicationByPublicID(iq, createdApp.PublicID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !createdApp.Equals(app) {
-		t.Errorf("Did not retrieve the expected app: %v\n", app)
+	// if !createdApp.Equals(app) {
+	if !reflect.DeepEqual(*got, createdApp) {
+		t.Error("Did not retrieve the expected app")
+		t.Error("got", got)
+		t.Error("want", createdApp)
 	}
 }
 

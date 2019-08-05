@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -59,7 +60,7 @@ func TestGetPolicies(t *testing.T) {
 	}
 
 	for i, f := range infos {
-		if !f.Equals(&dummyPolicyInfos[i]) {
+		if !reflect.DeepEqual(f, dummyPolicyInfos[i]) {
 			t.Fatal("Did not get expected policy info")
 		}
 	}
@@ -76,7 +77,7 @@ func TestGetPolicyInfoByName(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !info.Equals(&expected) {
+	if !reflect.DeepEqual(info, expected) {
 		t.Fatal("Did not get expected policy info")
 	}
 }
