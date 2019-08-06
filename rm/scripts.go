@@ -19,27 +19,6 @@ type Script struct {
 	Type    string `json:"type"`
 }
 
-// Equals compares two Script objects
-func (a *Script) Equals(b *Script) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Content != b.Content {
-		return
-	}
-
-	if a.Type != b.Type {
-		return
-	}
-
-	return true
-}
-
 type runResponse struct {
 	Name   string `json:"name"`
 	Result string `json:"result"`

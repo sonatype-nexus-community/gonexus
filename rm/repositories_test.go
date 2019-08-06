@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -44,7 +45,7 @@ func TestGetRepositories(t *testing.T) {
 	t.Logf("%q\n", repos)
 
 	for i, repo := range repos {
-		if !repo.Equals(&dummyRepos[i]) {
+		if !reflect.DeepEqual(repo, dummyRepos[i]) {
 			t.Error("Did not receive the expected repositories")
 		}
 	}
@@ -62,7 +63,7 @@ func TestGetRepositoryByName(t *testing.T) {
 	}
 	t.Logf("%q\n", repo)
 
-	if !repo.Equals(&dummyRepos[dummyRepoIdx]) {
+	if !reflect.DeepEqual(repo, dummyRepos[dummyRepoIdx]) {
 		t.Error("Did not receive the expected repositories")
 	}
 }
