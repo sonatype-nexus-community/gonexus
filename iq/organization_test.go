@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -72,8 +73,11 @@ func TestGetOranizationByName(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !dummyOrgs[dummyOrgsIdx].Equals(org) {
-		t.Errorf("Did not retrieve the expected organization: %v\n", org)
+	want := dummyOrgs[dummyOrgsIdx]
+	if !reflect.DeepEqual(want, *org) {
+		t.Error("Did not retrieve the expected organization\n")
+		t.Error(" got:", org)
+		t.Error("want:", want)
 	}
 
 	t.Log(org)
@@ -96,8 +100,10 @@ func TestCreateOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !createdOrg.Equals(org) {
-		t.Errorf("Did not retrieve the expected org: %v\n", org)
+	if !reflect.DeepEqual(createdOrg, *org) {
+		t.Error("Did not retrieve the expected organization\n")
+		t.Error(" got:", org)
+		t.Error("want:", createdOrg)
 	}
 }
 

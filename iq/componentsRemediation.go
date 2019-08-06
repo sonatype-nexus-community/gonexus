@@ -18,63 +18,14 @@ type remediationData struct {
 	Component Component `json:"component"`
 }
 
-// Equals does a deep equality check against two remediationData objects
-func (a *remediationData) Equals(b *remediationData) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if !a.Component.Equals(&b.Component) {
-		return
-	}
-
-	return true
-}
-
 type remediationVersionChange struct {
 	Type string          `json:"type"`
 	Data remediationData `json:"data"`
 }
 
-// Equals does a deep equality check against two remediationVersionChange objects
-func (a *remediationVersionChange) Equals(b *remediationVersionChange) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Type != b.Type {
-		return
-	}
-
-	if !a.Data.Equals(&b.Data) {
-		return
-	}
-
-	return true
-}
-
 // Remediation encapsulates the remediation information for a component
 type Remediation struct {
 	VersionChanges []remediationVersionChange `json:"versionChanges"`
-}
-
-// Equals does a deep equality check against two Remediation objects
-func (a *Remediation) Equals(b *Remediation) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if len(a.VersionChanges) != len(b.VersionChanges) {
-		return
-	}
-
-	for i, v := range a.VersionChanges {
-		if !v.Equals(&b.VersionChanges[i]) {
-			return
-		}
-	}
-
-	return true
 }
 
 type remediationResponse struct {

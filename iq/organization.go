@@ -34,33 +34,6 @@ type Organization struct {
 	Tags []IQCategory `json:"tags,omitempty"`
 }
 
-// Equals compares two Organization objects
-func (a *Organization) Equals(b *Organization) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if len(a.Tags) != len(b.Tags) {
-		return
-	}
-
-	for i, t := range a.Tags {
-		if t != b.Tags[i] {
-			return
-		}
-	}
-
-	return true
-}
-
 // GetOrganizationByName returns details on the named IQ organization
 func GetOrganizationByName(iq IQ, organizationName string) (*Organization, error) {
 	orgs, err := GetAllOrganizations(iq)

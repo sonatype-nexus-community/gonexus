@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -89,7 +90,7 @@ func TestGetAllPolicyViolations(t *testing.T) {
 	}
 
 	for i, f := range violations {
-		if !f.Equals(&dummyPolicyViolations[i]) {
+		if !reflect.DeepEqual(f, dummyPolicyViolations[i]) {
 			t.Fatal("Did not get expected policy violation")
 		}
 	}
@@ -110,7 +111,7 @@ func TestGetPolicyViolationsByName(t *testing.T) {
 		t.Fatalf("Received %d violations instead of the expected %d", len(violations), 1)
 	}
 
-	if !violations[0].Equals(&expected) {
+	if !reflect.DeepEqual(violations[0], expected) {
 		t.Fatal("Did not get expected policy violation")
 	}
 }

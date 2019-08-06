@@ -44,51 +44,6 @@ type Application struct {
 	} `json:"applicationTags,omitempty"`
 }
 
-// Equals compares two Application objects
-func (a *Application) Equals(b *Application) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.PublicID != b.PublicID {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.OrganizationID != b.OrganizationID {
-		return
-	}
-
-	if a.ContactUserName != b.ContactUserName {
-		return
-	}
-
-	if len(a.ApplicationTags) != len(b.ApplicationTags) {
-		return
-	}
-
-	for i, v := range a.ApplicationTags {
-		if v.ID != b.ApplicationTags[i].ID {
-			return
-		}
-		if v.TagID != b.ApplicationTags[i].TagID {
-			return
-		}
-		if v.ApplicationID != b.ApplicationTags[i].ApplicationID {
-			return
-		}
-	}
-
-	return true
-}
-
 // GetApplicationByPublicID returns details on the named IQ application
 func GetApplicationByPublicID(iq IQ, applicationPublicID string) (*Application, error) {
 	doError := func(err error) error {

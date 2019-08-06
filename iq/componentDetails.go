@@ -28,45 +28,6 @@ type ComponentDetail struct {
 	} `json:"securityData"`
 }
 
-// Equals compares two ComponentDetail objects
-func (a *ComponentDetail) Equals(b *ComponentDetail) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if !a.Component.Equals(&b.Component) {
-		return
-	}
-
-	if a.MatchState != b.MatchState {
-		return
-	}
-
-	if a.CatalogDate != b.CatalogDate {
-		return
-	}
-
-	if a.RelativePopularity != b.RelativePopularity {
-		return
-	}
-
-	if !a.LicenseData.Equals(&b.LicenseData) {
-		return
-	}
-
-	if len(a.SecurityData.SecurityIssues) != len(b.SecurityData.SecurityIssues) {
-		return
-	}
-
-	for i, s := range a.SecurityData.SecurityIssues {
-		if !s.Equals(&b.SecurityData.SecurityIssues[i]) {
-			return
-		}
-	}
-
-	return true
-}
-
 // GetComponent returns information on a named component
 func GetComponent(iq IQ, components []Component) ([]ComponentDetail, error) {
 	req, err := json.Marshal(detailsRequest{components})

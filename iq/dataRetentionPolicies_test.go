@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -103,7 +104,7 @@ func TestGetRetentionPolicies(t *testing.T) {
 	}
 
 	expected := dummyRetentionPolicies[dummyOrgs[0].ID]
-	if !policies.Equals(&expected) {
+	if !reflect.DeepEqual(policies, expected) {
 		t.Error("Did not find the expected retention policies")
 	}
 }
@@ -144,7 +145,7 @@ func TestSetRetentionPolicies(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !got.Equals(&expected) {
+	if !reflect.DeepEqual(got, expected) {
 		t.Logf("got: %v\nwant: %v", got, expected)
 		t.Error("Did not find the expected retention policies")
 	}

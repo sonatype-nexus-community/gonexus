@@ -17,39 +17,6 @@ type PolicyInfo struct {
 	PolicyType  string `json:"policyType"`
 }
 
-// Equals performs a deep comparison on two PolicyInfo objects
-func (a *PolicyInfo) Equals(b *PolicyInfo) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.OwnerID != b.OwnerID {
-		return
-	}
-
-	if a.OwnerType != b.OwnerType {
-		return
-	}
-
-	if a.ThreatLevel != b.ThreatLevel {
-		return
-	}
-
-	if a.PolicyType != b.PolicyType {
-		return
-	}
-
-	return true
-}
-
 type policiesList struct {
 	Policies []PolicyInfo `json:"policies"`
 }

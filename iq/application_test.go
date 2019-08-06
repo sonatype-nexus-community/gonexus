@@ -132,7 +132,6 @@ func TestGetApplicationByPublicID(t *testing.T) {
 	}
 
 	want := dummyApps[dummyAppsIdx]
-	// if !dummyApps[dummyAppsIdx].Equals(app) {
 	if !reflect.DeepEqual(*got, want) {
 		t.Error("Did not retrieve the expected app")
 		t.Error("got", got)
@@ -159,7 +158,6 @@ func TestCreateApplication(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// if !createdApp.Equals(app) {
 	if !reflect.DeepEqual(*got, createdApp) {
 		t.Error("Did not retrieve the expected app")
 		t.Error("got", got)
