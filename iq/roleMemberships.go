@@ -52,7 +52,7 @@ type Member struct {
 }
 
 func hasDeprecatedAPI(iq IQ) bool {
-	api := fmt.Sprintf(restRoleMembersOrgDeprecated, rootOrganizationID)
+	api := fmt.Sprintf(restRoleMembersOrgDeprecated, RootOrganization)
 	request, _ := iq.NewRequest("HEAD", api, nil)
 	_, resp, _ := iq.Do(request)
 	return resp.StatusCode != http.StatusNotFound

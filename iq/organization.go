@@ -9,7 +9,8 @@ import (
 const (
 	restOrganization = "api/v2/organizations"
 
-	rootOrganizationID = "ROOT_ORGANIZATION_ID"
+	// RootOrganization is the ID of the ... Root ... Organization
+	RootOrganization = "ROOT_ORGANIZATION_ID"
 )
 
 type iqNewOrgRequest struct {
