@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -88,7 +89,7 @@ func TestRemediationByApp(t *testing.T) {
 	}
 
 	expected := dummyRemediations[dummyApps[0].ID+":"+stage]
-	if !remediation.Equals(&expected) {
+	if !reflect.DeepEqual(remediation, expected) {
 		t.Error("Did not receive the expected remediation")
 	}
 }
@@ -105,7 +106,7 @@ func TestRemediationByOrg(t *testing.T) {
 	}
 
 	expected := dummyRemediations[dummyOrgs[0].ID+":"+stage]
-	if !remediation.Equals(&expected) {
+	if !reflect.DeepEqual(remediation, expected) {
 		t.Error("Did not receive the expected remediation")
 	}
 }

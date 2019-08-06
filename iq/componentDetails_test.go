@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func componentDetailsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reque
 		components := make([]ComponentDetail, 0)
 		for _, c := range req.Components {
 			for _, deets := range dummyComponentDetails {
-				if deets.Component.Equals(&c) {
+				if reflect.DeepEqual(deets.Component, c) {
 					components = append(components, deets)
 				}
 			}
@@ -69,7 +70,7 @@ func TestGetComponent(t *testing.T) {
 		t.Fatalf("Received %d results but expected 1\n", len(details))
 	}
 
-	if !details[0].Equals(&expected) {
+	if !reflect.DeepEqual(details[0], expected) {
 		t.Errorf("Did not receive expected component details")
 	}
 }

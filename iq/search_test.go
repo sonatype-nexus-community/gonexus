@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func searchTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		}
 
 		var result searchResponse
-		if !coords.Equals(&dummyComponent.ComponentID.Coordinates) {
+		if !reflect.DeepEqual(coords, dummyComponent.ComponentID.Coordinates) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			result.Criteria.ComponentIdentifier.Coordinates = coords
@@ -67,8 +68,12 @@ func TestSearchComponent(t *testing.T) {
 		t.Errorf("Received %d components instead of %d\n", len(components), 1)
 	}
 
-	if !components[0].ComponentIdentifier.Equals(dummyComponent.ComponentID) {
-		t.Fatal("Did not receive expected components")
+	got := components[0].ComponentIdentifier
+	want := dummyComponent.ComponentID
+	if !reflect.DeepEqual(got, *want) {
+		t.Error("Did not receive expected components")
+		t.Error(" got:", got)
+		t.Error("want:", want)
 	}
 	// TODO: better comparison
 }

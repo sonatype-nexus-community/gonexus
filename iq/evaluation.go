@@ -21,68 +21,10 @@ type Coordinates struct {
 	Classifier string `json:"classifier,omitempty"`
 }
 
-// Equals compares two Coordinates objects
-func (a *Coordinates) Equals(b *Coordinates) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ArtifactID != b.ArtifactID {
-		return
-	}
-
-	if a.GroupID != b.GroupID {
-		return
-	}
-
-	if a.Version != b.Version {
-		return
-	}
-
-	if a.Extension != b.Extension {
-		return
-	}
-
-	if a.Classifier != b.Classifier {
-		return
-	}
-
-	return true
-}
-
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
 	Format      string      `json:"format,omitempty"`
 	Coordinates Coordinates `json:"coordinates,omitempty"`
-}
-
-// Equals compares two ComponentIdentifier objects
-func (a *ComponentIdentifier) Equals(b *ComponentIdentifier) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Coordinates.ArtifactID != b.Coordinates.ArtifactID {
-		return
-	}
-
-	if a.Coordinates.GroupID != b.Coordinates.GroupID {
-		return
-	}
-
-	if a.Coordinates.Version != b.Coordinates.Version {
-		return
-	}
-
-	if a.Coordinates.Extension != b.Coordinates.Extension {
-		return
-	}
-
-	return true
 }
 
 // Component encapsulates the details of a component in IQ
@@ -93,45 +35,6 @@ type Component struct {
 	PackageURL  string               `json:"packageUrl,omitempty"`
 	MatchState  string               `json:"matchState,omitempty"`
 	Pathnames   []string             `json:"pathnames,omitempty"`
-}
-
-// Equals compares two Component objects
-func (a *Component) Equals(b *Component) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Hash != b.Hash {
-		return
-	}
-
-	if !a.ComponentID.Equals(b.ComponentID) {
-		return
-	}
-
-	if a.Proprietary != b.Proprietary {
-		return
-	}
-
-	if a.PackageURL != b.PackageURL {
-		return
-	}
-
-	if a.MatchState != b.MatchState {
-		return
-	}
-
-	if len(a.Pathnames) != len(b.Pathnames) {
-		return
-	}
-
-	for i, p := range a.Pathnames {
-		if p != b.Pathnames[i] {
-			return
-		}
-	}
-
-	return true
 }
 
 type versionDetailsRubyGem struct {
@@ -203,56 +106,10 @@ type PolicyViolation struct {
 	} `json:"constraintViolations"`
 }
 
-// Equals performs a deep comparison between two PolicyViolation objects
-func (a *PolicyViolation) Equals(b *PolicyViolation) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.PolicyID != b.PolicyID {
-		return
-	}
-
-	if a.PolicyName != b.PolicyName {
-		return
-	}
-
-	if a.StageID != b.StageID {
-		return
-	}
-
-	if a.ReportURL != b.ReportURL {
-		return
-	}
-
-	if a.ThreatLevel != b.ThreatLevel {
-		return
-	}
-
-	return true
-}
-
 // License identifier an OSS license recognized by Sonatype
 type License struct {
 	LicenseID   string `json:"licenseId"`
 	LicenseName string `json:"licenseName"`
-}
-
-// Equals compares two License objects
-func (a *License) Equals(b *License) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.LicenseID != b.LicenseID {
-		return
-	}
-
-	if a.LicenseName != b.LicenseName {
-		return
-	}
-
-	return true
 }
 
 // LicenseData encapsulates the information on the different licenses of a component
@@ -268,68 +125,6 @@ type LicenseData struct {
 	} `json:"effectiveLicenseThreats,omitempty"`
 }
 
-// Equals compares two LicenseData objects
-func (a *LicenseData) Equals(b *LicenseData) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Status != b.Status {
-		return
-	}
-
-	if len(a.DeclaredLicenses) != len(b.DeclaredLicenses) {
-		return
-	}
-
-	for i, l := range a.DeclaredLicenses {
-		if !l.Equals(&b.DeclaredLicenses[i]) {
-			return
-		}
-	}
-
-	if len(a.ObservedLicenses) != len(b.ObservedLicenses) {
-		return
-	}
-
-	for i, l := range a.ObservedLicenses {
-		if !l.Equals(&b.ObservedLicenses[i]) {
-			return
-		}
-	}
-
-	if len(a.OverriddenLicenses) != len(b.OverriddenLicenses) {
-		return
-	}
-
-	for i, l := range a.OverriddenLicenses {
-		if !l.Equals(&b.OverriddenLicenses[i]) {
-			return
-		}
-	}
-
-	if len(a.EffectiveLicenseThreats) != len(b.EffectiveLicenseThreats) {
-		return
-	}
-
-	for i, l := range a.EffectiveLicenseThreats {
-		if l.LicenseThreatGroupCategory != b.EffectiveLicenseThreats[i].LicenseThreatGroupCategory {
-			return
-		}
-
-		if l.LicenseThreatGroupLevel != b.EffectiveLicenseThreats[i].LicenseThreatGroupLevel {
-			return
-		}
-
-		if l.LicenseThreatGroupName != b.EffectiveLicenseThreats[i].LicenseThreatGroupName {
-			return
-		}
-
-	}
-
-	return true
-}
-
 // SecurityIssue encapsulates a security issue in the Sonatype database
 type SecurityIssue struct {
 	Source         string  `json:"source"`
@@ -338,39 +133,6 @@ type SecurityIssue struct {
 	Status         string  `json:"status,omitempty"`
 	URL            string  `json:"url"`
 	ThreatCategory string  `json:"threatCategory"`
-}
-
-// Equals compares two SecurityIssue objects
-func (a *SecurityIssue) Equals(b *SecurityIssue) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Source != b.Source {
-		return
-	}
-
-	if a.Reference != b.Reference {
-		return
-	}
-
-	if a.Severity != b.Severity {
-		return
-	}
-
-	if a.Status != b.Status {
-		return
-	}
-
-	if a.URL != b.URL {
-		return
-	}
-
-	if a.ThreatCategory != b.ThreatCategory {
-		return
-	}
-
-	return true
 }
 
 // ComponentEvaluationResult holds the results of a component evaluation

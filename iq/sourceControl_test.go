@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -119,7 +120,7 @@ func TestGetSourceControlEntryByInternalID(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !entry.Equals(&dummyEntries[dummyEntryIdx]) {
+	if !reflect.DeepEqual(entry, dummyEntries[dummyEntryIdx]) {
 		t.Errorf("Did not receive expected entry")
 	}
 
@@ -142,7 +143,7 @@ func TestGetAllSourceControlEntries(t *testing.T) {
 	for _, entry := range entries {
 		var found bool
 		for _, dummy := range dummyEntries {
-			if dummy.Equals(&entry) {
+			if !reflect.DeepEqual(dummy, entry) {
 				found = true
 			}
 		}
@@ -165,7 +166,7 @@ func TestGetSourceControlEntry(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !entry.Equals(&dummyEntries[dummyEntryIdx]) {
+	if !reflect.DeepEqual(entry, dummyEntries[dummyEntryIdx]) {
 		t.Errorf("Did not receive expected entry")
 	}
 
@@ -189,7 +190,7 @@ func TestCreateSourceControlEntry(t *testing.T) {
 	}
 	t.Logf("Entry: %v\n", entry)
 
-	if !entry.Equals(&createdEntry) {
+	if !reflect.DeepEqual(entry, createdEntry) {
 		t.Errorf("Did not receive expected entry")
 	}
 }

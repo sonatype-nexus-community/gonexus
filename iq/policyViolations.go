@@ -14,29 +14,6 @@ type ApplicationViolation struct {
 	PolicyViolations []PolicyViolation `json:"policyViolations"`
 }
 
-// Equals performs a deep comparison between two ApplicationViolation objects
-func (a *ApplicationViolation) Equals(b *ApplicationViolation) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if !a.Application.Equals(&b.Application) {
-		return
-	}
-
-	if len(a.PolicyViolations) != len(b.PolicyViolations) {
-		return
-	}
-
-	for i, v := range a.PolicyViolations {
-		if !v.Equals(&b.PolicyViolations[i]) {
-			return
-		}
-	}
-
-	return true
-}
-
 type violationResponse struct {
 	ApplicationViolations []ApplicationViolation `json:"applicationViolations"`
 }

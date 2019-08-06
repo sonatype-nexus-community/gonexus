@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -112,7 +113,7 @@ func TestEvaluateComponents(t *testing.T) {
 	}
 
 	reportComponent := report.Results[0].Component
-	if !dummyComponent.Equals(&reportComponent) {
+	if !reflect.DeepEqual(dummyComponent, reportComponent) {
 		t.Error("Did not find the expected Component in evaluation results")
 	}
 }

@@ -14,46 +14,9 @@ type DataRetentionPolicies struct {
 	SuccessMetrics     DataRetentionPolicy `json:"successMetrics"`
 }
 
-// Equals compares two DataRetentionPolicies objects
-func (a *DataRetentionPolicies) Equals(b *DataRetentionPolicies) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if !a.ApplicationReports.Equals(&b.ApplicationReports) {
-		return
-	}
-
-	if !a.SuccessMetrics.Equals(&b.SuccessMetrics) {
-		return
-	}
-
-	return true
-}
-
 // ApplicationReports captures the policies related to application reports
 type ApplicationReports struct {
 	Stages map[Stage]DataRetentionPolicy `json:"stages"`
-}
-
-// Equals compares two ApplicationReports objects
-func (a *ApplicationReports) Equals(b *ApplicationReports) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if len(a.Stages) != len(b.Stages) {
-		return
-	}
-
-	for i, s := range a.Stages {
-		bs := b.Stages[i]
-		if !s.Equals(&bs) {
-			return
-		}
-	}
-
-	return true
 }
 
 // DataRetentionPolicy describes the retention policies for a pipeline stage
@@ -61,27 +24,6 @@ type DataRetentionPolicy struct {
 	InheritPolicy bool   `json:"inheritPolicy"`
 	EnablePurging bool   `json:"enablePurging"`
 	MaxAge        string `json:"maxAge"`
-}
-
-// Equals compares two DataRetentionPolicy objects
-func (a *DataRetentionPolicy) Equals(b *DataRetentionPolicy) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.InheritPolicy != b.InheritPolicy {
-		return
-	}
-
-	if a.EnablePurging != b.EnablePurging {
-		return
-	}
-
-	if a.MaxAge != b.MaxAge {
-		return
-	}
-
-	return true
 }
 
 // GetRetentionPolicies returns the current retention policies
