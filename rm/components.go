@@ -32,49 +32,6 @@ type RepositoryItem struct {
 	Tags       []string              `json:"tags"`
 }
 
-// Equals compares two RepositoryItem objects
-func (a *RepositoryItem) Equals(b *RepositoryItem) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Group != b.Group {
-		return
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Version != b.Version {
-		return
-	}
-
-	if len(a.Assets) != len(b.Assets) {
-		return
-	}
-
-	for i, asset := range a.Assets {
-		if !asset.Equals(&b.Assets[i]) {
-			return
-		}
-	}
-
-	return true
-}
-
 const hashPart = 20
 
 // Hash is a hack which returns the most appopriate IQable hash of a repo item

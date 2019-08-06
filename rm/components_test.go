@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -179,7 +180,7 @@ func getComponentsTester(t *testing.T, repo string) {
 	}
 
 	for i, c := range components {
-		if !c.Equals(&dummyComponents[repo][i]) {
+		if !reflect.DeepEqual(c, dummyComponents[repo][i]) {
 			t.Fatal("Did not receive expected components")
 		}
 	}
@@ -206,7 +207,7 @@ func TestGetComponentByID(t *testing.T) {
 
 	fmt.Printf("%q\n", component)
 
-	if !component.Equals(&expectedComponent) {
+	if !reflect.DeepEqual(component, expectedComponent) {
 		t.Error("Did not receive expected component")
 	}
 }
@@ -230,7 +231,7 @@ func componentUploader(t *testing.T, expected RepositoryItem, upload UploadCompo
 
 	fmt.Printf("%q\n", component)
 
-	if !component.Equals(&expected) {
+	if !reflect.DeepEqual(component, expected) {
 		t.Error("Did not receive expected component")
 	}
 }

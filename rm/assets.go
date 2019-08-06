@@ -24,43 +24,6 @@ type RepositoryItemAsset struct {
 	Checksum    repositoryItemAssetsChecksum `json:"checksum"`
 }
 
-// Equals compares two RepositoryItemAssets objects
-func (a *RepositoryItemAsset) Equals(b *RepositoryItemAsset) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.DownloadURL != b.DownloadURL {
-		return
-	}
-
-	if a.Path != b.Path {
-		return
-	}
-
-	if a.ID != b.ID {
-		return
-	}
-
-	if a.Repository != b.Repository {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Checksum.Sha1 != b.Checksum.Sha1 {
-		return
-	}
-
-	if a.Checksum.Md5 != b.Checksum.Md5 {
-		return
-	}
-
-	return true
-}
-
 type listAssetsResponse struct {
 	Items             []RepositoryItemAsset `json:"items"`
 	ContinuationToken string                `json:"continuationToken"`

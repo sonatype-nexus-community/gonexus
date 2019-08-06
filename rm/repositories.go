@@ -63,35 +63,6 @@ type Repository struct {
 	} `json:"attributes,omitempty"`
 }
 
-// Equals compares two Repository objects
-func (a *Repository) Equals(b *Repository) (_ bool) {
-	if a == b {
-		return true
-	}
-
-	if a.Name != b.Name {
-		return
-	}
-
-	if a.Format != b.Format {
-		return
-	}
-
-	if a.Type != b.Type {
-		return
-	}
-
-	if a.URL != b.URL {
-		return
-	}
-
-	if a.Attributes.Proxy.RemoteURL != b.Attributes.Proxy.RemoteURL {
-		return
-	}
-
-	return true
-}
-
 // GetRepositories returns a list of components in the indicated repository
 func GetRepositories(rm RM) ([]Repository, error) {
 	doError := func(err error) error {

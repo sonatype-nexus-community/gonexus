@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -58,7 +59,7 @@ func TestCheckDatabase(t *testing.T) {
 
 	expectedState := dummyDatabaseStates[db]
 
-	if !state.Equals(&expectedState) {
+	if !reflect.DeepEqual(state, expectedState) {
 		t.Fatal("Did not receive expected database state")
 	}
 }
@@ -83,7 +84,7 @@ func TestCheckAllDatabases(t *testing.T) {
 		if !ok {
 			t.Fatal("Received state does not exist in expected")
 		}
-		if !state.Equals(&v) {
+		if !reflect.DeepEqual(state, v) {
 			t.Fatal("Database state does not match expected")
 		}
 	}

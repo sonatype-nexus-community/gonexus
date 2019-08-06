@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -141,7 +142,7 @@ func getAssetsTester(t *testing.T, repo string) {
 	}
 
 	for i, c := range assets {
-		if !c.Equals(&dummyAssets[repo][i]) {
+		if !reflect.DeepEqual(c, dummyAssets[repo][i]) {
 			t.Fatal("Did not receive expected assets")
 		}
 	}
@@ -168,7 +169,7 @@ func TestGetAssetByID(t *testing.T) {
 
 	fmt.Printf("%q\n", asset)
 
-	if !asset.Equals(&expectedAsset) {
+	if !reflect.DeepEqual(asset, expectedAsset) {
 		t.Error("Did not receive expected asset")
 	}
 }

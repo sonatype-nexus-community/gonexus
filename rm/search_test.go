@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -89,7 +90,7 @@ func TestSearchComponents(t *testing.T) {
 	}
 
 	for i, c := range components {
-		if !c.Equals(&dummyComponents[repo][i]) {
+		if !reflect.DeepEqual(c, dummyComponents[repo][i]) {
 			t.Fatal("Did not receive expected components")
 		}
 	}
@@ -114,7 +115,7 @@ func TestSearchAssets(t *testing.T) {
 	}
 
 	for i, c := range assets {
-		if !c.Equals(&dummyAssets[repo][i]) {
+		if !reflect.DeepEqual(c, dummyAssets[repo][i]) {
 			t.Fatal("Did not receive expected components")
 		}
 	}

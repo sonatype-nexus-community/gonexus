@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -138,7 +139,7 @@ func TestScriptList(t *testing.T) {
 	}
 
 	for i, s := range scripts {
-		if !s.Equals(&dummyScripts[i]) {
+		if !reflect.DeepEqual(s, dummyScripts[i]) {
 			t.Fatal("Did not receive the expected scripts")
 		}
 	}
@@ -156,7 +157,7 @@ func TestScriptGet(t *testing.T) {
 	}
 	t.Logf("%v\n", script)
 
-	if !script.Equals(&dummyScripts[dummyScriptsIdx]) {
+	if !reflect.DeepEqual(script, dummyScripts[dummyScriptsIdx]) {
 		t.Fatal("Did not receive the expected script")
 	}
 }
@@ -177,7 +178,7 @@ func TestScriptUpload(t *testing.T) {
 	}
 	t.Logf("%v\n", script)
 
-	if !script.Equals(&newScript) {
+	if !reflect.DeepEqual(script, newScript) {
 		t.Fatal("Did not receive the expected script")
 	}
 }
@@ -192,7 +193,7 @@ func TestScriptUpdate(t *testing.T) {
 		Type:    dummyScripts[0].Type,
 	}
 
-	if updatedScript.Equals(&dummyScripts[0]) {
+	if reflect.DeepEqual(updatedScript, dummyScripts[0]) {
 		t.Fatal("I am an idiot")
 	}
 
@@ -206,7 +207,7 @@ func TestScriptUpdate(t *testing.T) {
 	}
 	t.Logf("%v\n", script)
 
-	if !script.Equals(&updatedScript) {
+	if !reflect.DeepEqual(script, updatedScript) {
 		t.Fatal("Did not receive the expected script")
 	}
 }
