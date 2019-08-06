@@ -51,8 +51,8 @@ type Member struct {
 	UserOrGroupName string `json:"userOrGroupName"`
 }
 
-func hasDeprecatedAPI(iq IQ) bool {
-	api := fmt.Sprintf(restRoleMembersOrgDeprecated, RootOrganization)
+func hasRev70API(iq IQ) bool {
+	api := fmt.Sprintf(restRoleMembersOrgGet, RootOrganization)
 	request, _ := iq.NewRequest("HEAD", api, nil)
 	_, resp, _ := iq.Do(request)
 	return resp.StatusCode != http.StatusNotFound
@@ -82,10 +82,10 @@ func OrganizationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 	}
 
 	var endpoint string
-	if hasDeprecatedAPI(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, org.ID)
-	} else {
+	if hasRev70API(iq) {
 		endpoint = fmt.Sprintf(restRoleMembersOrgGet, org.ID)
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, org.ID)
 	}
 
 	body, _, err := iq.Get(endpoint)
@@ -112,20 +112,20 @@ func setOrganizationAuth(iq IQ, name, roleName, member, memberType string) error
 
 	var endpoint string
 	var payload io.Reader
-	if hasDeprecatedAPI(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, org.ID)
-		buf, err := json.Marshal(newMapping(role.ID, memberType, member))
-		if err != nil {
-			return fmt.Errorf("could not create mapping: %v", err)
-		}
-		payload = bytes.NewBuffer(buf)
-	} else {
+	if hasRev70API(iq) {
 		switch memberType {
 		case MemberTypeUser:
 			endpoint = fmt.Sprintf(restRoleMembersOrgUser, org.ID, role.ID, member)
 		case MemberTypeGroup:
 			endpoint = fmt.Sprintf(restRoleMembersOrgGroup, org.ID, role.ID, member)
 		}
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, org.ID)
+		buf, err := json.Marshal(newMapping(role.ID, memberType, member))
+		if err != nil {
+			return fmt.Errorf("could not create mapping: %v", err)
+		}
+		payload = bytes.NewBuffer(buf)
 	}
 
 	_, _, err = iq.Put(endpoint, payload)
@@ -154,10 +154,10 @@ func ApplicationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 	}
 
 	var endpoint string
-	if hasDeprecatedAPI(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
-	} else {
+	if hasRev70API(iq) {
 		endpoint = fmt.Sprintf(restRoleMembersAppGet, app.ID)
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
 	}
 
 	body, _, err := iq.Get(endpoint)
@@ -184,20 +184,20 @@ func setApplicationAuth(iq IQ, name, roleName, member, memberType string) error 
 
 	var endpoint string
 	var payload io.Reader
-	if hasDeprecatedAPI(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
-		buf, err := json.Marshal(newMapping(role.ID, memberType, member))
-		if err != nil {
-			return fmt.Errorf("could not create mapping: %v", err)
-		}
-		payload = bytes.NewBuffer(buf)
-	} else {
+	if hasRev70API(iq) {
 		switch memberType {
 		case MemberTypeUser:
 			endpoint = fmt.Sprintf(restRoleMembersAppUser, app.ID, role.ID, member)
 		case MemberTypeGroup:
 			endpoint = fmt.Sprintf(restRoleMembersAppGroup, app.ID, role.ID, member)
 		}
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
+		buf, err := json.Marshal(newMapping(role.ID, memberType, member))
+		if err != nil {
+			return fmt.Errorf("could not create mapping: %v", err)
+		}
+		payload = bytes.NewBuffer(buf)
 	}
 
 	_, _, err = iq.Put(endpoint, payload)
@@ -217,3 +217,43 @@ func SetApplicationUser(iq IQ, name, roleName, user string) error {
 func SetApplicationGroup(iq IQ, name, roleName, group string) error {
 	return setApplicationAuth(iq, name, roleName, group, MemberTypeGroup)
 }
+
+/*
+// RevokeOrganizationUser
+func RevokeOrganizationUser(iq IQ, name, roleName, user string) error {
+	var endpoint string
+	if hasRev70API(iq) {
+	restRoleMembersOrgUser  = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
+	restRoleMembersOrgDeprecated = "api/v2/organizations/%s/roleMembers"
+}
+*/
+
+/*
+// RevokeOrganizationGroup
+func RevokeOrganizationGroup(iq IQ, name, roleName, group string) error {
+	var endpoint string
+	if hasRev70API(iq) {
+	restRoleMembersOrgGroup = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
+	restRoleMembersOrgDeprecated = "api/v2/organizations/%s/roleMembers"
+}
+*/
+
+/*
+// RevokeApplicationUser
+func RevokeApplicationUser(iq IQ, name, roleName, user string) error {
+	var endpoint string
+	if hasRev70API(iq) {
+	restRoleMembersAppUser  = "api/v2/roleMemberships/application/%s/role/%s/user/%s"
+	restRoleMembersAppDeprecated = "api/v2/applications/%s/roleMembers"
+}
+*/
+
+/*
+// RevokeApplicationGroup
+func RevokeApplicationGroup(iq IQ, name, roleName, group string) error {
+	var endpoint string
+	if hasRev70API(iq) {
+	restRoleMembersAppGroup = "api/v2/roleMemberships/application/%s/role/%s/group/%s"
+	restRoleMembersAppDeprecated = "api/v2/applications/%s/roleMembers"
+}
+*/
