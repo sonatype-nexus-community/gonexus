@@ -116,7 +116,7 @@ func TestGetAllOrganizations(t *testing.T) {
 		panic(err)
 	}
 
-	fmt.Printf("%v\n", organizations)
+	t.Log(organizations)
 }
 
 func ExampleCreateOrganization() {

@@ -70,7 +70,7 @@ if err != nil {
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |     :full_moon:     |                                   |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |     :full_moon:     |                                   |
 | [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |     :full_moon:     |                                   |
-| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |     :full_moon:     |                                   |
+| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |     :full_moon:     |                 r64               |
 | [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2)          |     :full_moon:     |                                   |
 | [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       |     :full_moon:     |                                   |
 | [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) |     :full_moon:     |                                   |
