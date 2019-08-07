@@ -16,7 +16,7 @@ var (
 )
 
 var dummyRemediations = map[string]Remediation{
-	"app1InternalId:build": {
+	dummyApps[0].ID + ":" + StageBuild: {
 		VersionChanges: []remediationVersionChange{
 			{
 				Type: remediationTypeNoViolations,
@@ -26,7 +26,17 @@ var dummyRemediations = map[string]Remediation{
 			},
 		},
 	},
-	"org1InternalId:build": {
+	dummyOrgs[0].ID + ":" + StageBuild: {
+		VersionChanges: []remediationVersionChange{
+			{
+				Type: remediationTypeNoViolations,
+			},
+			{
+				Type: remediationTypeNonFailing,
+			},
+		},
+	},
+	dummyApps[0].ID: {
 		VersionChanges: []remediationVersionChange{
 			{
 				Type: remediationTypeNoViolations,
@@ -52,25 +62,32 @@ func compRemediationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	var key string
 	switch {
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path[1:], restRemediationByAppPrefix):
-		key := fmt.Sprintf("%s:%s", strings.ReplaceAll(r.URL.Path[1:], restRemediationByAppPrefix, ""), r.URL.Query()["stageId"][0])
-		respond(key, w)
+		key = strings.ReplaceAll(r.URL.Path[1:], restRemediationByAppPrefix, "")
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path[1:], restRemediationByOrgPrefix):
-		key := fmt.Sprintf("%s:%s", strings.ReplaceAll(r.URL.Path[1:], restRemediationByOrgPrefix, ""), r.URL.Query()["stageId"][0])
-		respond(key, w)
+		key = strings.ReplaceAll(r.URL.Path[1:], restRemediationByOrgPrefix, "")
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
+
+	if stage, ok := r.URL.Query()["stageId"]; ok && len(stage) > 0 {
+		key = fmt.Sprintf("%s:%s", key, stage[0])
+	}
+	respond(key, w)
 }
 
 func compRemediationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
 	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		switch {
-		case strings.HasPrefix(r.URL.Path[1:], restApplication):
+		case r.URL.Path[1:] == restApplication:
 			applicationTestFunc(t, w, r)
 		case strings.HasPrefix(r.URL.Path[1:], restOrganization):
 			organizationTestFunc(t, w, r)
+		case strings.HasPrefix(r.URL.Path[1:], restApplication) && strings.HasSuffix(r.URL.Path, "/raw"):
+			reportsTestFunc(t, w, r)
 		default:
 			compRemediationTestFunc(t, w, r)
 		}
@@ -108,5 +125,24 @@ func TestRemediationByOrg(t *testing.T) {
 	expected := dummyRemediations[dummyOrgs[0].ID+":"+stage]
 	if !reflect.DeepEqual(remediation, expected) {
 		t.Error("Did not receive the expected remediation")
+	}
+}
+
+func TestRemediationByAppReport(t *testing.T) {
+	iq, mock := compRemediationTestIQ(t)
+	defer mock.Close()
+
+	appIdx, reportID := 0, "0"
+
+	got, err := GetRemediationsByAppReport(iq, dummyApps[appIdx].PublicID, reportID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := []Remediation{dummyRemediations[dummyApps[appIdx].ID]}
+	if !reflect.DeepEqual(want, got) {
+		t.Error("Did not receive the expected remediation")
+		t.Error("got", got)
+		t.Error("want", want)
 	}
 }
