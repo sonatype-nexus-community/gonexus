@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-const restReports = "api/v2/reports/applications"
+const (
+	restReports    = "api/v2/reports/applications"
+	restReportsRaw = "api/v2/applications/%s/reports/%s/raw"
+)
 
 // Stage type describes a pipeline stage
 type Stage string
@@ -147,6 +150,24 @@ func GetReportInfoByAppIDStage(iq IQ, appID, stage string) (ReportInfo, error) {
 	return ReportInfo{}, fmt.Errorf("did not find report for '%s'", appID)
 }
 
+func getRawReportByURL(iq IQ, URL string) (ReportRaw, error) {
+	body, _, err := iq.Get(URL)
+	if err != nil {
+		return ReportRaw{}, fmt.Errorf("could not get raw report: %v", err)
+	}
+
+	var report ReportRaw
+	if err = json.Unmarshal(body, &report); err != nil {
+		return report, fmt.Errorf("could not unmarshal raw report: %v", err)
+	}
+	return report, nil
+}
+
+// GetRawReportByAppReportID returns raw report information by application and application public ID
+func GetRawReportByAppReportID(iq IQ, appID, reportID string) (ReportRaw, error) {
+	return getRawReportByURL(iq, fmt.Sprintf(restReportsRaw, appID, reportID))
+}
+
 // GetRawReportByAppID returns report information by application public ID
 func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 	infos, err := GetReportInfosByAppID(iq, appID)
@@ -156,16 +177,7 @@ func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 
 	for _, info := range infos {
 		if info.Stage == stage {
-			body, _, err := iq.Get(info.ReportDataURL)
-			if err != nil {
-				return ReportRaw{}, fmt.Errorf("could not get raw report: %v", err)
-			}
-
-			var report ReportRaw
-			if err = json.Unmarshal(body, &report); err != nil {
-				return report, fmt.Errorf("could not unmarshal raw report: %v", err)
-			}
-			return report, nil
+			return getRawReportByURL(iq, info.ReportDataURL)
 		}
 	}
 

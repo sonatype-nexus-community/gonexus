@@ -10,23 +10,23 @@ import (
 	"testing"
 )
 
-const reportDataURLPrefix = "dummy/report/data/url/"
+const reportDataURLFormat = "api/v2/applications/%s/reports/%s/raw"
 
 var dummyReportInfos = []ReportInfo{
 	{
-		ApplicationID:           "app1InternalId",
+		ApplicationID:           dummyApps[0].ID,
 		EmbeddableReportHTMLURL: "WhoEmbedsThis?",
 		EvaluationDate:          "evalDate",
-		ReportDataURL:           reportDataURLPrefix + "1/raw",
+		ReportDataURL:           fmt.Sprintf(reportDataURLFormat, dummyApps[0].PublicID, "0"),
 		ReportHTMLURL:           "htmlURL",
 		ReportPdfURL:            "pdfURL",
 		Stage:                   StageBuild,
 	},
 	{
-		ApplicationID:           "app2InternalId",
+		ApplicationID:           dummyApps[1].ID,
 		EmbeddableReportHTMLURL: "WhoEmbedsThis?",
 		EvaluationDate:          "evalDate",
-		ReportDataURL:           reportDataURLPrefix + "2/raw",
+		ReportDataURL:           fmt.Sprintf(reportDataURLFormat, dummyApps[0].PublicID, "1"),
 		ReportHTMLURL:           "htmlURL",
 		ReportPdfURL:            "pdfURL",
 		Stage:                   StageBuild,
@@ -115,34 +115,30 @@ func reportsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		if !found {
 			w.WriteHeader(http.StatusNotFound)
 		}
-	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path[1:], reportDataURLPrefix):
-		switch {
-		case strings.HasSuffix(r.URL.Path, "raw"):
-			if raw, ok := dummyRawReports[r.URL.Path[1:]]; ok {
-				resp, err := json.Marshal(raw)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
+	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/raw"):
+		if raw, ok := dummyRawReports[r.URL.Path[1:]]; ok {
+			resp, err := json.Marshal(raw)
+			if err != nil {
+				t.Fatal(err)
 			}
-		case strings.HasSuffix(r.URL.Path, "policy"):
-			if policy, ok := dummyPolicyReports[r.URL.Path[1:]]; ok {
-				resp, err := json.Marshal(policy)
-				if err != nil {
-					t.Fatal(err)
-				}
 
-				fmt.Fprintln(w, string(resp))
-			} else {
-				w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, string(resp))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/policy"):
+		if policy, ok := dummyPolicyReports[r.URL.Path[1:]]; ok {
+			resp, err := json.Marshal(policy)
+			if err != nil {
+				t.Fatal(err)
 			}
-		default:
+
+			fmt.Fprintln(w, string(resp))
+		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	default:
+		t.Log("wtf", r.URL.Path)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
@@ -150,7 +146,7 @@ func reportsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 func reportsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
 	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		switch {
-		case strings.HasPrefix(r.URL.Path[1:], restApplication):
+		case r.URL.Path[1:] == restApplication:
 			applicationTestFunc(t, w, r)
 		default:
 			reportsTestFunc(t, w, r)
@@ -195,6 +191,23 @@ func TestGetReportInfosByAppID(t *testing.T) {
 
 	if !reflect.DeepEqual(infos[0], dummyReportInfos[testIdx]) {
 		t.Fatal("Did not get expected report info")
+	}
+}
+
+func TestGetRawReportByAppReportID(t *testing.T) {
+	iq, mock := reportsTestIQ(t)
+	defer mock.Close()
+
+	testIdx := 0
+
+	report, err := GetRawReportByAppReportID(iq, dummyApps[testIdx].PublicID, fmt.Sprintf("%d", testIdx))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dummy := dummyRawReports[dummyReportInfos[testIdx].ReportDataURL]
+	if !reflect.DeepEqual(report, dummy) {
+		t.Error("Did not get expected raw report")
 	}
 }
 
