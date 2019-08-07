@@ -17,6 +17,7 @@ var (
 
 var dummyRemediations = map[string]Remediation{
 	dummyApps[0].ID + ":" + StageBuild: {
+		Component: dummyComponent,
 		VersionChanges: []remediationVersionChange{
 			{
 				Type: remediationTypeNoViolations,
@@ -27,6 +28,7 @@ var dummyRemediations = map[string]Remediation{
 		},
 	},
 	dummyOrgs[0].ID + ":" + StageBuild: {
+		Component: dummyComponent,
 		VersionChanges: []remediationVersionChange{
 			{
 				Type: remediationTypeNoViolations,
@@ -37,6 +39,7 @@ var dummyRemediations = map[string]Remediation{
 		},
 	},
 	dummyApps[0].ID: {
+		Component: dummyComponent,
 		VersionChanges: []remediationVersionChange{
 			{
 				Type: remediationTypeNoViolations,

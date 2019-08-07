@@ -25,6 +25,7 @@ type remediationVersionChange struct {
 
 // Remediation encapsulates the remediation information for a component
 type Remediation struct {
+	Component      Component                  `json:"component,omitempty"`
 	VersionChanges []remediationVersionChange `json:"versionChanges"`
 }
 
@@ -61,6 +62,7 @@ func getRemediation(iq IQ, component Component, endpoint string) (Remediation, e
 		return Remediation{}, fmt.Errorf("could not parse remediation response: %v", err)
 	}
 
+	results.Remediation.Component = component
 	return results.Remediation, nil
 }
 
