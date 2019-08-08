@@ -10,7 +10,7 @@ import (
 const restLabelComponent = "api/v2/components/%s/labels/%s/applications/%s"
 
 // ComponentLabelApply adds an existing label to a component for a given application
-func ComponentLabelApply(iq IQ, label string, comp Component, appID string) error {
+func ComponentLabelApply(iq IQ, comp Component, appID, label string) error {
 	app, err := GetApplicationByPublicID(iq, appID)
 	if err != nil {
 		return fmt.Errorf("could not retrieve application with ID %s: %v", appID, err)
@@ -26,7 +26,7 @@ func ComponentLabelApply(iq IQ, label string, comp Component, appID string) erro
 }
 
 // ComponentLabelUnapply removes an existing association between a label and a component
-func ComponentLabelUnapply(iq IQ, label string, comp Component, appID string) error {
+func ComponentLabelUnapply(iq IQ, comp Component, appID, label string) error {
 	app, err := GetApplicationByPublicID(iq, appID)
 	if err != nil {
 		return fmt.Errorf("could not retrieve application with ID %s: %v", appID, err)
