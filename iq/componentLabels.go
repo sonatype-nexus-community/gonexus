@@ -3,6 +3,7 @@ package nexusiq
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // api/v2/components/{componentHash}/labels/{labelName}/applications/{applicationId}
@@ -15,7 +16,7 @@ func ComponentLabelApply(iq IQ, comp Component, appID, label string) error {
 		return fmt.Errorf("could not retrieve application with ID %s: %v", appID, err)
 	}
 
-	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, label, app.ID)
+	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, url.PathEscape(label), app.ID)
 	_, resp, err := iq.Post(endpoint, nil)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("could not apply label: %v", err)
@@ -31,7 +32,7 @@ func ComponentLabelUnapply(iq IQ, comp Component, appID, label string) error {
 		return fmt.Errorf("could not retrieve application with ID %s: %v", appID, err)
 	}
 
-	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, label, app.ID)
+	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, url.PathEscape(label), app.ID)
 	resp, err := iq.Del(endpoint)
 	if err != nil && resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("could not unapply label: %v", err)
