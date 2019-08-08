@@ -109,7 +109,7 @@ func GetRemediationsByAppReport(iq IQ, applicationID, reportID string) (remediat
 			break
 		}
 		var remediation Remediation
-		remediation, err = getRemediationByAppInternalID(iq, c.Component, "", app.ID)
+		remediation, err = getRemediationByAppInternalID(iq, c.Component, report.ReportInfo.Stage, app.ID)
 		remediations = append(remediations, remediation)
 	}
 
