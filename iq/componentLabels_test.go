@@ -55,7 +55,7 @@ func TestComponentLabelApply(t *testing.T) {
 
 	label, component, appID := dummyLabels[0], dummyComponent, dummyApps[0].PublicID
 
-	if err := ComponentLabelApply(iq, label, component, appID); err != nil {
+	if err := ComponentLabelApply(iq, component, appID, label); err != nil {
 		t.Error(err)
 	}
 }
@@ -66,11 +66,11 @@ func TestComponentLabelUnapply(t *testing.T) {
 
 	label, component, appID := dummyLabels[0], dummyComponent, dummyApps[0].PublicID
 
-	if err := ComponentLabelApply(iq, label, component, appID); err != nil {
+	if err := ComponentLabelApply(iq, component, appID, label); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := ComponentLabelUnapply(iq, label, component, appID); err != nil {
+	if err := ComponentLabelUnapply(iq, component, appID, label); err != nil {
 		t.Error(err)
 	}
 }
