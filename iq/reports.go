@@ -59,6 +59,7 @@ type rawReportMatchSummary struct {
 type ReportRaw struct {
 	Components   []rawReportComponent  `json:"components"`
 	MatchSummary rawReportMatchSummary `json:"matchSummary"`
+	ReportInfo   ReportInfo            `json:"reportInfo,omitempty"`
 }
 
 type policyReportComponent struct {
@@ -95,6 +96,7 @@ type ReportPolicy struct {
 	Counts      policyReportCounts      `json:"counts"`
 	ReportTime  int64                   `json:"reportTime"`
 	ReportTitle string                  `json:"reportTitle"`
+	ReportInfo  ReportInfo              `json:"reportInfo,omitempty"`
 }
 
 // Report encapsulates the policy and raw report of an application
