@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sync"
 )
 
 const (
 	restRemediationByApp = "api/v2/components/remediation/application/"
 	restRemediationByOrg = "api/v2/components/remediation/organization/"
 
-	remediationTypeNoViolations = "next-no-violations"
-	remediationTypeNonFailing   = "next-non-failing"
+	// RemediationTypeNoViolations is a type of remediation version change where the version does not violate any policies
+	RemediationTypeNoViolations = "next-no-violations"
+	// RemediationTypeNonFailing is a type of remediation version change where the version does not fail any policies, even if it violates them
+	RemediationTypeNonFailing = "next-non-failing"
 )
 
 type remediationData struct {
@@ -104,14 +107,42 @@ func GetRemediationsByAppReport(iq IQ, applicationID, reportID string) (remediat
 		return nil, fmt.Errorf("could not get application: %v", err)
 	}
 
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	components := make(chan Component, 20)
+	for w := 1; w <= 20; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for c := range components {
+				purl := Component{
+					Hash:       c.Hash,
+					PackageURL: c.PackageURL,
+				}
+				var remediation Remediation
+				remediation, err = getRemediationByAppInternalID(iq, purl, report.ReportInfo.Stage, app.ID)
+				if err != nil {
+					err = fmt.Errorf("did not find remediation for '%v': %v", c, err)
+					break
+				}
+				if len(remediation.VersionChanges) > 0 {
+					mu.Lock()
+					remediations = append(remediations, remediation)
+					mu.Unlock()
+				}
+			}
+		}()
+	}
+
 	for _, c := range report.Components {
 		if err != nil {
-			break
+			return
 		}
-		var remediation Remediation
-		remediation, err = getRemediationByAppInternalID(iq, c.Component, report.ReportInfo.Stage, app.ID)
-		remediations = append(remediations, remediation)
+		components <- c.Component
 	}
+	close(components)
+
+	wg.Wait()
 
 	return
 }

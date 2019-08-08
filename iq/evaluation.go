@@ -21,10 +21,47 @@ type Coordinates struct {
 	Classifier string `json:"classifier,omitempty"`
 }
 
+// String returns a string representation of the Coordinates object
+func (c Coordinates) String() string {
+	var buf bytes.Buffer
+
+	if c.GroupID != "" {
+		buf.WriteString(c.GroupID)
+		buf.WriteString(":")
+	}
+
+	buf.WriteString(c.ArtifactID)
+	buf.WriteString(":")
+	buf.WriteString(c.Version)
+
+	if c.Extension != "" {
+		buf.WriteString(":")
+		buf.WriteString(c.Extension)
+	}
+
+	if c.Classifier != "" {
+		buf.WriteString(":")
+		buf.WriteString(c.Classifier)
+	}
+
+	return buf.String()
+}
+
 // ComponentIdentifier identifies the format and coordinates of a component
 type ComponentIdentifier struct {
 	Format      string      `json:"format,omitempty"`
 	Coordinates Coordinates `json:"coordinates,omitempty"`
+}
+
+// String returns a string representation of the ComponentIdentifier object
+func (c ComponentIdentifier) String() string {
+	var buf bytes.Buffer
+
+	buf.WriteString(c.Format)
+	buf.WriteString(":")
+	buf.WriteString(c.Coordinates.String())
+
+	return buf.String()
 }
 
 // Component encapsulates the details of a component in IQ
