@@ -8,6 +8,7 @@ import (
 
 const restMaintenanceDBCheck = "service/rest/v1/maintenance/%s/check"
 
+// Define database types
 const (
 	AccessLogDB = "accesslog"
 	ComponentDB = "component"
@@ -15,11 +16,13 @@ const (
 	SecurityDB  = "security"
 )
 
+// DatabaseState contains state information about a given state
 type DatabaseState struct {
 	PageCorruption bool `json:"pageCorruption"`
 	IndexErrors    int  `json:"indexErrors"`
 }
 
+// CheckDatabase returns the state of the named database
 func CheckDatabase(rm RM, dbName string) (DatabaseState, error) {
 	doError := func(err error) error {
 		return fmt.Errorf("error checking status of database '%s': %v", dbName, err)
@@ -40,6 +43,7 @@ func CheckDatabase(rm RM, dbName string) (DatabaseState, error) {
 	return state, nil
 }
 
+// CheckAllDatabases returns state on all of the databases
 func CheckAllDatabases(rm RM) (states map[string]DatabaseState, err error) {
 	states = make(map[string]DatabaseState)
 
