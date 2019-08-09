@@ -14,6 +14,7 @@ const (
 	restReadOnlyForceRelease = "service/rest/v1/read-only/force-release"
 )
 
+// ReadOnlyState returns information about the read-only state of an RM instance
 type ReadOnlyState struct {
 	SystemInitiated bool   `json:"systemInitiated"`
 	SummaryReason   string `json:"summaryReason"`
