@@ -31,10 +31,10 @@ if err != nil {
 | [Repositories](https://help.sonatype.com/repomanager3/rest-and-integration-api/repositories-api)     |      :full_moon:       |
 | [Script](https://help.sonatype.com/repomanager3/rest-and-integration-api/script-api)                 |      :full_moon:       |
 | [Search](https://help.sonatype.com/repomanager3/rest-and-integration-api/search-api)                 | :waning_gibbous_moon:  |
-| [Staging](https://help.sonatype.com/repomanager3/staging) _pro_                                      |       :new_moon:       |
+| [Staging](https://help.sonatype.com/repomanager3/staging) _pro_                                      | :waning_gibbous_moon:  |
 | [Status](https://help.sonatype.com/repomanager3/rest-and-integration-api/status-api)                 |      :full_moon:       |
 | [Support](https://help.sonatype.com/repomanager3/rest-and-integration-api/support-api)               |      :full_moon:       |
-| [Tagging](https://help.sonatype.com/repomanager3/tagging) _pro_                                      |       :new_moon:       |
+| [Tagging](https://help.sonatype.com/repomanager3/tagging) _pro_                                      | :waning_gibbous_moon:  |
 | [Tasks](https://help.sonatype.com/repomanager3/rest-and-integration-api/tasks-api)                   |       :new_moon:       |
 
 #### Supported Provisioning API
@@ -70,7 +70,7 @@ if err != nil {
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |     :full_moon:     |                                   |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |     :full_moon:     |                                   |
 | [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |     :full_moon:     |                                   |
-| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |     :full_moon:     |                 r64               |
+| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |     :full_moon:     |                r64                |
 | [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2)          |     :full_moon:     |                                   |
 | [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       |     :full_moon:     |                                   |
 | [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) |     :full_moon:     |                                   |

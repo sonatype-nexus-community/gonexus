@@ -105,7 +105,7 @@ func TestSearchAssets(t *testing.T) {
 	query := NewSearchQueryBuilder().Repository(repo)
 	assets, err := SearchAssets(rm, query)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	t.Logf("%q\n", assets)
