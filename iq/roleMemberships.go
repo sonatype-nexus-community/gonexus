@@ -14,10 +14,10 @@ const (
 	restRoleMembersAppDeprecated = "api/v2/applications/%s/roleMembers"
 
 	// After 70
-	restRoleMembersOrgGet   = "api/v2/roleMemberships/organization/%s"
-	restRoleMembersAppGet   = "api/v2/roleMemberships/application/%s"
-	restRoleMembersReposGet = "api/v2/roleMemberships/repository_container"
-	// restRoleMembersGlobalGet = "api/v2/roleMemberships/global"
+	restRoleMembersOrgGet    = "api/v2/roleMemberships/organization/%s"
+	restRoleMembersAppGet    = "api/v2/roleMemberships/application/%s"
+	restRoleMembersReposGet  = "api/v2/roleMemberships/repository_container"
+	restRoleMembersGlobalGet = "api/v2/roleMemberships/global"
 
 	restRoleMembersOrgUser         = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
 	restRoleMembersOrgGroup        = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
@@ -76,6 +76,44 @@ func newMappings(roleID, memberType, memberName string) memberMappings {
 	}
 }
 
+func organizationAuthorizationsByID(iq IQ, orgID string) ([]MemberMapping, error) {
+	var endpoint string
+	if hasRev70API(iq) {
+		endpoint = fmt.Sprintf(restRoleMembersOrgGet, orgID)
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, orgID)
+	}
+
+	body, _, err := iq.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve role mapping for organization %s: %v", orgID, err)
+	}
+
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
+
+	return mappings.MemberMappings, err
+}
+
+func organizationAuthorizationsByRoleID(iq IQ, roleID string) ([]MemberMapping, error) {
+	orgs, err := GetAllOrganizations(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not find organizations: %v", err)
+	}
+
+	mappings := make([]MemberMapping, 0)
+	for _, org := range orgs {
+		orgMaps, _ := organizationAuthorizationsByID(iq, org.ID)
+		for _, m := range orgMaps {
+			if m.RoleID == roleID {
+				mappings = append(mappings, m)
+			}
+		}
+	}
+
+	return mappings, nil
+}
+
 // OrganizationAuthorizations returns the member mappings of an organization
 func OrganizationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 	org, err := GetOrganizationByName(iq, name)
@@ -83,22 +121,17 @@ func OrganizationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 		return nil, fmt.Errorf("could not find organization with name %s: %v", name, err)
 	}
 
-	var endpoint string
-	if hasRev70API(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersOrgGet, org.ID)
-	} else {
-		endpoint = fmt.Sprintf(restRoleMembersOrgDeprecated, org.ID)
-	}
+	return organizationAuthorizationsByID(iq, org.ID)
+}
 
-	body, _, err := iq.Get(endpoint)
+// OrganizationAuthorizationsByRole returns the member mappings of all organizations which match the given role
+func OrganizationAuthorizationsByRole(iq IQ, roleName string) ([]MemberMapping, error) {
+	role, err := RoleByName(iq, roleName)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve role mapping for organization %s: %v", name, err)
+		return nil, fmt.Errorf("could not find role with name %s: %v", roleName, err)
 	}
 
-	var mappings memberMappings
-	err = json.Unmarshal(body, &mappings)
-
-	return mappings.MemberMappings, err
+	return organizationAuthorizationsByRoleID(iq, role.ID)
 }
 
 func setOrganizationAuth(iq IQ, name, roleName, member, memberType string) error {
@@ -154,6 +187,44 @@ func SetOrganizationGroup(iq IQ, name, roleName, group string) error {
 	return setOrganizationAuth(iq, name, roleName, group, MemberTypeGroup)
 }
 
+func applicationAuthorizationsByID(iq IQ, appID string) ([]MemberMapping, error) {
+	var endpoint string
+	if hasRev70API(iq) {
+		endpoint = fmt.Sprintf(restRoleMembersAppGet, appID)
+	} else {
+		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, appID)
+	}
+
+	body, _, err := iq.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve role mapping for application %s: %v", appID, err)
+	}
+
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
+
+	return mappings.MemberMappings, err
+}
+
+func applicationAuthorizationsByRoleID(iq IQ, roleID string) ([]MemberMapping, error) {
+	apps, err := GetAllApplications(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not find applications: %v", err)
+	}
+
+	mappings := make([]MemberMapping, 0)
+	for _, app := range apps {
+		appMaps, _ := applicationAuthorizationsByID(iq, app.ID)
+		for _, m := range appMaps {
+			if m.RoleID == roleID {
+				mappings = append(mappings, m)
+			}
+		}
+	}
+
+	return mappings, nil
+}
+
 // ApplicationAuthorizations returns the member mappings of an application
 func ApplicationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 	app, err := GetApplicationByPublicID(iq, name)
@@ -161,22 +232,17 @@ func ApplicationAuthorizations(iq IQ, name string) ([]MemberMapping, error) {
 		return nil, fmt.Errorf("could not find application with name %s: %v", name, err)
 	}
 
-	var endpoint string
-	if hasRev70API(iq) {
-		endpoint = fmt.Sprintf(restRoleMembersAppGet, app.ID)
-	} else {
-		endpoint = fmt.Sprintf(restRoleMembersAppDeprecated, app.ID)
-	}
+	return applicationAuthorizationsByID(iq, app.ID)
+}
 
-	body, _, err := iq.Get(endpoint)
+// ApplicationAuthorizationsByRole returns the member mappings of all applications which match the given role
+func ApplicationAuthorizationsByRole(iq IQ, roleName string) ([]MemberMapping, error) {
+	role, err := RoleByName(iq, roleName)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve role mapping for application %s: %v", name, err)
+		return nil, fmt.Errorf("could not find role with name %s: %v", roleName, err)
 	}
 
-	var mappings memberMappings
-	err = json.Unmarshal(body, &mappings)
-
-	return mappings.MemberMappings, err
+	return applicationAuthorizationsByRoleID(iq, role.ID)
 }
 
 func setApplicationAuth(iq IQ, name, roleName, member, memberType string) error {
@@ -360,22 +426,6 @@ func RevokeApplicationGroup(iq IQ, name, roleName, group string) error {
 	return revoke(iq, "application", name, roleName, MemberTypeGroup, group)
 }
 
-// RepositoriesAuthorizations returns the member mappings of all repositories
-func RepositoriesAuthorizations(iq IQ) ([]MemberMapping, error) {
-	body, _, err := iq.Get(restRoleMembersReposGet)
-	if err != nil {
-		return nil, fmt.Errorf("could not get repositories mappings: %v", err)
-	}
-
-	var mappings memberMappings
-	err = json.Unmarshal(body, &mappings)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal mapping: %v", err)
-	}
-
-	return mappings.MemberMappings, nil
-}
-
 func repositoriesAuth(iq IQ, method, roleName, memberType, member string) error {
 	if !hasRev70API(iq) {
 		return fmt.Errorf("TODO")
@@ -407,6 +457,48 @@ func repositoriesAuth(iq IQ, method, roleName, memberType, member string) error 
 	return nil
 }
 
+func repositoriesAuthorizationsByRoleID(iq IQ, roleID string) ([]MemberMapping, error) {
+	auths, err := RepositoriesAuthorizations(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not find authorization mappings for repositories: %v", err)
+	}
+
+	mappings := make([]MemberMapping, 0)
+	for _, m := range auths {
+		if m.RoleID == roleID {
+			mappings = append(mappings, m)
+		}
+	}
+
+	return mappings, nil
+}
+
+// RepositoriesAuthorizations returns the member mappings of all repositories
+func RepositoriesAuthorizations(iq IQ) ([]MemberMapping, error) {
+	body, _, err := iq.Get(restRoleMembersReposGet)
+	if err != nil {
+		return nil, fmt.Errorf("could not get repositories mappings: %v", err)
+	}
+
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal mapping: %v", err)
+	}
+
+	return mappings.MemberMappings, nil
+}
+
+// RepositoriesAuthorizationsByRole returns the member mappings of all repositories which match the given role
+func RepositoriesAuthorizationsByRole(iq IQ, roleName string) ([]MemberMapping, error) {
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return nil, fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+
+	return repositoriesAuthorizationsByRoleID(iq, role.ID)
+}
+
 // SetRepositoriesUser sets the role and user that can have access to the repositories
 func SetRepositoriesUser(iq IQ, roleName, user string) error {
 	return repositoriesAuth(iq, http.MethodPut, roleName, MemberTypeUser, user)
@@ -425,4 +517,49 @@ func RevokeRepositoriesUser(iq IQ, roleName, user string) error {
 // RevokeRepositoriesGroup revoke the role and group that can have access to the repositories
 func RevokeRepositoriesGroup(iq IQ, roleName, group string) error {
 	return repositoriesAuth(iq, http.MethodDelete, roleName, MemberTypeGroup, group)
+}
+
+func membersByRoleID(iq IQ, roleID string) ([]MemberMapping, error) {
+	members := make([]MemberMapping, 0)
+
+	if m, err := organizationAuthorizationsByRoleID(iq, roleID); err == nil && len(m) > 0 {
+		members = append(members, m...)
+	}
+
+	if m, err := applicationAuthorizationsByRoleID(iq, roleID); err == nil && len(m) > 0 {
+		members = append(members, m...)
+	}
+
+	if hasRev70API(iq) {
+		if m, err := repositoriesAuthorizationsByRoleID(iq, roleID); err == nil && len(m) > 0 {
+			members = append(members, m...)
+		}
+	}
+
+	return members, nil
+}
+
+// MembersByRole returns all users and groups by role name
+func MembersByRole(iq IQ, roleName string) ([]MemberMapping, error) {
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return nil, fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+	return membersByRoleID(iq, role.ID)
+}
+
+// Admins returns all of the users and roles who have the administrator role
+func Admins(iq IQ) ([]MemberMapping, error) {
+	adminID, err := GetSystemAdminID(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not find admin user: %v", err)
+	}
+
+	// WTH: no
+	admins, err := membersByRoleID(iq, adminID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get admin users: %v", err)
+	}
+
+	return admins, nil
 }
