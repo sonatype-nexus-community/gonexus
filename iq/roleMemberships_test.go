@@ -60,6 +60,22 @@ var dummyRoleMappingsApps = map[string][]MemberMapping{
 	},
 }
 
+var dummyRoleMappingsRepos = []MemberMapping{
+	{
+		RoleID:  "2cb71b3468d649789163ea2e212b541e",
+		Members: []Member{},
+	},
+	{
+		RoleID: "90c7c98683b4471cb77a916744540bcc",
+		Members: []Member{
+			{
+				Type:            MemberTypeUser,
+				UserOrGroupName: "foo",
+			},
+		},
+	},
+}
+
 func roleMembershipsDeprecatedTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodHead:
@@ -137,14 +153,18 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 		}
 		w.WriteHeader(http.StatusOK)
 	case r.Method == http.MethodGet:
-		id := path.Base(r.URL.Path) // Could be better?
 		var found bool
 		var mappings []MemberMapping
 		switch {
 		case strings.HasPrefix(r.URL.Path[1:], restRoleMembersOrgGet[:len(restRoleMembersOrgGet)-2]):
+			id := path.Base(r.URL.Path)
 			mappings, found = dummyRoleMappingsOrgs[id]
 		case strings.HasPrefix(r.URL.Path[1:], restRoleMembersAppGet[:len(restRoleMembersAppGet)-2]):
+			id := path.Base(r.URL.Path)
 			mappings, found = dummyRoleMappingsApps[id]
+		case strings.HasPrefix(r.URL.Path[1:], restRoleMembersReposGet[:len(restRoleMembersReposGet)-2]):
+			found = true
+			mappings = dummyRoleMappingsRepos
 		}
 		if !found {
 			w.WriteHeader(http.StatusNotFound)
@@ -158,6 +178,28 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 		}
 
 		fmt.Fprintln(w, string(buf))
+	case r.Method == http.MethodPut && strings.Contains(r.URL.Path, "repository_container"):
+		pathParts := strings.Split(r.URL.Path[1:], "/")
+		t.Log(">>>>>> arstarstar", pathParts)
+
+		//* api/v2/roleMemberships/repository_container/role/{roleId}/[user|group]/{name}
+		roleID := pathParts[5]
+		memberType := pathParts[6]
+		memberName := pathParts[7]
+
+		newTestMapping := MemberMapping{
+			RoleID: roleID,
+			Members: []Member{
+				{
+					Type:            strings.ToUpper(memberType),
+					UserOrGroupName: memberName,
+				},
+			},
+		}
+
+		// TODO deal with duplicates?
+
+		dummyRoleMappingsRepos = append(dummyRoleMappingsRepos, newTestMapping)
 	case r.Method == http.MethodPut:
 		pathParts := strings.Split(r.URL.Path[1:], "/")
 
@@ -184,7 +226,7 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 			RoleID: roleID,
 			Members: []Member{
 				{
-					Type:            memberType,
+					Type:            strings.ToUpper(memberType),
 					UserOrGroupName: memberName,
 				},
 			},
@@ -196,26 +238,39 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 	case r.Method == http.MethodDelete:
 		pathParts := strings.Split(r.URL.Path[1:], "/")
 
-		//* api/v2/roleMemberships/[organization|application]/{id}/role/{roleId}/[user|group]/{name}
-		authType := pathParts[3]
-		id := pathParts[4]
-		roleID := pathParts[6]
-		memberType := pathParts[7]
-		memberName := pathParts[8]
+		var (
+			roleID, memberType, memberName string
+			mappings                       []MemberMapping
+		)
+		if strings.Contains(r.URL.Path, "repository_container") {
+			//* api/v2/roleMemberships/repository_container/role/{roleId}/[user|group]/{name}
+			roleID = pathParts[5]
+			memberType = strings.ToUpper(pathParts[6])
+			memberName = pathParts[7]
+			mappings = dummyRoleMappingsRepos
+		} else {
+			//* api/v2/roleMemberships/[organization|application]/{id}/role/{roleId}/[user|group]/{name}
+			authType := pathParts[3]
+			id := pathParts[4]
+			roleID = pathParts[6]
+			memberType = strings.ToUpper(pathParts[7])
+			memberName = pathParts[8]
 
-		var dummyMappings map[string][]MemberMapping
-		switch authType {
-		case "organizations":
-			dummyMappings = dummyRoleMappingsOrgs
-		case "applications":
-			dummyMappings = dummyRoleMappingsApps
-		}
-		if _, ok := dummyMappings[id]; !ok {
-			w.WriteHeader(http.StatusNotFound)
-			return
+			var dummyMappings map[string][]MemberMapping
+			switch authType {
+			case "organization":
+				dummyMappings = dummyRoleMappingsOrgs
+			case "application":
+				dummyMappings = dummyRoleMappingsApps
+			}
+			if _, ok := dummyMappings[id]; !ok {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			mappings = dummyMappings[id]
 		}
 
-		for _, mapping := range dummyMappings[id] {
+		for _, mapping := range mappings {
 			if mapping.RoleID == roleID {
 				for i, member := range mapping.Members {
 					if member.Type == memberType && member.UserOrGroupName == memberName {
@@ -428,7 +483,7 @@ func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
 	switch authType {
 	case "organization":
 		dummyOrgName := dummyOrgs[0].Name
-		switch authType {
+		switch memberType {
 		case MemberTypeUser:
 			err = SetOrganizationUser(iq, dummyOrgName, role.Name, name)
 			if err == nil {
@@ -437,6 +492,7 @@ func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
 		case MemberTypeGroup:
 			err = SetOrganizationGroup(iq, dummyOrgName, role.Name, name)
 			if err == nil {
+				t.Log("HERE1")
 				err = RevokeOrganizationGroup(iq, dummyOrgName, role.Name, name)
 			}
 		}
@@ -445,7 +501,7 @@ func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
 		}
 	case "application":
 		dummyAppName := dummyApps[0].PublicID
-		switch authType {
+		switch memberType {
 		case MemberTypeUser:
 			err = SetApplicationUser(iq, dummyAppName, role.Name, name)
 			if err == nil {
@@ -459,6 +515,22 @@ func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
 		}
 		if err == nil {
 			mappings, err = ApplicationAuthorizations(iq, dummyAppName)
+		}
+	case "repository_container":
+		switch memberType {
+		case MemberTypeUser:
+			err = SetRepositoriesUser(iq, role.Name, name)
+			if err == nil {
+				err = RevokeRepositoriesUser(iq, role.Name, name)
+			}
+		case MemberTypeGroup:
+			err = SetRepositoriesGroup(iq, role.Name, name)
+			if err == nil {
+				err = RevokeRepositoriesGroup(iq, role.Name, name)
+			}
+		}
+		if err == nil {
+			mappings, err = RepositoriesAuthorizations(iq)
 		}
 	}
 	if err != nil {
@@ -510,4 +582,92 @@ func TestRevokeApplicationUser(t *testing.T) {
 
 func TestRevokeApplicationGroup(t *testing.T) {
 	testWithDeprecated(t, testRevokeApplicationGroup)
+}
+
+func TestRepositoriesAuthorizations(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	got, err := RepositoriesAuthorizations(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := dummyRoleMappingsRepos
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected repositories mapping")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func testSetRepositories(t *testing.T, memberType string) {
+	t.Helper()
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	role := dummyRoles[0]
+	memberName := "dummyDumDum"
+
+	want := MemberMapping{
+		RoleID: role.ID,
+		Members: []Member{
+			{
+				Type:            memberType,
+				UserOrGroupName: memberName,
+			},
+		},
+	}
+
+	var err error
+	switch memberType {
+	case MemberTypeUser:
+		err = SetRepositoriesUser(iq, role.Name, memberName)
+	case MemberTypeGroup:
+		err = SetRepositoriesGroup(iq, role.Name, memberName)
+	}
+	if err != nil {
+		t.Error(err)
+	}
+
+	got, err := RepositoriesAuthorizations(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var found bool
+	for _, mapping := range got {
+		if reflect.DeepEqual(mapping, want) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("User role mapping not updated")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func TestSetRepositoriesUser(t *testing.T) {
+	testSetRepositories(t, MemberTypeUser)
+}
+
+func TestSetRepositoriesGroup(t *testing.T) {
+	testSetRepositories(t, MemberTypeGroup)
+}
+
+func TestRevokeRepositoriesUser(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	testRevoke(t, iq, "repository_container", MemberTypeUser)
+}
+
+func TestRevokeRepositoriesGroup(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	testRevoke(t, iq, "repository_container", MemberTypeGroup)
 }

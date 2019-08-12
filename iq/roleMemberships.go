@@ -14,17 +14,17 @@ const (
 	restRoleMembersAppDeprecated = "api/v2/applications/%s/roleMembers"
 
 	// After 70
-	restRoleMembersOrgGet = "api/v2/roleMemberships/organization/%s"
-	restRoleMembersAppGet = "api/v2/roleMemberships/application/%s"
-	// restRoleMembersReposGet  = "api/v2/roleMemberships/repository_container"
+	restRoleMembersOrgGet   = "api/v2/roleMemberships/organization/%s"
+	restRoleMembersAppGet   = "api/v2/roleMemberships/application/%s"
+	restRoleMembersReposGet = "api/v2/roleMemberships/repository_container"
 	// restRoleMembersGlobalGet = "api/v2/roleMemberships/global"
 
-	restRoleMembersOrgUser  = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
-	restRoleMembersOrgGroup = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
-	restRoleMembersAppUser  = "api/v2/roleMemberships/application/%s/role/%s/user/%s"
-	restRoleMembersAppGroup = "api/v2/roleMemberships/application/%s/role/%s/group/%s"
-	// restRoleMembersRepositoryUser  = "api/v2/roleMemberships/repository_container/role/{roleId}/user/{userName}"
-	// restRoleMembersRepositoryGroup = "api/v2/roleMemberships/repository_container/role/{roleId}/group/{groupName}"
+	restRoleMembersOrgUser         = "api/v2/roleMemberships/organization/%s/role/%s/user/%s"
+	restRoleMembersOrgGroup        = "api/v2/roleMemberships/organization/%s/role/%s/group/%s"
+	restRoleMembersAppUser         = "api/v2/roleMemberships/application/%s/role/%s/user/%s"
+	restRoleMembersAppGroup        = "api/v2/roleMemberships/application/%s/role/%s/group/%s"
+	restRoleMembersRepositoryUser  = "api/v2/roleMemberships/repository_container/role/%s/user/%s"
+	restRoleMembersRepositoryGroup = "api/v2/roleMemberships/repository_container/role/%s/group/%s"
 	// restRoleMembersGlobalUser      = "api/v2/roleMemberships/global/role/{roleId}/user/{userName}"
 	// restRoleMembersGlobalGroup     = "api/v2/roleMemberships/global/role/{roleId}/group/{groupName}"
 )
@@ -239,15 +239,25 @@ func revokeLT70(iq IQ, authType, authName, roleName, memberType, memberName stri
 		return fmt.Errorf("could not find role with name %s: %v", roleName, err)
 	}
 
-	var mapping []MemberMapping
-	var baseEndpoint string
+	var (
+		authID, baseEndpoint string
+		mapping              []MemberMapping
+	)
 	switch authType {
 	case "organization":
-		baseEndpoint = restRoleMembersOrgDeprecated
-		mapping, err = OrganizationAuthorizations(iq, authName)
+		org, err := GetOrganizationByName(iq, authName)
+		if err == nil {
+			authID = org.ID
+			baseEndpoint = restRoleMembersOrgDeprecated
+			mapping, err = OrganizationAuthorizations(iq, authName)
+		}
 	case "application":
-		baseEndpoint = restRoleMembersAppDeprecated
-		mapping, err = ApplicationAuthorizations(iq, authName)
+		app, err := GetApplicationByPublicID(iq, authName)
+		if err == nil {
+			authID = app.ID
+			baseEndpoint = restRoleMembersAppDeprecated
+			mapping, err = ApplicationAuthorizations(iq, authName)
+		}
 	}
 	if err != nil && mapping != nil {
 		return fmt.Errorf("could not get current authorizations for %s: %v", authName, err)
@@ -270,7 +280,7 @@ func revokeLT70(iq IQ, authType, authName, roleName, memberType, memberName stri
 		return fmt.Errorf("could not create mapping: %v", err)
 	}
 
-	endpoint := fmt.Sprintf(baseEndpoint, authName)
+	endpoint := fmt.Sprintf(baseEndpoint, authID)
 	_, _, err = iq.Put(endpoint, bytes.NewBuffer(buf))
 	if err != nil {
 		return fmt.Errorf("could not remove role mapping: %v", err)
@@ -279,42 +289,140 @@ func revokeLT70(iq IQ, authType, authName, roleName, memberType, memberName stri
 	return nil
 }
 
+func revoke(iq IQ, authType, authName, roleName, memberType, memberName string) error {
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+
+	var (
+		authID, baseEndpoint string
+	)
+	switch authType {
+	case "organization":
+		org, err := GetOrganizationByName(iq, authName)
+		if err == nil {
+			authID = org.ID
+			switch memberType {
+			case MemberTypeUser:
+				baseEndpoint = restRoleMembersOrgUser
+			case MemberTypeGroup:
+				baseEndpoint = restRoleMembersOrgGroup
+			}
+		}
+	case "application":
+		app, err := GetApplicationByPublicID(iq, authName)
+		if err == nil {
+			authID = app.ID
+			switch memberType {
+			case MemberTypeUser:
+				baseEndpoint = restRoleMembersAppUser
+			case MemberTypeGroup:
+				baseEndpoint = restRoleMembersAppGroup
+			}
+		}
+	}
+
+	endpoint := fmt.Sprintf(baseEndpoint, authID, role.ID, memberName)
+	_, err = iq.Del(endpoint)
+	return err
+}
+
 // RevokeOrganizationUser removes a user and role from the named organization
 func RevokeOrganizationUser(iq IQ, name, roleName, user string) error {
-	if hasRev70API(iq) {
-		endpoint := fmt.Sprintf(restRoleMembersOrgUser, name, roleName, user)
-		_, err := iq.Del(endpoint)
-		return err
+	if !hasRev70API(iq) {
+		return revokeLT70(iq, "organization", name, roleName, MemberTypeUser, user)
 	}
-	return revokeLT70(iq, "organization", name, roleName, MemberTypeUser, user)
+	return revoke(iq, "organization", name, roleName, MemberTypeUser, user)
 }
 
 // RevokeOrganizationGroup removes a group and role from the named organization
 func RevokeOrganizationGroup(iq IQ, name, roleName, group string) error {
-	if hasRev70API(iq) {
-		endpoint := fmt.Sprintf(restRoleMembersOrgGroup, name, roleName, group)
-		_, err := iq.Del(endpoint)
-		return err
+	if !hasRev70API(iq) {
+		return revokeLT70(iq, "organization", name, roleName, MemberTypeGroup, group)
 	}
-	return revokeLT70(iq, "organization", name, roleName, MemberTypeGroup, group)
+	return revoke(iq, "organization", name, roleName, MemberTypeGroup, group)
 }
 
 // RevokeApplicationUser removes a user and role from the named application
 func RevokeApplicationUser(iq IQ, name, roleName, user string) error {
-	if hasRev70API(iq) {
-		endpoint := fmt.Sprintf(restRoleMembersAppUser, name, roleName, user)
-		_, err := iq.Del(endpoint)
-		return err
+	if !hasRev70API(iq) {
+		return revokeLT70(iq, "application", name, roleName, MemberTypeUser, user)
 	}
-	return revokeLT70(iq, "application", name, roleName, MemberTypeUser, user)
+	return revoke(iq, "application", name, roleName, MemberTypeUser, user)
 }
 
 // RevokeApplicationGroup removes a group and role from the named application
 func RevokeApplicationGroup(iq IQ, name, roleName, group string) error {
-	if hasRev70API(iq) {
-		endpoint := fmt.Sprintf(restRoleMembersAppGroup, name, roleName, group)
-		_, err := iq.Del(endpoint)
-		return err
+	if !hasRev70API(iq) {
+		return revokeLT70(iq, "application", name, roleName, MemberTypeGroup, group)
 	}
-	return revokeLT70(iq, "application", name, roleName, MemberTypeGroup, group)
+	return revoke(iq, "application", name, roleName, MemberTypeGroup, group)
+}
+
+// RepositoriesAuthorizations returns the member mappings of all repositories
+func RepositoriesAuthorizations(iq IQ) ([]MemberMapping, error) {
+	body, _, err := iq.Get(restRoleMembersReposGet)
+	if err != nil {
+		return nil, fmt.Errorf("could not get repositories mappings: %v", err)
+	}
+
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal mapping: %v", err)
+	}
+
+	return mappings.MemberMappings, nil
+}
+
+func repositoriesAuth(iq IQ, method, roleName, memberType, member string) error {
+	if !hasRev70API(iq) {
+		return fmt.Errorf("TODO")
+	}
+
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+
+	var endpoint string
+	switch memberType {
+	case MemberTypeUser:
+		endpoint = fmt.Sprintf(restRoleMembersRepositoryUser, role.ID, member)
+	case MemberTypeGroup:
+		endpoint = fmt.Sprintf(restRoleMembersRepositoryGroup, role.ID, member)
+	}
+
+	switch method {
+	case http.MethodPut:
+		_, _, err = iq.Put(endpoint, nil)
+	case http.MethodDelete:
+		_, err = iq.Del(endpoint)
+	}
+	if err != nil {
+		return fmt.Errorf("could not affect repositories role mapping: %v", err)
+	}
+
+	return nil
+}
+
+// SetRepositoriesUser sets the role and user that can have access to the repositories
+func SetRepositoriesUser(iq IQ, roleName, user string) error {
+	return repositoriesAuth(iq, http.MethodPut, roleName, MemberTypeUser, user)
+}
+
+// SetRepositoriesGroup sets the role and group that can have access to the repositories
+func SetRepositoriesGroup(iq IQ, roleName, group string) error {
+	return repositoriesAuth(iq, http.MethodPut, roleName, MemberTypeGroup, group)
+}
+
+// RevokeRepositoriesUser revoke the role and user that can have access to the repositories
+func RevokeRepositoriesUser(iq IQ, roleName, user string) error {
+	return repositoriesAuth(iq, http.MethodDelete, roleName, MemberTypeUser, user)
+}
+
+// RevokeRepositoriesGroup revoke the role and group that can have access to the repositories
+func RevokeRepositoriesGroup(iq IQ, roleName, group string) error {
+	return repositoriesAuth(iq, http.MethodDelete, roleName, MemberTypeGroup, group)
 }
