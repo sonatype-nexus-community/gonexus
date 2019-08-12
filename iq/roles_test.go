@@ -21,6 +21,11 @@ var dummyRoles = []Role{
 		Description: "Evaluates individual components and views policy violation results for a specified application.",
 	},
 	{
+		ID:          "1b92fae3e55a411793a091fb821c422d",
+		Name:        "System Administrator",
+		Description: "Manages system configuration and users.",
+	},
+	{
 		ID:          "1da70fae1fd54d6cb7999871ebdb9a36",
 		Name:        "Developer",
 		Description: "Views all information for their assigned organization or application.",

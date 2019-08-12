@@ -15,11 +15,11 @@ import (
 var dummyRoleMappingsOrgs = map[string][]MemberMapping{
 	dummyOrgs[0].ID: []MemberMapping{
 		{
-			RoleID:  "2cb71b3468d649789163ea2e212b541e",
+			RoleID:  dummyRoles[0].ID,
 			Members: []Member{},
 		},
 		{
-			RoleID: "90c7c98683b4471cb77a916744540bcc",
+			RoleID: dummyRoles[1].ID,
 			Members: []Member{
 				{
 					Type:            MemberTypeUser,
@@ -32,12 +32,21 @@ var dummyRoleMappingsOrgs = map[string][]MemberMapping{
 			},
 		},
 		{
-			RoleID:  "1da70fae1fd54d6cb7999871ebdb9a36",
+			RoleID:  dummyRoles[2].ID,
 			Members: []Member{},
 		},
 		{
-			RoleID:  "1cddabf7fdaa47d6833454af10e0a3ef",
+			RoleID:  dummyRoles[3].ID,
 			Members: []Member{},
+		},
+		{
+			RoleID: dummyRoles[0].ID,
+			Members: []Member{
+				{
+					Type:            MemberTypeUser,
+					UserOrGroupName: "testrina",
+				},
+			},
 		},
 	},
 }
@@ -45,15 +54,24 @@ var dummyRoleMappingsOrgs = map[string][]MemberMapping{
 var dummyRoleMappingsApps = map[string][]MemberMapping{
 	dummyApps[0].ID: []MemberMapping{
 		{
-			RoleID:  "2cb71b3468d649789163ea2e212b541e",
+			RoleID:  dummyRoles[0].ID,
 			Members: []Member{},
 		},
 		{
-			RoleID: "90c7c98683b4471cb77a916744540bcc",
+			RoleID: dummyRoles[1].ID,
 			Members: []Member{
 				{
 					Type:            MemberTypeUser,
 					UserOrGroupName: "foo",
+				},
+			},
+		},
+		{
+			RoleID: dummyRoles[0].ID,
+			Members: []Member{
+				{
+					Type:            MemberTypeUser,
+					UserOrGroupName: "le test",
 				},
 			},
 		},
@@ -62,11 +80,16 @@ var dummyRoleMappingsApps = map[string][]MemberMapping{
 
 var dummyRoleMappingsRepos = []MemberMapping{
 	{
-		RoleID:  "2cb71b3468d649789163ea2e212b541e",
-		Members: []Member{},
+		RoleID: dummyRoles[0].ID,
+		Members: []Member{
+			{
+				Type:            MemberTypeGroup,
+				UserOrGroupName: "oof",
+			},
+		},
 	},
 	{
-		RoleID: "90c7c98683b4471cb77a916744540bcc",
+		RoleID: dummyRoles[1].ID,
 		Members: []Member{
 			{
 				Type:            MemberTypeUser,
@@ -341,6 +364,39 @@ func testGetOrganizationAuthorizations(t *testing.T, iq IQ) {
 	}
 }
 
+func testGetOrganizationAuthorizationsByRole(t *testing.T, iq IQ) {
+	t.Helper()
+	role := dummyRoles[0]
+
+	want := make([]MemberMapping, 0)
+	for _, v := range dummyRoleMappingsOrgs {
+		for _, m := range v {
+			if m.RoleID == role.ID {
+				want = append(want, m)
+			}
+		}
+	}
+
+	got, err := OrganizationAuthorizationsByRole(iq, role.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected organization mapping")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func TestOrganizationAuthorizations(t *testing.T) {
+	testWithDeprecated(t, testGetOrganizationAuthorizations)
+}
+
+func TestOrganizationAuthorizationsByRole(t *testing.T) {
+	testWithDeprecated(t, testGetOrganizationAuthorizationsByRole)
+}
+
 func testGetApplicationAuthorizations(t *testing.T, iq IQ) {
 	t.Helper()
 	dummyIdx := 0
@@ -356,6 +412,39 @@ func testGetApplicationAuthorizations(t *testing.T, iq IQ) {
 		t.Error(" got", got)
 		t.Error("want", want)
 	}
+}
+
+func testGetApplicationAuthorizationsByRole(t *testing.T, iq IQ) {
+	t.Helper()
+	role := dummyRoles[0]
+
+	want := make([]MemberMapping, 0)
+	for _, v := range dummyRoleMappingsApps {
+		for _, m := range v {
+			if m.RoleID == role.ID {
+				want = append(want, m)
+			}
+		}
+	}
+
+	got, err := ApplicationAuthorizationsByRole(iq, role.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected application mapping")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func TestApplicationAuthorizations(t *testing.T) {
+	testWithDeprecated(t, testGetApplicationAuthorizations)
+}
+
+func TestApplicationAuthorizationsByRole(t *testing.T) {
+	testWithDeprecated(t, testGetApplicationAuthorizationsByRole)
 }
 
 func testSetAuth(t *testing.T, iq IQ, authTarget string, memberType string) {
@@ -438,20 +527,12 @@ func testSetApplicationGroup(t *testing.T, iq IQ) {
 	testSetAuth(t, iq, "organization", MemberTypeGroup)
 }
 
-func TestOrganizationAuthorizations(t *testing.T) {
-	testWithDeprecated(t, testGetOrganizationAuthorizations)
-}
-
 func TestSetOrganizationUser(t *testing.T) {
 	testWithDeprecated(t, testSetOrganizationUser)
 }
 
 func TestSetOrganizationGroup(t *testing.T) {
 	testWithDeprecated(t, testSetOrganizationGroup)
-}
-
-func TestApplicationAuthorizations(t *testing.T) {
-	testWithDeprecated(t, testGetApplicationAuthorizations)
 }
 
 func TestSetApplicationUser(t *testing.T) {
@@ -601,6 +682,31 @@ func TestRepositoriesAuthorizations(t *testing.T) {
 	}
 }
 
+func TestGetApplicationAuthorizationsByRole(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	role := dummyRoles[0]
+
+	want := make([]MemberMapping, 0)
+	for _, m := range dummyRoleMappingsRepos {
+		if m.RoleID == role.ID {
+			want = append(want, m)
+		}
+	}
+
+	got, err := RepositoriesAuthorizationsByRole(iq, role.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected repositories mapping")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
 func testSetRepositories(t *testing.T, memberType string) {
 	t.Helper()
 	iq, mock := roleMembershipsTestIQ(t, false)
@@ -670,4 +776,47 @@ func TestRevokeRepositoriesGroup(t *testing.T) {
 	defer mock.Close()
 
 	testRevoke(t, iq, "repository_container", MemberTypeGroup)
+}
+
+func testMembersByRole(t *testing.T, iq IQ) {
+	role := dummyRoles[0]
+
+	// Build the want slice
+	want := make([]MemberMapping, 0)
+	for _, v := range dummyRoleMappingsOrgs {
+		for _, m := range v {
+			if m.RoleID == role.ID {
+				want = append(want, m)
+			}
+		}
+	}
+	for _, v := range dummyRoleMappingsApps {
+		for _, m := range v {
+			if m.RoleID == role.ID {
+				want = append(want, m)
+			}
+		}
+	}
+	if hasRev70API(iq) {
+		for _, m := range dummyRoleMappingsRepos {
+			if m.RoleID == role.ID {
+				want = append(want, m)
+			}
+		}
+	}
+
+	got, err := MembersByRole(iq, role.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected members for a role")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func TestMembersByRole(t *testing.T) {
+	testWithDeprecated(t, testMembersByRole)
 }

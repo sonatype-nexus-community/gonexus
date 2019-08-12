@@ -44,7 +44,7 @@ func Roles(iq IQ) ([]Role, error) {
 func RoleByName(iq IQ, name string) (Role, error) {
 	roles, err := Roles(iq)
 	if err != nil {
-		return Role{}, err
+		return Role{}, fmt.Errorf("did not find role with name %s: %v", name, err)
 	}
 
 	for _, r := range roles {
@@ -54,4 +54,14 @@ func RoleByName(iq IQ, name string) (Role, error) {
 	}
 
 	return Role{}, fmt.Errorf("did not find role with name %s", name)
+}
+
+// GetSystemAdminID returns the identifier of the System Administrator role
+func GetSystemAdminID(iq IQ) (string, error) {
+	role, err := RoleByName(iq, "System Administrator")
+	if err != nil {
+		return "", fmt.Errorf("did not get admin role: %v", err)
+	}
+
+	return role.ID, nil
 }
