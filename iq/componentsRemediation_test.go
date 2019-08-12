@@ -132,7 +132,7 @@ func TestRemediationByOrg(t *testing.T) {
 }
 
 func TestRemediationByAppReport(t *testing.T) {
-	t.Skip("TODO")
+	// t.Skip("TODO")
 	iq, mock := compRemediationTestIQ(t)
 	defer mock.Close()
 
@@ -144,6 +144,10 @@ func TestRemediationByAppReport(t *testing.T) {
 	}
 
 	want := []Remediation{dummyRemediations[dummyApps[appIdx].ID]}
+	want[0].Component = Component{
+		Hash:       want[0].Component.Hash,
+		PackageURL: want[0].Component.PackageURL,
+	}
 	if !reflect.DeepEqual(want, got) {
 		t.Error("Did not receive the expected remediation")
 		t.Error("got", got)
