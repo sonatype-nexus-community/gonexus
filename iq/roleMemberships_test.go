@@ -161,7 +161,7 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 	case r.Method == http.MethodPut:
 		pathParts := strings.Split(r.URL.Path[1:], "/")
 
-		//* api/v2/roleMemberships/[organization|application]/{organizationId}/role/{roleId}/[user|group]/{userName}
+		//* api/v2/roleMemberships/[organization|application]/{id}/role/{roleId}/[user|group]/{name}
 		authType := pathParts[3]
 		id := pathParts[4]
 		roleID := pathParts[6]
@@ -194,7 +194,42 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 
 		dummyMappings[id] = append(dummyMappings[id], newTestMapping)
 	case r.Method == http.MethodDelete:
-		// TODO
+		pathParts := strings.Split(r.URL.Path[1:], "/")
+
+		//* api/v2/roleMemberships/[organization|application]/{id}/role/{roleId}/[user|group]/{name}
+		authType := pathParts[3]
+		id := pathParts[4]
+		roleID := pathParts[6]
+		memberType := pathParts[7]
+		memberName := pathParts[8]
+
+		var dummyMappings map[string][]MemberMapping
+		switch authType {
+		case "organizations":
+			dummyMappings = dummyRoleMappingsOrgs
+		case "applications":
+			dummyMappings = dummyRoleMappingsApps
+		}
+		if _, ok := dummyMappings[id]; !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		for _, mapping := range dummyMappings[id] {
+			if mapping.RoleID == roleID {
+				for i, member := range mapping.Members {
+					if member.Type == memberType && member.UserOrGroupName == memberName {
+						copy(mapping.Members[i:], mapping.Members[i+1:])
+						mapping.Members[len(mapping.Members)-1] = Member{}
+						mapping.Members = mapping.Members[:len(mapping.Members)-1]
+
+						w.WriteHeader(http.StatusOK)
+						return
+					}
+				}
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -312,7 +347,6 @@ func testSetAuth(t *testing.T, iq IQ, authTarget string, memberType string) {
 	if err != nil {
 		t.Error(err)
 	}
-	// fmt.Println(got)
 
 	var found bool
 	for _, mapping := range got {
@@ -371,4 +405,109 @@ func TestSetApplicationUser(t *testing.T) {
 
 func TestSetApplicationGroup(t *testing.T) {
 	testWithDeprecated(t, testSetApplicationGroup)
+}
+
+func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
+	t.Helper()
+	role := dummyRoles[0]
+	name := "deleteMe"
+	/*
+		want := MemberMapping{
+			RoleID: role.ID,
+			Members: []Member{
+				{
+					Type:            memberType,
+					UserOrGroupName: name,
+				},
+			},
+		}
+	*/
+
+	var mappings []MemberMapping
+	var err error
+	switch authType {
+	case "organization":
+		dummyOrgName := dummyOrgs[0].Name
+		switch authType {
+		case MemberTypeUser:
+			err = SetOrganizationUser(iq, dummyOrgName, role.Name, name)
+			if err == nil {
+				err = RevokeOrganizationUser(iq, dummyOrgName, role.Name, name)
+			}
+		case MemberTypeGroup:
+			err = SetOrganizationGroup(iq, dummyOrgName, role.Name, name)
+			if err == nil {
+				err = RevokeOrganizationGroup(iq, dummyOrgName, role.Name, name)
+			}
+		}
+		if err == nil {
+			mappings, err = OrganizationAuthorizations(iq, dummyOrgName)
+		}
+	case "application":
+		dummyAppName := dummyApps[0].PublicID
+		switch authType {
+		case MemberTypeUser:
+			err = SetApplicationUser(iq, dummyAppName, role.Name, name)
+			if err == nil {
+				err = RevokeApplicationUser(iq, dummyAppName, role.Name, name)
+			}
+		case MemberTypeGroup:
+			err = SetApplicationGroup(iq, dummyAppName, role.Name, name)
+			if err == nil {
+				err = RevokeApplicationGroup(iq, dummyAppName, role.Name, name)
+			}
+		}
+		if err == nil {
+			mappings, err = ApplicationAuthorizations(iq, dummyAppName)
+		}
+	}
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, mapping := range mappings {
+		if mapping.RoleID == role.ID {
+			for _, member := range mapping.Members {
+				if member.Type == memberType && member.UserOrGroupName == name {
+					t.Error("found mapping which should have been revoked")
+				}
+			}
+		}
+	}
+}
+
+func testRevokeOrganizationUser(t *testing.T, iq IQ) {
+	t.Helper()
+	testRevoke(t, iq, "organization", MemberTypeUser)
+}
+
+func testRevokeOrganizationGroup(t *testing.T, iq IQ) {
+	t.Helper()
+	testRevoke(t, iq, "organization", MemberTypeGroup)
+}
+
+func testRevokeApplicationUser(t *testing.T, iq IQ) {
+	t.Helper()
+	testRevoke(t, iq, "application", MemberTypeUser)
+}
+
+func testRevokeApplicationGroup(t *testing.T, iq IQ) {
+	t.Helper()
+	testRevoke(t, iq, "application", MemberTypeGroup)
+}
+
+func TestRevokeOrganizationUser(t *testing.T) {
+	testWithDeprecated(t, testRevokeOrganizationUser)
+}
+
+func TestRevokeOrganizationGroup(t *testing.T) {
+	testWithDeprecated(t, testRevokeOrganizationGroup)
+}
+
+func TestRevokeApplicationUser(t *testing.T) {
+	testWithDeprecated(t, testRevokeApplicationUser)
+}
+
+func TestRevokeApplicationGroup(t *testing.T) {
+	testWithDeprecated(t, testRevokeApplicationGroup)
 }
