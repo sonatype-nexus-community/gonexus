@@ -79,7 +79,7 @@ if err != nil {
 | [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2)              |     :full_moon:     |                                   |
 | [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github)                                         |     :full_moon:     |                                   |
 | [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   |     :new_moon:      |                                   |
-| [Users](https://help.sonatype.com/iqserver/automating/rest-apis)                                                     |     :new_moon:      |                r70                |
+| [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  |     :full_moon:     |                r70                |
 | [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2)                         |     :full_moon:     |                                   |
 
 **Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
