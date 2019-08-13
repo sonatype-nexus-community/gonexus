@@ -25,8 +25,8 @@ const (
 	restRoleMembersAppGroup        = "api/v2/roleMemberships/application/%s/role/%s/group/%s"
 	restRoleMembersRepositoryUser  = "api/v2/roleMemberships/repository_container/role/%s/user/%s"
 	restRoleMembersRepositoryGroup = "api/v2/roleMemberships/repository_container/role/%s/group/%s"
-	// restRoleMembersGlobalUser      = "api/v2/roleMemberships/global/role/{roleId}/user/{userName}"
-	// restRoleMembersGlobalGroup     = "api/v2/roleMemberships/global/role/{roleId}/group/{groupName}"
+	restRoleMembersGlobalUser      = "api/v2/roleMemberships/global/role/%s/user/%s"
+	restRoleMembersGlobalGroup     = "api/v2/roleMemberships/global/role/%s/group/%s"
 )
 
 // Constants to describe a Member Type
@@ -47,6 +47,8 @@ type MemberMapping struct {
 
 // Member describes a member to map with a role
 type Member struct {
+	OwnerID         string `json:"ownerId,omitempty"`
+	OwnerType       string `json:"ownerType,omitempty"`
 	Type            string `json:"type"`
 	UserOrGroupName string `json:"userOrGroupName"`
 }
@@ -428,7 +430,7 @@ func RevokeApplicationGroup(iq IQ, name, roleName, group string) error {
 
 func repositoriesAuth(iq IQ, method, roleName, memberType, member string) error {
 	if !hasRev70API(iq) {
-		return fmt.Errorf("TODO")
+		return fmt.Errorf("did not find revision 70 API")
 	}
 
 	role, err := RoleByName(iq, roleName)
@@ -548,18 +550,69 @@ func MembersByRole(iq IQ, roleName string) ([]MemberMapping, error) {
 	return membersByRoleID(iq, role.ID)
 }
 
-// Admins returns all of the users and roles who have the administrator role
-func Admins(iq IQ) ([]MemberMapping, error) {
-	adminID, err := GetSystemAdminID(iq)
+// GlobalAuthorizations returns all of the users and roles who have the administrator role across all of IQ
+func GlobalAuthorizations(iq IQ) ([]MemberMapping, error) {
+	body, _, err := iq.Get(restRoleMembersGlobalGet)
 	if err != nil {
-		return nil, fmt.Errorf("could not find admin user: %v", err)
+		return nil, fmt.Errorf("could not get global members: %v", err)
 	}
 
-	// WTH: no
-	admins, err := membersByRoleID(iq, adminID)
+	var mappings memberMappings
+	err = json.Unmarshal(body, &mappings)
 	if err != nil {
-		return nil, fmt.Errorf("could not get admin users: %v", err)
+		return nil, fmt.Errorf("could not unmarshal mapping: %v", err)
 	}
 
-	return admins, nil
+	return mappings.MemberMappings, nil
+}
+
+func globalAuth(iq IQ, method, roleName, memberType, member string) error {
+	if !hasRev70API(iq) {
+		return fmt.Errorf("did not find revision 70 API")
+	}
+
+	role, err := RoleByName(iq, roleName)
+	if err != nil {
+		return fmt.Errorf("could not find role with name %s: %v", roleName, err)
+	}
+
+	var endpoint string
+	switch memberType {
+	case MemberTypeUser:
+		endpoint = fmt.Sprintf(restRoleMembersGlobalUser, role.ID, member)
+	case MemberTypeGroup:
+		endpoint = fmt.Sprintf(restRoleMembersGlobalGroup, role.ID, member)
+	}
+
+	switch method {
+	case http.MethodPut:
+		_, _, err = iq.Put(endpoint, nil)
+	case http.MethodDelete:
+		_, err = iq.Del(endpoint)
+	}
+	if err != nil {
+		return fmt.Errorf("could not affect global role mapping: %v", err)
+	}
+
+	return nil
+}
+
+// SetGlobalUser sets the role and user that can have access to the repositories
+func SetGlobalUser(iq IQ, roleName, user string) error {
+	return globalAuth(iq, http.MethodPut, roleName, MemberTypeUser, user)
+}
+
+// SetGlobalGroup sets the role and group that can have access to the global
+func SetGlobalGroup(iq IQ, roleName, group string) error {
+	return globalAuth(iq, http.MethodPut, roleName, MemberTypeGroup, group)
+}
+
+// RevokeGlobalUser revoke the role and user that can have access to the global
+func RevokeGlobalUser(iq IQ, roleName, user string) error {
+	return globalAuth(iq, http.MethodDelete, roleName, MemberTypeUser, user)
+}
+
+// RevokeGlobalGroup revoke the role and group that can have access to the global
+func RevokeGlobalGroup(iq IQ, roleName, group string) error {
+	return globalAuth(iq, http.MethodDelete, roleName, MemberTypeGroup, group)
 }

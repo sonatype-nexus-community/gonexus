@@ -99,6 +99,31 @@ var dummyRoleMappingsRepos = []MemberMapping{
 	},
 }
 
+var dummyRoleMappingsGlobal = []MemberMapping{
+	{
+		RoleID: dummyRoles[0].ID,
+		Members: []Member{
+			{
+				OwnerID:         "global",
+				OwnerType:       "GLOBAL",
+				Type:            MemberTypeGroup,
+				UserOrGroupName: "oof",
+			},
+		},
+	},
+	{
+		RoleID: dummyRoles[1].ID,
+		Members: []Member{
+			{
+				OwnerID:         "global",
+				OwnerType:       "GLOBAL",
+				Type:            MemberTypeUser,
+				UserOrGroupName: "foo",
+			},
+		},
+	},
+}
+
 func roleMembershipsDeprecatedTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodHead:
@@ -188,6 +213,9 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 		case strings.HasPrefix(r.URL.Path[1:], restRoleMembersReposGet[:len(restRoleMembersReposGet)-2]):
 			found = true
 			mappings = dummyRoleMappingsRepos
+		case strings.HasPrefix(r.URL.Path[1:], restRoleMembersGlobalGet[:len(restRoleMembersGlobalGet)-2]):
+			found = true
+			mappings = dummyRoleMappingsGlobal
 		}
 		if !found {
 			w.WriteHeader(http.StatusNotFound)
@@ -201,11 +229,13 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 		}
 
 		fmt.Fprintln(w, string(buf))
+	case r.Method == http.MethodPut && strings.Contains(r.URL.Path, "global"):
+		fallthrough
 	case r.Method == http.MethodPut && strings.Contains(r.URL.Path, "repository_container"):
 		pathParts := strings.Split(r.URL.Path[1:], "/")
-		t.Log(">>>>>> arstarstar", pathParts)
 
-		//* api/v2/roleMemberships/repository_container/role/{roleId}/[user|group]/{name}
+		//* api/v2/roleMemberships/[repository_container|global]/role/{roleId}/[user|group]/{name}
+		authType := pathParts[3]
 		roleID := pathParts[5]
 		memberType := pathParts[6]
 		memberName := pathParts[7]
@@ -222,7 +252,15 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 
 		// TODO deal with duplicates?
 
-		dummyRoleMappingsRepos = append(dummyRoleMappingsRepos, newTestMapping)
+		switch authType {
+		case "global":
+			newTestMapping.Members[0].OwnerID = "global"
+			newTestMapping.Members[0].OwnerType = "GLOBAL"
+			dummyRoleMappingsGlobal = append(dummyRoleMappingsGlobal, newTestMapping)
+		case "repository_container":
+			dummyRoleMappingsRepos = append(dummyRoleMappingsRepos, newTestMapping)
+		}
+
 	case r.Method == http.MethodPut:
 		pathParts := strings.Split(r.URL.Path[1:], "/")
 
@@ -265,13 +303,22 @@ func roleMembershipsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reques
 			roleID, memberType, memberName string
 			mappings                       []MemberMapping
 		)
-		if strings.Contains(r.URL.Path, "repository_container") {
-			//* api/v2/roleMemberships/repository_container/role/{roleId}/[user|group]/{name}
+		switch {
+		case strings.Contains(r.URL.Path, "global"):
+			fallthrough
+		case strings.Contains(r.URL.Path, "repository_container"):
+			//* api/v2/roleMemberships/[repository_container|global]/role/{roleId}/[user|group]/{name}
+			authType := pathParts[3]
 			roleID = pathParts[5]
 			memberType = strings.ToUpper(pathParts[6])
 			memberName = pathParts[7]
-			mappings = dummyRoleMappingsRepos
-		} else {
+			switch authType {
+			case "repository_container":
+				mappings = dummyRoleMappingsRepos
+			case "global":
+				mappings = dummyRoleMappingsGlobal
+			}
+		default:
 			//* api/v2/roleMemberships/[organization|application]/{id}/role/{roleId}/[user|group]/{name}
 			authType := pathParts[3]
 			id := pathParts[4]
@@ -613,6 +660,22 @@ func testRevoke(t *testing.T, iq IQ, authType, memberType string) {
 		if err == nil {
 			mappings, err = RepositoriesAuthorizations(iq)
 		}
+	case "global":
+		switch memberType {
+		case MemberTypeUser:
+			err = SetGlobalUser(iq, role.Name, name)
+			if err == nil {
+				err = RevokeGlobalUser(iq, role.Name, name)
+			}
+		case MemberTypeGroup:
+			err = SetGlobalGroup(iq, role.Name, name)
+			if err == nil {
+				err = RevokeGlobalGroup(iq, role.Name, name)
+			}
+		}
+		if err == nil {
+			mappings, err = GlobalAuthorizations(iq)
+		}
 	}
 	if err != nil {
 		t.Error(err)
@@ -819,4 +882,94 @@ func testMembersByRole(t *testing.T, iq IQ) {
 
 func TestMembersByRole(t *testing.T) {
 	testWithDeprecated(t, testMembersByRole)
+}
+
+func TestGlobalAuthorizations(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	got, err := GlobalAuthorizations(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := dummyRoleMappingsGlobal
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Did not get expected global mapping")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func testSetGlobal(t *testing.T, memberType string) {
+	t.Helper()
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	role := dummyRoles[0]
+	memberName := "dummyDumDum"
+
+	want := MemberMapping{
+		RoleID: role.ID,
+		Members: []Member{
+			{
+				OwnerID:         "global",
+				OwnerType:       "GLOBAL",
+				Type:            memberType,
+				UserOrGroupName: memberName,
+			},
+		},
+	}
+
+	var err error
+	switch memberType {
+	case MemberTypeUser:
+		err = SetGlobalUser(iq, role.Name, memberName)
+	case MemberTypeGroup:
+		err = SetGlobalGroup(iq, role.Name, memberName)
+	}
+	if err != nil {
+		t.Error(err)
+	}
+
+	got, err := GlobalAuthorizations(iq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var found bool
+	for _, mapping := range got {
+		if reflect.DeepEqual(mapping, want) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("User role mapping not updated")
+		t.Error(" got", got)
+		t.Error("want", want)
+	}
+}
+
+func TestSetGlobalUser(t *testing.T) {
+	testSetGlobal(t, MemberTypeUser)
+}
+
+func TestSetGlobalGroup(t *testing.T) {
+	testSetGlobal(t, MemberTypeGroup)
+}
+
+func TestRevokeGlobalUser(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	testRevoke(t, iq, "global", MemberTypeUser)
+}
+
+func TestRevokeGlobalGroup(t *testing.T) {
+	iq, mock := roleMembershipsTestIQ(t, false)
+	defer mock.Close()
+
+	testRevoke(t, iq, "global", MemberTypeGroup)
 }
