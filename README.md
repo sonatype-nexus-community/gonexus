@@ -66,7 +66,7 @@ if err != nil {
 | Endpoint                                                                                                             |        Status         |   Min IQ Version    |
 | -------------------------------------------------------------------------------------------------------------------- | :-------------------: | :-----------------: |
 | [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2)                    |      :full_moon:      |                     |
-| [Authorization Configuration](https://help.sonatype.com/iqserver/automating/rest-apis)                               | :waning_gibbous_moon: | Missing: global r70 |
+| [Authorization Configuration](https://help.sonatype.com/iqserver/automating/rest-apis)                               |      :full_moon:      |         r70         |
 | [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |      :full_moon:      |                     |
 | [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |      :full_moon:      |                     |
 | [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |      :full_moon:      |                     |
