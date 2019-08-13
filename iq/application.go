@@ -33,14 +33,14 @@ type allAppsResponse struct {
 // Application captures information of an IQ application
 type Application struct {
 	ID              string `json:"id"`
-	PublicID        string `json:"publicId"`
+	PublicID        string `json:"publicId,omitempty"`
 	Name            string `json:"name"`
 	OrganizationID  string `json:"organizationId"`
-	ContactUserName string `json:"contactUserName"`
+	ContactUserName string `json:"contactUserName,omitempty"`
 	ApplicationTags []struct {
-		ID            string `json:"id"`
-		TagID         string `json:"tagId"`
-		ApplicationID string `json:"applicationId"`
+		ID            string `json:"id,omitempty"`
+		TagID         string `json:"tagId,omitempty"`
+		ApplicationID string `json:"applicationId,omitempty"`
 	} `json:"applicationTags,omitempty"`
 }
 
