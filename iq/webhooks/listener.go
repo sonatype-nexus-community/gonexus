@@ -36,7 +36,7 @@ func parseRequest(r *http.Request) (whtype WebhookEventType, err error) {
 		return whtype, fmt.Errorf("IQ webhook type '%s' not supported", whtype)
 	}
 
-	return whtype, nil
+	return whtype, err
 }
 
 // Listen will handle any HTTP requests which are genuine Nexus IQ Webhooks
@@ -44,15 +44,11 @@ func Listen(w http.ResponseWriter, r *http.Request) {
 	whtype, err := parseRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("error parsing request: %v", err)
 		return
 	}
 
-	switch whtype {
-	case WebhookEventApplicationEvaluation:
-		log.Println("Accepted Application Evaluation")
-	case WebhookEventViolationAlert:
-		log.Println("Accepted Violation Alert")
-	}
+	log.Printf("accepted: %s\n", whtype)
 
 	w.WriteHeader(http.StatusOK)
 }
