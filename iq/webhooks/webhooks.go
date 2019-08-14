@@ -1,21 +1,26 @@
-package nexusiq
+package webhooks
 
 import (
 	"net/http"
 	"strings"
+
+	"github.com/sonatype-nexus-community/gonexus/iq"
 )
 
-// WebhookEventType identifies a webhook event
+// WebhookEventType identifies a webhook event typu
 type WebhookEventType string
 
 // Enumeration of every Webhook event type
 const (
 	WebhookEventApplicationEvaluation         WebhookEventType = "iq:applicationEvaluation"
-	WebhookEventPolicyAlert                   WebhookEventType = "iq:policyAlert"
+	WebhookEventViolationAlert                WebhookEventType = "iq:policyAlert"
 	WebhookEventPolicyManagement              WebhookEventType = "iq:policyManagement"
 	WebhookEventLicenseOverride               WebhookEventType = "iq:licenseOverrideManagement"
 	WebhookEventSecurityVulnerabilityOverride WebhookEventType = "iq:securityVulnerabilityOverrideManagement"
 )
+
+// WebhookEvent identifies a webhook event
+type WebhookEvent interface{}
 
 // WebhookApplicationEvaluation is the payload for an Application Evaluation webhook event
 type WebhookApplicationEvaluation struct {
@@ -40,10 +45,10 @@ type webhookAppEval struct {
 
 // WebhookViolationAlert is the payload for a Violation Alert webhook event
 type WebhookViolationAlert struct {
-	Initiator             string         `json:"initiator"`
-	ApplicationEvaluation webhookAppEval `json:"applicationEvaluation"`
-	Application           Application    `json:"application"`
-	PolicyAlerts          []policyAlert  `json:"policyAlerts"`
+	Initiator             string              `json:"initiator"`
+	ApplicationEvaluation webhookAppEval      `json:"applicationEvaluation"`
+	Application           nexusiq.Application `json:"application"`
+	PolicyAlerts          []policyAlert       `json:"policyAlerts"`
 }
 
 type policyAlert struct {
@@ -55,11 +60,11 @@ type policyAlert struct {
 }
 
 type componentFact struct {
-	Hash                string              `json:"hash"`
-	DisplayName         string              `json:"displayName"`
-	ComponentIdentifier ComponentIdentifier `json:"componentIdentifier"`
-	PathNames           []string            `json:"pathNames"`
-	ConstraintFacts     []constraintFact    `json:"constraintFacts"`
+	Hash                string                      `json:"hash"`
+	DisplayName         string                      `json:"displayName"`
+	ComponentIdentifier nexusiq.ComponentIdentifier `json:"componentIdentifier"`
+	PathNames           []string                    `json:"pathNames"`
+	ConstraintFacts     []constraintFact            `json:"constraintFacts"`
 }
 
 type constraintFact struct {
