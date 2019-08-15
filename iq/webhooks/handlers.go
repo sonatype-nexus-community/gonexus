@@ -1,26 +1,64 @@
 package webhooks
 
-var appEvalEvents = make([]chan<- WebhookApplicationEvaluation, 0)
-var violationAlertEvents = make([]chan<- WebhookViolationAlert, 0)
+import (
+	"sync"
+)
+
+var mu sync.Mutex
+
+var (
+	appEvalEvents        = make(map[chan<- WebhookApplicationEvaluation]struct{})
+	violationAlertEvents = make(map[chan<- WebhookViolationAlert]struct{})
+)
 
 // ApplicationEvaluationEvents puts a new Application Evaluation on the given channel
-func ApplicationEvaluationEvents(events chan<- WebhookApplicationEvaluation) {
-	appEvalEvents = append(appEvalEvents, events)
-}
+func ApplicationEvaluationEvents() (<-chan WebhookApplicationEvaluation, func()) {
+	events := make(chan WebhookApplicationEvaluation, 1)
 
-// ViolationAlertEvents puts a new Violation Alert on the given channel
-func ViolationAlertEvents(events chan<- WebhookViolationAlert) {
-	violationAlertEvents = append(violationAlertEvents, events)
-}
+	mu.Lock()
+	appEvalEvents[events] = struct{}{}
+	mu.Unlock()
 
-func sendApplicationEvaluationEvent(event WebhookApplicationEvaluation) {
-	for _, c := range appEvalEvents {
-		c <- event
+	return events, func() {
+		mu.Lock()
+		defer mu.Unlock()
+		delete(appEvalEvents, events)
 	}
 }
 
-func sendViolationAlertEvents(event WebhookViolationAlert) {
-	for _, c := range violationAlertEvents {
-		c <- event
+// ViolationAlertEvents puts a new Violation Alert on the given channel
+func ViolationAlertEvents() (<-chan WebhookViolationAlert, func()) {
+	events := make(chan WebhookViolationAlert, 1)
+
+	mu.Lock()
+	violationAlertEvents[events] = struct{}{}
+	mu.Unlock()
+
+	return events, func() {
+		mu.Lock()
+		defer mu.Unlock()
+		delete(violationAlertEvents, events)
+	}
+}
+
+func sendApplicationEvaluationEvent(event WebhookApplicationEvaluation) {
+	mu.Lock()
+	defer mu.Unlock()
+	for c := range appEvalEvents {
+		select {
+		case c <- event:
+		default:
+		}
+	}
+}
+
+func sendViolationAlertEvent(event WebhookViolationAlert) {
+	mu.Lock()
+	defer mu.Unlock()
+	for c := range violationAlertEvents {
+		select {
+		case c <- event:
+		default:
+		}
 	}
 }
