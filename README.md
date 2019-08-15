@@ -75,13 +75,14 @@ if err != nil {
 | [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       | :full_moon: |                |
 | [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) | :full_moon: |                |
 | [Organization](https://help.sonatype.com/iqserver/automating/rest-apis/organization-rest-apis---v2)                  | :full_moon: |                |
+| [Policy Violation](https://help.sonatype.com/iqserver/automating/rest-apis/policy-violation-rest-api---v2)           | :full_moon: |                |
+| [Policy Waiver](https://help.sonatype.com/iqserver/automating/rest-apis/policy-waiver-rest-api---v2)                 | :new_moon:  |      r71       |
 | [Promote Scan](https://help.sonatype.com/iqserver/automating/rest-apis/promote-scan-rest-api---v2)                   | :new_moon:  |                |
-| [Role](https://help.sonatype.com/iqserver/automating/rest-apis/role-rest-api---v2)                                   | :full_moon: |      r70       |
 | [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2)              | :full_moon: |                |
+| [Role](https://help.sonatype.com/iqserver/automating/rest-apis/role-rest-api---v2)                                   | :full_moon: |      r70       |
 | [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github)                                         | :full_moon: |                |
 | [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   | :new_moon:  |                |
 | [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  | :full_moon: |      r70       |
-| [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2)                         | :full_moon: |                |
 | [Webhooks](https://help.sonatype.com/iqserver/automating/iq-server-webhooks)                                         | :full_moon: |                |
 
 **Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
