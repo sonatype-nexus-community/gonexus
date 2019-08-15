@@ -12,11 +12,11 @@ type WebhookEventType string
 
 // Enumeration of every Webhook event type
 const (
-	WebhookEventApplicationEvaluation         WebhookEventType = "iq:applicationEvaluation"
-	WebhookEventViolationAlert                WebhookEventType = "iq:policyAlert"
-	WebhookEventPolicyManagement              WebhookEventType = "iq:policyManagement"
-	WebhookEventLicenseOverride               WebhookEventType = "iq:licenseOverrideManagement"
-	WebhookEventSecurityVulnerabilityOverride WebhookEventType = "iq:securityVulnerabilityOverrideManagement"
+	WebhookEventApplicationEvaluation WebhookEventType = "iq:applicationEvaluation"
+	WebhookEventViolationAlert        WebhookEventType = "iq:policyAlert"
+	WebhookEventPolicyManagement      WebhookEventType = "iq:policyManagement"
+	WebhookEventLicenseOverride       WebhookEventType = "iq:licenseOverrideManagement"
+	WebhookEventSecurityOverride      WebhookEventType = "iq:securityVulnerabilityOverrideManagement"
 )
 
 // WebhookEvent identifies a webhook event
@@ -76,6 +76,15 @@ type satisfiedCondition struct {
 	Summary string `json:"summary"`
 	Reason  string `json:"reason"`
 }
+
+// WebhookPolicyManagement is the payload for a Policy Management webhook event
+type WebhookPolicyManagement struct{}
+
+// WebhookLicenseOverride is the payload for a License Override webhook event
+type WebhookLicenseOverride struct{}
+
+// WebhookSecurityOverride is the payload for a Security Vulnerability Override webhook event
+type WebhookSecurityOverride struct{}
 
 // IsWebhookEvent determines if HTTP request is an IQ Webhook payload and identifies the type
 func IsWebhookEvent(r *http.Request) (ok bool, whtype WebhookEventType) {

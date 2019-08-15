@@ -30,7 +30,82 @@ func TestApplicationEvaluationEvents(t *testing.T) {
 	}
 }
 
-func TestViolationAlertouEvents(t *testing.T) {
+func TestPolicyManagementEvents(t *testing.T) {
+	tests := []struct {
+		want   WebhookPolicyManagement
+		closer bool
+	}{
+		{WebhookPolicyManagement{}, false},
+		{WebhookPolicyManagement{}, true},
+	}
+
+	for _, test := range tests {
+		events, close := PolicyManagementEvents()
+		if test.closer {
+			defer close()
+		}
+		sendPolicyManagementEvent(test.want)
+
+		got := <-events
+		if !reflect.DeepEqual(got, test.want) {
+			t.Error("Did not get expected event")
+			t.Error("got", got)
+			t.Error("want", test.want)
+		}
+	}
+}
+
+func TestLicenseOverrideEvents(t *testing.T) {
+	tests := []struct {
+		want   WebhookLicenseOverride
+		closer bool
+	}{
+		{WebhookLicenseOverride{}, false},
+		{WebhookLicenseOverride{}, true},
+	}
+
+	for _, test := range tests {
+		events, close := LicenseOverrideEvents()
+		if test.closer {
+			defer close()
+		}
+		sendLicenseOverrideEvent(test.want)
+
+		got := <-events
+		if !reflect.DeepEqual(got, test.want) {
+			t.Error("Did not get expected event")
+			t.Error("got", got)
+			t.Error("want", test.want)
+		}
+	}
+}
+
+func TestSecurityOverrideEvents(t *testing.T) {
+	tests := []struct {
+		want   WebhookSecurityOverride
+		closer bool
+	}{
+		{WebhookSecurityOverride{}, false},
+		{WebhookSecurityOverride{}, true},
+	}
+
+	for _, test := range tests {
+		events, close := SecurityOverrideEvents()
+		if test.closer {
+			defer close()
+		}
+		sendSecurityOverrideEvent(test.want)
+
+		got := <-events
+		if !reflect.DeepEqual(got, test.want) {
+			t.Error("Did not get expected event")
+			t.Error("got", got)
+			t.Error("want", test.want)
+		}
+	}
+}
+
+func TestViolationAlertEvents(t *testing.T) {
 	tests := []struct {
 		want   WebhookViolationAlert
 		closer bool

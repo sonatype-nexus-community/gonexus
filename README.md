@@ -63,26 +63,26 @@ if err != nil {
 
 #### Supported IQ Endpoints
 
-| Endpoint                                                                                                             |        Status         |   Min IQ Version    |
-| -------------------------------------------------------------------------------------------------------------------- | :-------------------: | :-----------------: |
-| [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2)                    |      :full_moon:      |                     |
-| [Authorization Configuration](https://help.sonatype.com/iqserver/automating/rest-apis)                               |      :full_moon:      |         r70         |
-| [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |      :full_moon:      |                     |
-| [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |      :full_moon:      |                     |
-| [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |      :full_moon:      |                     |
-| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |      :full_moon:      |         r64         |
-| [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2)          |      :full_moon:      |                     |
-| [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       |      :full_moon:      |                     |
-| [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) |      :full_moon:      |                     |
-| [Organization](https://help.sonatype.com/iqserver/automating/rest-apis/organization-rest-apis---v2)                  |      :full_moon:      |                     |
-| [Promote Scan](https://help.sonatype.com/iqserver/automating/rest-apis/promote-scan-rest-api---v2)                   |      :new_moon:       |                     |
-| [Role](https://help.sonatype.com/iqserver/automating/rest-apis/role-rest-api---v2)                                   |      :full_moon:      |         r70         |
-| [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2)              |      :full_moon:      |                     |
-| [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github)                                         |      :full_moon:      |                     |
-| [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   |      :new_moon:       |                     |
-| [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  |      :full_moon:      |         r70         |
-| [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2)                         |      :full_moon:      |                     |
-| [Webhooks](https://help.sonatype.com/iqserver/automating/iq-server-webhooks)                                         |      :waning_crescent_moon:      |                     |
+| Endpoint                                                                                                             |         Status         | Min IQ Version |
+| -------------------------------------------------------------------------------------------------------------------- | :--------------------: | :------------: |
+| [Application](https://help.sonatype.com/iqserver/automating/rest-apis/application-rest-apis---v2)                    |      :full_moon:       |                |
+| [Authorization Configuration](https://help.sonatype.com/iqserver/automating/rest-apis)                               |      :full_moon:       |      r70       |
+| [Component Details](https://help.sonatype.com/iqserver/automating/rest-apis/component-details-rest-api---v2)         |      :full_moon:       |                |
+| [Component Evaluation](https://help.sonatype.com/iqserver/automating/rest-apis/component-evaluation-rest-apis---v2)  |      :full_moon:       |                |
+| [Component Labels](https://help.sonatype.com/iqserver/automating/rest-apis/component-labels-rest-api---v2)           |      :full_moon:       |                |
+| [Component Remediation](https://help.sonatype.com/iqserver/automating/rest-apis/component-remediation-rest-api---v2) |      :full_moon:       |      r64       |
+| [Component Search](https://help.sonatype.com/iqserver/automating/rest-apis/component-search-rest-apis---v2)          |      :full_moon:       |                |
+| [Component Versions](https://help.sonatype.com/iqserver/automating/rest-apis/component-versions-rest-api---v2)       |      :full_moon:       |                |
+| [Data Retention Policy](https://help.sonatype.com/iqserver/automating/rest-apis/data-retention-policy-rest-api---v2) |      :full_moon:       |                |
+| [Organization](https://help.sonatype.com/iqserver/automating/rest-apis/organization-rest-apis---v2)                  |      :full_moon:       |                |
+| [Promote Scan](https://help.sonatype.com/iqserver/automating/rest-apis/promote-scan-rest-api---v2)                   |       :new_moon:       |                |
+| [Role](https://help.sonatype.com/iqserver/automating/rest-apis/role-rest-api---v2)                                   |      :full_moon:       |      r70       |
+| [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2)              |      :full_moon:       |                |
+| [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github)                                         |      :full_moon:       |                |
+| [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   |       :new_moon:       |                |
+| [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  |      :full_moon:       |      r70       |
+| [Violation](https://help.sonatype.com/iqserver/automating/rest-apis/violation-rest-api---v2)                         |      :full_moon:       |                |
+| [Webhooks](https://help.sonatype.com/iqserver/automating/iq-server-webhooks)                                         | :waning_crescent_moon: |                |
 
 **Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
 
