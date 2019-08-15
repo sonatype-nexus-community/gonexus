@@ -24,13 +24,13 @@ func parseRequest(r *http.Request) (whtype WebhookEventType, err error) {
 	switch whtype {
 	case WebhookEventApplicationEvaluation:
 		var event WebhookApplicationEvaluation
-		if err = json.Unmarshal(body, &event); err != nil {
+		if err = json.Unmarshal(body, &event); err == nil {
 			sendApplicationEvaluationEvent(event)
 		}
 	case WebhookEventViolationAlert:
 		var event WebhookViolationAlert
-		if err = json.Unmarshal(body, &event); err != nil {
-			sendViolationAlertEvents(event)
+		if err = json.Unmarshal(body, &event); err == nil {
+			sendViolationAlertEvent(event)
 		}
 	default:
 		return whtype, fmt.Errorf("IQ webhook type '%s' not supported", whtype)
