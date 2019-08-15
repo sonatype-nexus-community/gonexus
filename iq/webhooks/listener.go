@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -56,14 +55,10 @@ func parseRequest(r *http.Request) (whtype WebhookEventType, err error) {
 
 // Listen will handle any HTTP requests which are genuine Nexus IQ Webhooks
 func Listen(w http.ResponseWriter, r *http.Request) {
-	whtype, err := parseRequest(r)
-	if err != nil {
+	if _, err := parseRequest(r); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Printf("error parsing request: %v", err)
 		return
 	}
-
-	log.Printf("accepted: %s\n", whtype)
 
 	w.WriteHeader(http.StatusOK)
 }
