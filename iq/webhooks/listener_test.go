@@ -3,6 +3,7 @@ package webhooks
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -106,4 +107,34 @@ func TestReceivingEventsFromRequest(t *testing.T) {
 			t.Error("did not get expected anything")
 		}
 	}
+}
+
+func ExampleListen() {
+	appEvalEvents, _ := ApplicationEvaluationEvents()
+	violationAlertEvents, _ := ViolationAlertEvents()
+	policyMgmtEvents, _ := PolicyManagementEvents()
+	licenseOverride, _ := LicenseOverrideEvents()
+	securityOverride, _ := SecurityOverrideEvents()
+
+	go func() {
+		for {
+			select {
+			case <-appEvalEvents:
+				log.Println("Received Application Evaluation event")
+			case <-violationAlertEvents:
+				log.Println("Received Violation Alert event")
+			case <-policyMgmtEvents:
+				log.Println("Received Policy Management event")
+			case <-licenseOverride:
+				log.Println("Received License Overridden event")
+			case <-securityOverride:
+				log.Println("Received Security Vulnerability Overridden event")
+			default:
+			}
+		}
+	}()
+
+	http.HandleFunc("/ingest", Listen)
+
+	log.Fatal(http.ListenAndServe(":9876", nil))
 }
