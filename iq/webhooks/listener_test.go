@@ -8,20 +8,18 @@ import (
 	"testing"
 )
 
-func TestParseRequest(t *testing.T) {
-	tests := []struct {
-		t WebhookEventType
-		e interface{}
-	}{
-		{WebhookEventApplicationEvaluation, WebhookApplicationEvaluation{
-			Initiator: "dummy",
-			ID:        "foobar",
-		}},
-		{WebhookEventViolationAlert, WebhookViolationAlert{
-			Initiator: "dummy",
-		}},
-	}
+var tests = []struct {
+	t WebhookEventType
+	e interface{}
+}{
+	{WebhookEventApplicationEvaluation, WebhookApplicationEvaluation{Initiator: "dummy", ID: "foobar"}},
+	{WebhookEventViolationAlert, WebhookViolationAlert{Initiator: "dummy"}},
+	{WebhookEventPolicyManagement, WebhookPolicyManagement{policyOwner{ID: "dummy1", Name: "foobar1"}}},
+	{WebhookEventLicenseOverride, WebhookLicenseOverride{licenseOverride{ID: "dummy1", OwnerID: "foobar1"}}},
+	{WebhookEventSecurityOverride, WebhookSecurityOverride{securityVulnerabilityOverride{ID: "dummy1", OwnerID: "foobar1"}}},
+}
 
+func TestParseRequest(t *testing.T) {
 	for _, test := range tests {
 		buf, err := json.Marshal(test.e)
 		if err != nil {
@@ -46,21 +44,11 @@ func TestParseRequest(t *testing.T) {
 }
 
 func TestReceivingEventsFromRequest(t *testing.T) {
-	tests := []struct {
-		t WebhookEventType
-		e interface{}
-	}{
-		{WebhookEventApplicationEvaluation, WebhookApplicationEvaluation{
-			Initiator: "dummy",
-			ID:        "foobar",
-		}},
-		{WebhookEventViolationAlert, WebhookViolationAlert{
-			Initiator: "dummy",
-		}},
-	}
-
 	appEvalEvents, _ := ApplicationEvaluationEvents()
 	violationAlertEvents, _ := ViolationAlertEvents()
+	policyManagementEvents, _ := PolicyManagementEvents()
+	licenseOverrideEvents, _ := LicenseOverrideEvents()
+	securityOverrideEvents, _ := SecurityOverrideEvents()
 
 	for _, test := range tests {
 		buf, err := json.Marshal(test.e)
@@ -92,6 +80,24 @@ func TestReceivingEventsFromRequest(t *testing.T) {
 			t.Log(got)
 		case got := <-violationAlertEvents:
 			if test.t != WebhookEventViolationAlert {
+				t.Error("did not identify expected type")
+				t.Error("want", test.t)
+			}
+			t.Log(got)
+		case got := <-policyManagementEvents:
+			if test.t != WebhookEventPolicyManagement {
+				t.Error("did not identify expected type")
+				t.Error("want", test.t)
+			}
+			t.Log(got)
+		case got := <-licenseOverrideEvents:
+			if test.t != WebhookEventLicenseOverride {
+				t.Error("did not identify expected type")
+				t.Error("want", test.t)
+			}
+			t.Log(got)
+		case got := <-securityOverrideEvents:
+			if test.t != WebhookEventSecurityOverride {
 				t.Error("did not identify expected type")
 				t.Error("want", test.t)
 			}

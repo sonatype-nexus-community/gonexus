@@ -33,14 +33,21 @@ func parseRequest(r *http.Request) (whtype WebhookEventType, err error) {
 			sendViolationAlertEvent(event)
 		}
 	case WebhookEventPolicyManagement:
-		fallthrough
+		var event WebhookPolicyManagement
+		if err = json.Unmarshal(body, &event); err == nil {
+			sendPolicyManagementEvent(event)
+		}
 	case WebhookEventLicenseOverride:
-		fallthrough
+		var event WebhookLicenseOverride
+		if err = json.Unmarshal(body, &event); err == nil {
+			sendLicenseOverrideEvent(event)
+		}
 	case WebhookEventSecurityOverride:
-		fallthrough
+		var event WebhookSecurityOverride
+		if err = json.Unmarshal(body, &event); err == nil {
+			sendSecurityOverrideEvent(event)
+		}
 	default:
-		log.Println(whtype)
-		log.Println(string(body))
 		return whtype, fmt.Errorf("IQ webhook type '%s' not supported", whtype)
 	}
 

@@ -78,13 +78,73 @@ type satisfiedCondition struct {
 }
 
 // WebhookPolicyManagement is the payload for a Policy Management webhook event
-type WebhookPolicyManagement struct{}
+type WebhookPolicyManagement struct {
+	Owner policyOwner `json:"owner"`
+}
+
+type policyOwner struct {
+	ID                  string          `json:"id,omitempty"`
+	PublicID            string          `json:"publicId,omitempty"`
+	Name                string          `json:"name,omitempty"`
+	ParentOwnerID       string          `json:"parentOwnerId,omitempty"`
+	Type                string          `json:"type,omitempty"`
+	Tags                []tag           `json:"tags,omitempty"`
+	Labels              []tag           `json:"labels,omitempty"`
+	LicenseThreatGroups []policyDetails `json:"licenseThreatGroups,omitempty"`
+	Policies            []policyDetails `json:"policies,omitempty"`
+	Access              []access        `json:"access,omitempty"`
+}
+
+type access struct {
+	ID      string `json:"id,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Members []struct {
+		Type string `json:"type,omitempty"`
+		Name string `json:"name,omitempty"`
+	} `json:"members,omitempty"`
+}
+
+type tag struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Color       string `json:"color,omitempty"`
+}
+
+type policyDetails struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	ThreatLevel int64  `json:"threatLevel,omitempty"`
+}
 
 // WebhookLicenseOverride is the payload for a License Override webhook event
-type WebhookLicenseOverride struct{}
+type WebhookLicenseOverride struct {
+	LicenseOverride licenseOverride `json:"licenseOverride"`
+}
+
+type licenseOverride struct {
+	ID                  string                      `json:"id"`
+	OwnerID             string                      `json:"ownerId"`
+	Status              string                      `json:"status"`
+	Comment             string                      `json:"comment"`
+	LicenseIDS          []string                    `json:"licenseIds"`
+	ComponentIdentifier nexusiq.ComponentIdentifier `json:"componentIdentifier"`
+}
 
 // WebhookSecurityOverride is the payload for a Security Vulnerability Override webhook event
-type WebhookSecurityOverride struct{}
+type WebhookSecurityOverride struct {
+	SecurityVulnerabilityOverride securityVulnerabilityOverride `json:"securityVulnerabilityOverride"`
+}
+
+type securityVulnerabilityOverride struct {
+	ID          string `json:"id"`
+	OwnerID     string `json:"ownerId"`
+	Hash        string `json:"hash"`
+	Source      string `json:"source"`
+	ReferenceID string `json:"referenceId"`
+	Status      string `json:"status"`
+	Comment     string `json:"comment"`
+}
 
 // IsWebhookEvent determines if HTTP request is an IQ Webhook payload and identifies the type
 func IsWebhookEvent(r *http.Request) (ok bool, whtype WebhookEventType) {
