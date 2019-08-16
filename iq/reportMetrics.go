@@ -1,12 +1,16 @@
 package nexusiq
 
+import (
+	"time"
+)
+
 const restMetrics = "api/v2/reports/metrics"
 
 type metricTimePeriod string
 
 const (
-	timePeriodMonth metricTimePeriod = "MONTH"
-	timePeriodWeek  metricTimePeriod = "WEEK"
+	timePeriodMonthly metricTimePeriod = "MONTH"
+	timePeriodWeekly  metricTimePeriod = "WEEK"
 )
 
 type metricRequest struct {
@@ -45,7 +49,7 @@ type violationCounts struct {
 	Critical int64 `json:"CRITICAL"`
 }
 
-type metricsResponse struct {
+type Metrics struct {
 	ApplicationID       string        `json:"applicationId"`
 	ApplicationPublicID string        `json:"applicationPublicId"`
 	ApplicationName     string        `json:"applicationName"`
@@ -69,6 +73,25 @@ type aggregation struct {
 
 // TODO: Accept header: application/json or text/csv
 
-// GenerateMetrics
-// GenerateMetricsForApps
-// GenerateMetricsForOrgs
+func generateMetrics(iq IQ, req metricRequest) Metrics {
+	// time.ISOWeek() // year, week int
+	return Metrics{}
+}
+
+// GenerateMetrics TODO
+func GenerateMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time) Metrics {
+	var req metricRequest
+	return generateMetrics(iq, req)
+}
+
+// GenerateApplicationMetrics TODO
+func GenerateApplicationMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time, appPublicID string) Metrics {
+	var req metricRequest
+	return generateMetrics(iq, req)
+}
+
+// GenerateOrganizationMetrics TODO
+func GenerateOrganizationMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time, orgName string) Metrics {
+	var req metricRequest
+	return generateMetrics(iq, req)
+}
