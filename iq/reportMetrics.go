@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -49,6 +50,7 @@ type violationCounts struct {
 	Critical int64 `json:"CRITICAL"`
 }
 
+// Metrics encapsulates the data generate
 type Metrics struct {
 	ApplicationID       string        `json:"applicationId"`
 	ApplicationPublicID string        `json:"applicationPublicId"`
@@ -73,25 +75,80 @@ type aggregation struct {
 
 // TODO: Accept header: application/json or text/csv
 
-func generateMetrics(iq IQ, req metricRequest) Metrics {
-	// time.ISOWeek() // year, week int
+// MetricsRequestBuilder builds a request to retrieve metrics data from IQ
+type MetricsRequestBuilder struct {
+	timePeriod                      string
+	firstTimePeriod, lastTimePeriod time.Time
+	apps, orgs                      []string
+}
+
+// TimePeriod allows you to set the time period type. Defaults to MONTH
+func (b *MetricsRequestBuilder) TimePeriod(v string) *MetricsRequestBuilder {
+	b.timePeriod = v
+	return b
+}
+
+// FirstTimePeriod allows you to set the starting time period for the data gathering
+func (b *MetricsRequestBuilder) FirstTimePeriod(v time.Time) *MetricsRequestBuilder {
+	b.firstTimePeriod = v
+	return b
+}
+
+// LastTimePeriod allows you to set the ending time period for the data gathering. Optional
+func (b *MetricsRequestBuilder) LastTimePeriod(v time.Time) *MetricsRequestBuilder {
+	b.lastTimePeriod = v
+	return b
+}
+
+// Application adds an application whose data to include
+func (b *MetricsRequestBuilder) Application(v string) *MetricsRequestBuilder {
+	if b.apps == nil {
+		b.apps = make([]string, 0)
+	}
+	b.apps = append(b.apps, v)
+	return b
+}
+
+// Organization adds an application whose data to include
+func (b *MetricsRequestBuilder) Organization(v string) *MetricsRequestBuilder {
+	if b.orgs == nil {
+		b.orgs = make([]string, 0)
+	}
+	b.orgs = append(b.orgs, v)
+	return b
+}
+
+func (b *MetricsRequestBuilder) build() (req metricRequest) {
+	// If timePeriod is MONTH - an ISO 8601 year and month without timezone.
+	// If timePeriod is WEEK  - an ISO 8601 week year and week (e.g. week of 29 December 2008 is "2009-W01")
+	formatTime := func(t time.Time) string {
+		switch req.TimePeriod {
+		case timePeriodWeekly:
+			y, w := t.ISOWeek()
+			return fmt.Sprintf("%d-W%02d", y, w)
+		case timePeriodMonthly:
+			fallthrough
+		default:
+			return t.Format("2006-01")
+		}
+	}
+
+	req.TimePeriod = timePeriodMonthly
+	if b.timePeriod != "" {
+		req.TimePeriod = metricTimePeriod(b.timePeriod)
+	}
+	req.FirstTimePeriod = formatTime(b.firstTimePeriod)
+	if !b.lastTimePeriod.IsZero() {
+		req.LastTimePeriod = formatTime(b.lastTimePeriod)
+	}
+
+	req.ApplicationIDS = b.apps
+	req.OrganizationIDS = b.orgs
+
+	return
+}
+
+// GenerateMetrics creates metrics from the given qualifiers
+func GenerateMetrics(iq IQ, builder MetricsRequestBuilder) Metrics {
 	return Metrics{}
-}
-
-// GenerateMetrics TODO
-func GenerateMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time) Metrics {
-	var req metricRequest
-	return generateMetrics(iq, req)
-}
-
-// GenerateApplicationMetrics TODO
-func GenerateApplicationMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time, appPublicID string) Metrics {
-	var req metricRequest
-	return generateMetrics(iq, req)
-}
-
-// GenerateOrganizationMetrics TODO
-func GenerateOrganizationMetrics(iq IQ, timePeriod string, firstTimePeriod, lastTimePeriod time.Time, orgName string) Metrics {
-	var req metricRequest
-	return generateMetrics(iq, req)
 }
