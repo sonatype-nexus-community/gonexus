@@ -46,7 +46,7 @@ if err != nil {
 | Blob Store | :waning_gibbous_moon: |
 | Repository | :waning_gibbous_moon: |
 
-**Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
+_Legend_: :full_moon: complete :new_moon: untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: partial support
 
 ### nexusiq [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq) [![nexusiq coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq?0 "nexusiq coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq)
 
@@ -85,7 +85,31 @@ if err != nil {
 | [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  | :full_moon: |      r70       |
 | [Webhooks](https://help.sonatype.com/iqserver/automating/iq-server-webhooks)                                         | :full_moon: |                |
 
-**Legend**: :full_moon: == Complete :new_moon: == untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: == partial support
+_Legend_: :full_moon: complete :new_moon: untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: partial support
+
+##### webhooks [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks) [![nexusiq webhooks coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq/webhooks/?0 "nexusiq webhooks coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq/webhooks)
+
+The `iq/webhooks` subpackage provides structs for all of the event types along with helper functions.
+
+Most notably it provides a function called `Listen` which is an `http.HandlerFunc` that can be used as an endpoint handler for a server functioning as a webhook listener.
+The handler will place any webhook event it finds in a channel to be consumed at will.
+
+An example of using the handler to listen for Application Evaluation events:
+
+```go
+// import "github.com/sonatype-nexus-community/gonexus/iq/webhooks"
+appEvals, _ := webhooks.ApplicationEvaluationEvents()
+
+go func() {
+    for _ = range appEvals:
+        log.Println("Received Application Evaluation event")
+    }
+}()
+
+http.HandleFunc("/ingest", webhooks.Listen)
+```
+
+See the [documentation](https://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks#example-Listen) for a full example showing other event types.
 
 ## The Fine Print
 
