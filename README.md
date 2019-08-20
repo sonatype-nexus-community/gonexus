@@ -81,7 +81,7 @@ if err != nil {
 | [Report-related](https://help.sonatype.com/iqserver/automating/rest-apis/report-related-rest-apis---v2)              | :full_moon: |                |
 | [Role](https://help.sonatype.com/iqserver/automating/rest-apis/role-rest-api---v2)                                   | :full_moon: |      r70       |
 | [Source Control](https://help.sonatype.com/integrations/nexus-iq-for-github)                                         | :full_moon: |                |
-| [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   | :new_moon:  |                |
+| [Success Metrics Data](https://help.sonatype.com/iqserver/automating/rest-apis/success-metrics-data-rest-api---v2)   | :full_moon: |                |
 | [Users](https://help.sonatype.com/iqserver/automating/rest-apis/user-rest-api---v2)                                  | :full_moon: |      r70       |
 | [Webhooks](https://help.sonatype.com/iqserver/automating/iq-server-webhooks)                                         | :full_moon: |                |
 
