@@ -87,9 +87,9 @@ if err != nil {
 
 _Legend_: :full_moon: complete :new_moon: untouched :waning_crescent_moon::last_quarter_moon::waning_gibbous_moon: partial support
 
-##### webhooks [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks) [![nexusiq webhooks coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq/webhooks/?0 "nexusiq webhooks coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq/webhooks)
+##### iqwebhooks [![GoDoc](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/iqwebhooks?status.png)](http://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/iqwebhooks) [![nexusiq webhooks coverage](https://gocover.io/_badge/github.com/sonatype-nexus-community/gonexus/iq/iqwebhooks/?0 "nexusiq webhooks coverage")](http://gocover.io/github.com/sonatype-nexus-community/gonexus/iq/iqwebhooks)
 
-The `iq/webhooks` subpackage provides structs for all of the event types along with helper functions.
+The `iq/iqwebhooks` subpackage provides structs for all of the event types along with helper functions.
 
 Most notably it provides a function called `Listen` which is an `http.HandlerFunc` that can be used as an endpoint handler for a server functioning as a webhook listener.
 The handler will place any webhook event it finds in a channel to be consumed at will.
@@ -98,7 +98,7 @@ An example of using the handler to listen for Application Evaluation events:
 
 ```go
 // import "github.com/sonatype-nexus-community/gonexus/iq/webhooks"
-appEvals, _ := webhooks.ApplicationEvaluationEvents()
+appEvals, _ := iqwebhooks.ApplicationEvaluationEvents()
 
 go func() {
     for _ = range appEvals:
@@ -106,7 +106,7 @@ go func() {
     }
 }()
 
-http.HandleFunc("/ingest", webhooks.Listen)
+http.HandleFunc("/ingest", iqwebhooks.Listen)
 ```
 
 See the [documentation](https://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks#example-Listen) for a full example showing other event types.

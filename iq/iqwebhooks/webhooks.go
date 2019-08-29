@@ -1,4 +1,4 @@
-package webhooks
+package iqwebhooks
 
 import (
 	"net/http"

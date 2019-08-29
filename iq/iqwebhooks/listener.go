@@ -1,10 +1,11 @@
-package webhooks
+package iqwebhooks
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -23,6 +24,7 @@ func parseRequest(r *http.Request) (whtype WebhookEventType, err error) {
 	switch whtype {
 	case WebhookEventApplicationEvaluation:
 		var event WebhookApplicationEvaluation
+		log.Println("app eval", string(body))
 		if err = json.Unmarshal(body, &event); err == nil {
 			sendApplicationEvaluationEvent(event)
 		}
