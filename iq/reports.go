@@ -20,7 +20,7 @@ const (
 	StageProxy                = "proxy"
 	StageDevelop              = "develop"
 	StageBuild                = "build"
-	StageStageRelase          = "stage-release"
+	StageStageRelease         = "stage-release"
 	StageRelease              = "release"
 	StageOperate              = "operate"
 	StageContinuousMonitoring = "continuous-monitoring"
