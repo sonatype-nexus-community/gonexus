@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"time"
 )
 
 const (
-	restReports    = "api/v2/reports/applications"
-	restReportsRaw = "api/v2/applications/%s/reports/%s/raw"
+	restReports       = "api/v2/reports/applications"
+	restReportsRaw    = "api/v2/applications/%s/reports/%s/raw"
+	restReportsPolicy = "api/v2/applications/%s/reports/%s/policy"
 )
 
 // Stage type describes a pipeline stage
@@ -30,16 +32,29 @@ const (
 type ReportInfo struct {
 	ApplicationID           string `json:"applicationId"`
 	EmbeddableReportHTMLURL string `json:"embeddableReportHtmlUrl"`
-	EvaluationDate          string `json:"evaluationDate"`
+	EvaluationDateStr       string `json:"evaluationDate"`
 	ReportDataURL           string `json:"reportDataUrl"`
 	ReportHTMLURL           string `json:"reportHtmlUrl"`
 	ReportPdfURL            string `json:"reportPdfUrl"`
 	Stage                   string `json:"stage"`
+	evaluationDate          time.Time
 }
 
 // ReportID compares two ReportInfo objects
-func (a *ReportInfo) ReportID() string {
-	return path.Base(a.ReportHTMLURL)
+func (r *ReportInfo) ReportID() string {
+	return path.Base(r.ReportHTMLURL)
+}
+
+// EvaluationDate returns a time object of the report's EvaluationDate
+func (r *ReportInfo) EvaluationDate() time.Time {
+	if r.evaluationDate.IsZero() {
+		t, err := time.Parse(time.RFC3339, r.EvaluationDateStr)
+		if err != nil {
+			r.evaluationDate = time.Now()
+		}
+		r.evaluationDate = t
+	}
+	return r.evaluationDate
 }
 
 type rawReportComponent struct {
@@ -186,6 +201,19 @@ func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 	return ReportRaw{}, fmt.Errorf("could not find raw report for stage %s", stage)
 }
 
+func getPolicyReportByURL(iq IQ, URL string) (ReportPolicy, error) {
+	body, _, err := iq.Get(URL)
+	if err != nil {
+		return ReportPolicy{}, fmt.Errorf("could not get policy report: %v", err)
+	}
+
+	var report ReportPolicy
+	if err = json.Unmarshal(body, &report); err != nil {
+		return report, fmt.Errorf("could not unmarshal policy report: %v", err)
+	}
+	return report, nil
+}
+
 // GetPolicyReportByAppID returns report information by application public ID
 func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
 	infos, err := GetReportInfosByAppID(iq, appID)
@@ -195,16 +223,19 @@ func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
 
 	for _, info := range infos {
 		if info.Stage == stage {
-			body, _, err := iq.Get(strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
-			if err != nil {
-				return ReportPolicy{}, fmt.Errorf("could not get policy report: %v", err)
-			}
+			return getPolicyReportByURL(iq, strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+			/*
+				body, _, err := iq.Get(strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+				if err != nil {
+					return ReportPolicy{}, fmt.Errorf("could not get policy report: %v", err)
+				}
 
-			var report ReportPolicy
-			if err = json.Unmarshal(body, &report); err != nil {
-				return report, fmt.Errorf("could not unmarshal policy report: %v", err)
-			}
-			return report, nil
+				var report ReportPolicy
+				if err = json.Unmarshal(body, &report); err != nil {
+					return report, fmt.Errorf("could not unmarshal policy report: %v", err)
+				}
+				return report, nil
+			*/
 		}
 	}
 
@@ -224,4 +255,62 @@ func GetReportByAppID(iq IQ, appID, stage string) (report Report, err error) {
 	}
 
 	return
+}
+
+func getReportByID(iq IQ, appID, reportID string) (report Report, err error) {
+	report.Policy, err = getPolicyReportByURL(iq, fmt.Sprintf(restReportsPolicy, appID, reportID))
+	if err != nil {
+		return report, fmt.Errorf("could not retrieve policy report: %v", err)
+	}
+
+	report.Raw, err = getRawReportByURL(iq, fmt.Sprintf(restReportsRaw, appID, reportID))
+	if err != nil {
+		return report, fmt.Errorf("could not retrieve raw report: %v", err)
+	}
+
+	return
+}
+
+// ReportDiff encapsulates the differences between reports
+type ReportDiff struct {
+	Reports []Report
+	/*
+		Waived
+		Fixed
+		Num components
+	*/
+}
+
+// ReportsDiff returns a structure describing various differences between two reports
+func ReportsDiff(iq IQ, appID, report1ID, report2ID string) (ReportDiff, error) {
+	var (
+		report1, report2 Report
+		err              error
+	)
+
+	report1, err = getReportByID(iq, appID, report1ID)
+	if err == nil {
+		report2, err = getReportByID(iq, appID, report2ID)
+	}
+	if err != nil {
+		return ReportDiff{}, fmt.Errorf("could not retrieve raw reports: %v", err)
+	}
+
+	diff := func(iq IQ, report1, report2 Report) (ReportDiff, error) {
+		var d ReportDiff
+		d.Reports = make([]Report, 2)
+		d.Reports[0] = report1
+		d.Reports[1] = report2
+
+		// TODO
+
+		return d, nil
+	}
+
+	// determine report ordering
+	if report2.Raw.ReportInfo.EvaluationDate().After(report1.Raw.ReportInfo.EvaluationDate()) {
+		return diff(iq, report1, report2)
+	}
+
+	return diff(iq, report2, report1)
 }
