@@ -16,7 +16,7 @@ var dummyReportInfos = []ReportInfo{
 	{
 		ApplicationID:           dummyApps[0].ID,
 		EmbeddableReportHTMLURL: "WhoEmbedsThis?",
-		EvaluationDate:          "evalDate",
+		EvaluationDateStr:       "evalDate",
 		ReportDataURL:           fmt.Sprintf(reportDataURLFormat, dummyApps[0].PublicID, "0"),
 		ReportHTMLURL:           "htmlURL",
 		ReportPdfURL:            "pdfURL",
@@ -25,7 +25,7 @@ var dummyReportInfos = []ReportInfo{
 	{
 		ApplicationID:           dummyApps[1].ID,
 		EmbeddableReportHTMLURL: "WhoEmbedsThis?",
-		EvaluationDate:          "evalDate",
+		EvaluationDateStr:       "evalDate",
 		ReportDataURL:           fmt.Sprintf(reportDataURLFormat, dummyApps[0].PublicID, "1"),
 		ReportHTMLURL:           "htmlURL",
 		ReportPdfURL:            "pdfURL",
@@ -59,7 +59,7 @@ var dummyRawReports = map[string]ReportRaw{
 var dummyPolicyReports = map[string]ReportPolicy{
 	strings.Replace(dummyReportInfos[0].ReportDataURL, "/raw", "/policy", 1): ReportPolicy{
 		Application: dummyApps[0],
-		Components: []policyReportComponent{
+		Components: []PolicyReportComponent{
 			{
 				Component: Component{
 					Hash: "045c37a03be19f3e0db8",

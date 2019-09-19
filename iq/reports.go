@@ -64,7 +64,6 @@ type rawReportComponent struct {
 		SecurityIssues []SecurityIssue `json:"securityIssues"`
 	} `json:"securityData"`
 }
-
 type rawReportMatchSummary struct {
 	KnownComponentCount int64 `json:"knownComponentCount"`
 	TotalComponentCount int64 `json:"totalComponentCount"`
@@ -77,24 +76,27 @@ type ReportRaw struct {
 	ReportInfo   ReportInfo            `json:"reportInfo,omitempty"`
 }
 
-type policyReportComponent struct {
+type policyReportViolation struct {
+	Constraints []struct {
+		Conditions []struct {
+			ConditionReason  string `json:"conditionReason"`
+			ConditionSummary string `json:"conditionSummary"`
+		} `json:"conditions"`
+		ConstraintID   string `json:"constraintId"`
+		ConstraintName string `json:"constraintName"`
+	} `json:"constraints"`
+	Grandfathered        bool   `json:"grandfathered"`
+	PolicyID             string `json:"policyId"`
+	PolicyName           string `json:"policyName"`
+	PolicyThreatCategory string `json:"policyThreatCategory"`
+	PolicyThreatLevel    int64  `json:"policyThreatLevel"`
+	Waived               bool   `json:"waived"`
+}
+
+// PolicyReportComponent encapsulates a component which violates a policy
+type PolicyReportComponent struct {
 	Component
-	Violations []struct {
-		Constraints []struct {
-			Conditions []struct {
-				ConditionReason  string `json:"conditionReason"`
-				ConditionSummary string `json:"conditionSummary"`
-			} `json:"conditions"`
-			ConstraintID   string `json:"constraintId"`
-			ConstraintName string `json:"constraintName"`
-		} `json:"constraints"`
-		Grandfathered        bool   `json:"grandfathered"`
-		PolicyID             string `json:"policyId"`
-		PolicyName           string `json:"policyName"`
-		PolicyThreatCategory string `json:"policyThreatCategory"`
-		PolicyThreatLevel    int64  `json:"policyThreatLevel"`
-		Waived               bool   `json:"waived"`
-	} `json:"violations"`
+	Violations []policyReportViolation `json:"violations"`
 }
 
 type policyReportCounts struct {
@@ -107,7 +109,7 @@ type policyReportCounts struct {
 // ReportPolicy descrpibes the policies violated by the components in an application report
 type ReportPolicy struct {
 	Application Application             `json:"application"`
-	Components  []policyReportComponent `json:"components"`
+	Components  []PolicyReportComponent `json:"components"`
 	Counts      policyReportCounts      `json:"counts"`
 	ReportTime  int64                   `json:"reportTime"`
 	ReportTitle string                  `json:"reportTitle"`
@@ -116,8 +118,8 @@ type ReportPolicy struct {
 
 // Report encapsulates the policy and raw report of an application
 type Report struct {
-	Policy ReportPolicy
-	Raw    ReportRaw
+	Policy ReportPolicy `json:"policyReport"`
+	Raw    ReportRaw    `json:"rawReport"`
 }
 
 // GetAllReportInfos returns all report infos
@@ -273,12 +275,9 @@ func getReportByID(iq IQ, appID, reportID string) (report Report, err error) {
 
 // ReportDiff encapsulates the differences between reports
 type ReportDiff struct {
-	Reports []Report
-	/*
-		Waived
-		Fixed
-		Num components
-	*/
+	Reports []Report                `json:"reports"`
+	Waived  []PolicyReportComponent `json:"waived,omitempty"`
+	Fixed   []PolicyReportComponent `json:"fixed,omitempty"`
 }
 
 // ReportsDiff returns a structure describing various differences between two reports
@@ -303,6 +302,35 @@ func ReportsDiff(iq IQ, appID, report1ID, report2ID string) (ReportDiff, error) 
 		d.Reports[1] = report2
 
 		// TODO
+		report2Components := make(map[string]PolicyReportComponent)
+		for _, c := range report2.Policy.Components {
+			report2Components[c.Hash] = c
+		}
+
+		for _, comp1 := range report1.Policy.Components {
+			comp2, ok := report2Components[comp1.Hash]
+			// If the component is no longer listed in report2, then it has been fixed
+			if !ok {
+				d.Fixed = append(d.Fixed, comp1)
+				continue
+			}
+			for _, pol1 := range comp1.Violations {
+				var found bool
+				for _, pol2 := range comp2.Violations {
+					if pol1.PolicyID != pol2.PolicyID {
+						continue
+					}
+					// Marking as waived
+					if pol2.Waived {
+						d.Waived = append(d.Waived, comp2)
+					}
+				}
+				if !found {
+					// If the component in report1 has a policy that is not in report2, then it was fixed
+					d.Fixed = append(d.Fixed, comp1)
+				}
+			}
+		}
 
 		return d, nil
 	}
