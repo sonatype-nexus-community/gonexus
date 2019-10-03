@@ -146,6 +146,8 @@ func reportsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 func reportsTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
 	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
 		switch {
+		case r.URL.Path[1:] == restOrganization:
+			organizationTestFunc(t, w, r)
 		case r.URL.Path[1:] == restApplication:
 			applicationTestFunc(t, w, r)
 		default:
@@ -264,5 +266,40 @@ func TestGetReportByAppID(t *testing.T) {
 	dummyPolicy := dummyPolicyReports[strings.Replace(dummyReportInfos[testIdx].ReportDataURL, "/raw", "/policy", 1)]
 	if !reflect.DeepEqual(report.Policy, dummyPolicy) {
 		t.Error("Did not get expected policy report")
+	}
+}
+
+func TestGetReportInfosByOrganization(t *testing.T) {
+	iq, mock := reportsTestIQ(t)
+	defer mock.Close()
+
+	type args struct {
+		iq               IQ
+		organizationName string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantInfos []ReportInfo
+		wantErr   bool
+	}{
+		{
+			"test1",
+			args{iq, dummyOrgs[0].Name},
+			[]ReportInfo{dummyReportInfos[0]},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotInfos, err := GetReportInfosByOrganization(tt.args.iq, tt.args.organizationName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetReportInfosByOrganization() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotInfos, tt.wantInfos) {
+				t.Errorf("GetReportInfosByOrganization() = %v, want %v", gotInfos, tt.wantInfos)
+			}
+		})
 	}
 }

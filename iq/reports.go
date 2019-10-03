@@ -256,7 +256,7 @@ func GetReportByAppID(iq IQ, appID, stage string) (report Report, err error) {
 		return report, fmt.Errorf("could not retrieve raw report: %v", err)
 	}
 
-	return
+	return report, nil
 }
 
 func getReportByID(iq IQ, appID, reportID string) (report Report, err error) {
@@ -270,7 +270,24 @@ func getReportByID(iq IQ, appID, reportID string) (report Report, err error) {
 		return report, fmt.Errorf("could not retrieve raw report: %v", err)
 	}
 
-	return
+	return report, nil
+}
+
+// GetReportInfosByOrganization returns report information by organization name
+func GetReportInfosByOrganization(iq IQ, organizationName string) (infos []ReportInfo, err error) {
+	apps, err := GetApplicationsByOrganization(iq, organizationName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications for organization '%s': %v", organizationName, err)
+	}
+
+	infos = make([]ReportInfo, 0)
+	for _, app := range apps {
+		if appInfos, err := GetReportInfosByAppID(iq, app.PublicID); err == nil {
+			infos = append(infos, appInfos...)
+		}
+	}
+
+	return infos, nil
 }
 
 // ReportDiff encapsulates the differences between reports
