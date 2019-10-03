@@ -12,10 +12,10 @@ import (
 )
 
 var dummyApps = []Application{
-	{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "app1OrgId"},
-	{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "app2OrgId"},
-	{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "app3OrgId"},
-	{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "app4OrgId"},
+	{ID: "app1InternalId", PublicID: "app1PubId", Name: "app1Name", OrganizationID: "org1InternalId"},
+	{ID: "app2InternalId", PublicID: "app2PubId", Name: "app2Name", OrganizationID: "org2InternalId"},
+	{ID: "app3InternalId", PublicID: "app3PubId", Name: "app3Name", OrganizationID: "org3InternalId"},
+	{ID: "app4InternalId", PublicID: "app4PubId", Name: "app4Name", OrganizationID: "org4InternalId"},
 }
 
 func getAppByPublicID(pubID string) (app Application, i int, ok bool) {
@@ -95,7 +95,14 @@ func applicationTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request) {
 }
 
 func applicationTestIQ(t *testing.T) (iq IQ, mock *httptest.Server) {
-	return newTestIQ(t, applicationTestFunc)
+	return newTestIQ(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path[1:] == restOrganization:
+			organizationTestFunc(t, w, r)
+		default:
+			applicationTestFunc(t, w, r)
+		}
+	})
 }
 
 func TestGetAllApplications(t *testing.T) {
@@ -183,6 +190,42 @@ func TestDeleteApplication(t *testing.T) {
 
 	if _, err := GetApplicationByPublicID(iq, deleteMeApp.PublicID); err == nil {
 		t.Fatal("App was not deleted")
+	}
+}
+
+func TestGetApplicationsByOrganization(t *testing.T) {
+	iq, mock := applicationTestIQ(t)
+	defer mock.Close()
+
+	type args struct {
+		iq               IQ
+		organizationName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []Application
+		wantErr bool
+	}{
+		{
+			"good org",
+			args{iq, dummyOrgs[0].Name},
+			[]Application{dummyApps[0]},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetApplicationsByOrganization(tt.args.iq, tt.args.organizationName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetApplicationsByOrganization() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetApplicationsByOrganization() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 

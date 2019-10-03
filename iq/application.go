@@ -112,3 +112,25 @@ func GetAllApplications(iq IQ) ([]Application, error) {
 
 	return resp.Applications, nil
 }
+
+// GetApplicationsByOrganization returns all applications under a given organization
+func GetApplicationsByOrganization(iq IQ, organizationName string) ([]Application, error) {
+	org, err := GetOrganizationByName(iq, organizationName)
+	if err != nil {
+		return nil, fmt.Errorf("organization not found: %v", err)
+	}
+
+	apps, err := GetAllApplications(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications list: %v", err)
+	}
+
+	orgApps := make([]Application, 0)
+	for _, app := range apps {
+		if app.OrganizationID == org.ID {
+			orgApps = append(orgApps, app)
+		}
+	}
+
+	return orgApps, nil
+}
