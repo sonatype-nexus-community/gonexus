@@ -50,13 +50,23 @@ func (b *SearchQueryBuilder) addCriteriaEncoded(c, v string) *SearchQueryBuilder
 
 // Build will build the assembled search query
 func (b *SearchQueryBuilder) Build() string {
-	var buf bytes.Buffer
+	var (
+		buf      bytes.Buffer
+		hasStage bool
+	)
 
 	for k, v := range b.criteria {
+		if k == "stageId" {
+			hasStage = true
+		}
 		buf.WriteString("&")
 		buf.WriteString(k)
 		buf.WriteString("=")
 		buf.WriteString(v)
+	}
+
+	if !hasStage {
+		buf.WriteString("&stageId=build")
 	}
 
 	return buf.String()
