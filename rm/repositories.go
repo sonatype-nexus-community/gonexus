@@ -36,7 +36,8 @@ type repositoryFormat int
 
 // Enumerates the formats which can be created as Repository Manager repositories
 const (
-	Maven repositoryFormat = iota
+	Unknown repositoryFormat = iota
+	Maven
 	Npm
 	Nuget
 	Apt

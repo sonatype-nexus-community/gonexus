@@ -6,8 +6,10 @@ import (
 	"net/http"
 )
 
-const restAssets = "service/rest/v1/assets"
-const restListAssetsByRepo = "service/rest/v1/assets?repository=%s"
+const (
+	restAssets           = "service/rest/v1/assets"
+	restListAssetsByRepo = "service/rest/v1/assets?repository=%s"
+)
 
 type repositoryItemAssetsChecksum struct {
 	Sha1 string `json:"sha1"`

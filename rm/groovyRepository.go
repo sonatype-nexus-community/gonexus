@@ -6,18 +6,20 @@ import (
 	"text/template"
 )
 
-const groovyCreateHostedMaven = "repository.createMavenHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedNpm = "repository.createNpmHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedNuget = "repository.createNugetHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedApt = "repository.createAptHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedDocker = "repository.createDockerHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedGolang = "repository.createGolangHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedRaw = "repository.createRawHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedRubygems = "repository.createRubygemsHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedBower = "repository.createBowerHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedPypi = "repository.createPypiHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedYum = "repository.createYumHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateHostedGitLfs = "repository.createGitLfsHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+const (
+	groovyCreateHostedMaven    = "repository.createMavenHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedNpm      = "repository.createNpmHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedNuget    = "repository.createNugetHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedApt      = "repository.createAptHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedDocker   = "repository.createDockerHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedGolang   = "repository.createGolangHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedRaw      = "repository.createRawHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedRubygems = "repository.createRubygemsHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedBower    = "repository.createBowerHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedPypi     = "repository.createPypiHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedYum      = "repository.createYumHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateHostedGitLfs   = "repository.createGitLfsHosted('{{.Name}}'{{with .BlobStore}}, '{{.}}'{{end}})"
+)
 
 type repositoryHosted struct {
 	Name, BlobStore             string
@@ -27,18 +29,20 @@ type repositoryHosted struct {
 	// layoutPolicy LayoutPolicy
 }
 
-const groovyCreateProxyMaven = "repository.createMavenProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyNpm = "repository.createNpmProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyNuget = "repository.createNugetProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyApt = "repository.createAptProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyDocker = "repository.createDockerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyGolang = "repository.createGolangProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyRaw = "repository.createRawProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyRubygems = "repository.createRubygemsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyBower = "repository.createBowerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyPypi = "repository.createPypiProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyYum = "repository.createYumProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateProxyGitLfs = "repository.createGitLfsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const (
+	groovyCreateProxyMaven    = "repository.createMavenProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyNpm      = "repository.createNpmProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyNuget    = "repository.createNugetProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyApt      = "repository.createAptProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyDocker   = "repository.createDockerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyGolang   = "repository.createGolangProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyRaw      = "repository.createRawProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyRubygems = "repository.createRubygemsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyBower    = "repository.createBowerProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyPypi     = "repository.createPypiProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyYum      = "repository.createYumProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateProxyGitLfs   = "repository.createGitLfsProxy('{{.Name}}'{{with .RemoteURL}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+)
 
 type repositoryProxy struct {
 	Name, RemoteURL, BlobStore  string
@@ -47,18 +51,20 @@ type repositoryProxy struct {
 	// layoutPolicy LayoutPolicy
 }
 
-const groovyCreateGroupMaven = "repository.createMavenGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupNpm = "repository.createNpmGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupNuget = "repository.createNugetGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupApt = "repository.createAptGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupDocker = "repository.createDockerGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupGolang = "repository.createGolangGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupRaw = "repository.createRawGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupRubygems = "repository.createRubygemsGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupBower = "repository.createBowerGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupPypi = "repository.createPypiGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupYum = "repository.createYumGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
-const groovyCreateGroupGitLfs = "repository.createGitLfsGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+const (
+	groovyCreateGroupMaven    = "repository.createMavenGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupNpm      = "repository.createNpmGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupNuget    = "repository.createNugetGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupApt      = "repository.createAptGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupDocker   = "repository.createDockerGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupGolang   = "repository.createGolangGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupRaw      = "repository.createRawGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupRubygems = "repository.createRubygemsGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupBower    = "repository.createBowerGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupPypi     = "repository.createPypiGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupYum      = "repository.createYumGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+	groovyCreateGroupGitLfs   = "repository.createGitLfsGroup('{{.Name}}'{{with .Members}}, '{{.}}'{{end}}{{with .BlobStore}}, '{{.}}'{{end}})"
+)
 
 type repositoryGroup struct {
 	Name, BlobStore string
