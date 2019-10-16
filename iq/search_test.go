@@ -77,3 +77,21 @@ func TestSearchComponent(t *testing.T) {
 	}
 	// TODO: better comparison
 }
+
+func ExampleSearchComponents() {
+	iq, err := New("http://localhost:8070", "admin", "admin123")
+	if err != nil {
+		panic(err)
+	}
+
+	query := NewSearchQueryBuilder()
+	query = query.Stage(StageBuild)
+	query = query.PackageURL("pkg:maven/commons-collections/commons-collections@3.2")
+
+	components, err := SearchComponents(iq, query)
+	if err != nil {
+		panic(fmt.Sprintf("Did not complete search: %v", err))
+	}
+
+	fmt.Printf("%q\n", components)
+}
