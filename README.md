@@ -1,4 +1,4 @@
-# gonexus [![DepShield Badge](https://depshield.sonatype.org/badges/sonatype-nexus-community/gonexus/depshield.svg)](https://depshield.github.io)
+# gonexus [![DepShield Badge](https://depshield.sonatype.org/badges/sonatype-nexus-community/gonexus/depshield.svg)](https://depshield.github.io) [![CircleCI](https://circleci.com/gh/sonatype-nexus-community/gonexus.svg?style=svg)](https://circleci.com/gh/sonatype-nexus-community/gonexus)
 
 Provides a go client library for connecting to, and interacting with, [Sonatype](//www.sonatype.com) Nexus applications such as Nexus Repository Manager and Nexus IQ Server.
 
