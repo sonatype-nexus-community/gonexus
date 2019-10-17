@@ -290,6 +290,27 @@ func GetReportInfosByOrganization(iq IQ, organizationName string) (infos []Repor
 	return infos, nil
 }
 
+// GetReportsByOrganization returns all reports for an given organization
+func GetReportsByOrganization(iq IQ, organizationName string) (reports []Report, err error) {
+	apps, err := GetApplicationsByOrganization(iq, organizationName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get applications for organization '%s': %v", organizationName, err)
+	}
+
+	stages := []Stage{StageBuild, StageStageRelease, StageRelease, StageOperate}
+
+	reports = make([]Report, 0)
+	for _, app := range apps {
+		for _, s := range stages {
+			if appReport, err := GetReportByAppID(iq, app.PublicID, string(s)); err == nil {
+				reports = append(reports, appReport)
+			}
+		}
+	}
+
+	return reports, nil
+}
+
 // ReportDiff encapsulates the differences between reports
 type ReportDiff struct {
 	Reports []Report                `json:"reports"`
