@@ -29,7 +29,16 @@ type ComponentDetail struct {
 }
 
 // GetComponent returns information on a named component
-func GetComponent(iq IQ, components []Component) ([]ComponentDetail, error) {
+func GetComponent(iq IQ, component Component) (ComponentDetail, error) {
+	deets, err := GetComponents(iq, []Component{component})
+	if deets == nil {
+		return ComponentDetail{}, err
+	}
+	return deets[0], err
+}
+
+// GetComponents returns information on the named components
+func GetComponents(iq IQ, components []Component) ([]ComponentDetail, error) {
 	req, err := json.Marshal(detailsRequest{components})
 	if err != nil {
 		return nil, fmt.Errorf("could not generate request: %v", err)
@@ -46,4 +55,51 @@ func GetComponent(iq IQ, components []Component) ([]ComponentDetail, error) {
 	}
 
 	return resp.ComponentDetails, nil
+}
+
+// GetComponentsByApplication returns an array with all components along with their
+func GetComponentsByApplication(iq IQ, appPublicID string) ([]ComponentDetail, error) {
+	componentHashes := make(map[string]struct{})
+	components := make([]Component, 0)
+	stages := []Stage{StageBuild, StageStageRelease, StageRelease, StageOperate}
+	for _, stage := range stages {
+		if report, err := GetRawReportByAppID(iq, appPublicID, string(stage)); err == nil {
+			for _, c := range report.Components {
+				if _, ok := componentHashes[c.Hash]; !ok {
+					componentHashes[c.Hash] = struct{}{}
+					components = append(components, c.Component)
+				}
+			}
+		}
+	}
+
+	return GetComponents(iq, components)
+}
+
+// GetAllComponents returns an array with all components along with their
+func GetAllComponents(iq IQ) ([]ComponentDetail, error) {
+	apps, err := GetAllApplications(iq)
+	if err != nil {
+		return nil, err
+	}
+
+	componentHashes := make(map[string]struct{})
+	components := make([]ComponentDetail, 0)
+
+	for _, app := range apps {
+		appComponents, err := GetComponentsByApplication(iq, app.PublicID)
+		// TODO: catcher
+		if err != nil {
+			return nil, err
+		}
+
+		for _, c := range appComponents {
+			if _, ok := componentHashes[c.Component.Hash]; !ok {
+				componentHashes[c.Component.Hash] = struct{}{}
+				components = append(components, c)
+			}
+		}
+	}
+
+	return components, nil
 }
