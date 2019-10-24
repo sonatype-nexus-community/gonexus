@@ -32,6 +32,17 @@ type Remediation struct {
 	VersionChanges []remediationVersionChange `json:"versionChanges"`
 }
 
+// ComponentForRemediationType returns the component which satisfies the given remediation strategy
+func (r Remediation) ComponentForRemediationType(remType string) (Component, error) {
+	for _, v := range r.VersionChanges {
+		if v.Type == remType {
+			return v.Data.Component, nil
+		}
+	}
+
+	return Component{}, fmt.Errorf("did not find a component satisfying remediation type: %s", remType)
+}
+
 type remediationResponse struct {
 	Remediation Remediation `json:"remediation"`
 }
