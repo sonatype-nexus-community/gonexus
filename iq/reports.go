@@ -135,6 +135,29 @@ func GetAllReportInfos(iq IQ) ([]ReportInfo, error) {
 	return infos, err
 }
 
+// GetAllReports returns all policy and raw reports
+func GetAllReports(iq IQ) ([]Report, error) {
+	infos, err := GetAllReportInfos(iq)
+	if err != nil {
+		return nil, fmt.Errorf("could not get report infos: %v", err)
+	}
+
+	reports := make([]Report, 0)
+
+	for _, info := range infos {
+		raw, _ := getRawReportByURL(iq, info.ReportDataURL)
+		policy, _ := getPolicyReportByURL(iq, strings.Replace(info.ReportDataURL, "/raw", "/policy", 1))
+
+		reports = append(reports,
+			Report{
+				Raw:    raw,
+				Policy: policy,
+			})
+	}
+
+	return reports, err
+}
+
 // GetReportInfosByAppID returns report information by application public ID
 func GetReportInfosByAppID(iq IQ, appID string) (infos []ReportInfo, err error) {
 	app, err := GetApplicationByPublicID(iq, appID)
