@@ -85,7 +85,7 @@ func reportMetricsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request)
 		metrics := make([]Metrics, 0)
 		for _, m := range dummyMetrics {
 			var found bool
-			if reqFirst.Before(m.firstTimePeriod) {
+			if m.firstTimePeriod.Before(reqFirst) {
 				continue
 			}
 
