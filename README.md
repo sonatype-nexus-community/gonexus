@@ -121,7 +121,7 @@ go func() {
 http.HandleFunc("/ingest", iqwebhooks.Listen)
 ```
 
-See the [documentation](https://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/webhooks#example-Listen) for a full example showing other event types.
+See the [documentation](https://godoc.org/github.com/sonatype-nexus-community/gonexus/iq/iqwebhooks#example-Listen) for a full example showing other event types.
 
 ## The Fine Print
 
