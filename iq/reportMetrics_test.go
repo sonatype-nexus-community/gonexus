@@ -17,8 +17,10 @@ var dummyMetrics = []struct {
 	metrics                         []Metrics
 }{
 	{
-		time.Now().Add(-(30 * (24 * time.Hour))), time.Now(),
-		map[string]struct{}{dummyApps[0].ID: struct{}{}}, nil,
+		time.Now().Add(-(14 * (24 * time.Hour))),
+		time.Now(),
+		map[string]struct{}{dummyApps[0].ID: struct{}{}},
+		nil,
 		[]Metrics{
 			{
 				ApplicationID:       dummyApps[0].ID,
@@ -85,11 +87,13 @@ func reportMetricsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Request)
 		metrics := make([]Metrics, 0)
 		for _, m := range dummyMetrics {
 			var found bool
+			t.Log("shit1", reqFirst, m.firstTimePeriod)
 			if m.firstTimePeriod.Before(reqFirst) {
 				continue
 			}
 
 			if reqLast.After(m.lastTimePeriod) {
+				t.Log("shit2", reqLast, m.lastTimePeriod)
 				continue
 			}
 
@@ -216,7 +220,11 @@ func TestGenerateMetrics(t *testing.T) {
 		want  []Metrics
 	}{
 		{
-			input: NewMetricsRequestBuilder().Monthly().StartingOn(time.Now().Add(-(14 * (24 * time.Hour)))).WithApplication(dummyApps[0].PublicID),
+			input: NewMetricsRequestBuilder().Monthly().StartingOn(time.Now().Add((120 * (24 * time.Hour)))).WithApplication(dummyApps[0].PublicID),
+			want:  []Metrics{},
+		},
+		{
+			input: NewMetricsRequestBuilder().Monthly().StartingOn(time.Now().Add(-(30 * (24 * time.Hour)))).WithApplication(dummyApps[0].PublicID),
 			want:  dummyMetrics[0].metrics,
 		},
 	}
