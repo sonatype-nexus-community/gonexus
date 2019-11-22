@@ -152,23 +152,60 @@ func TestCreateApplication(t *testing.T) {
 	iq, mock := applicationTestIQ(t)
 	defer mock.Close()
 
-	createdApp := Application{PublicID: "createdApp", Name: "createdApp", OrganizationID: "createdAppOrgId"}
-
-	var err error
-	createdApp.ID, err = CreateApplication(iq, createdApp.Name, createdApp.OrganizationID)
-	if err != nil {
-		t.Fatal(err)
+	type args struct {
+		iq             IQ
+		name           string
+		id             string
+		organizationID string
 	}
-
-	got, err := GetApplicationByPublicID(iq, createdApp.PublicID)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			"best case",
+			args{iq: iq, name: "createdApp", id: "createdApp", organizationID: "createdAppOrgId"},
+			"createdAppInternalId",
+			false,
+		},
+		{
+			"missing name",
+			args{iq: iq, id: "createdApp", organizationID: "createdAppOrgId"},
+			"",
+			true,
+		},
+		{
+			"missing id",
+			args{iq: iq, name: "createdApp", organizationID: "createdAppOrgId"},
+			"",
+			true,
+		},
+		{
+			"missing org",
+			args{iq: iq, name: "createdApp", id: "createdApp"},
+			"",
+			true,
+		},
+		{
+			"missing options",
+			args{iq: iq},
+			"",
+			true,
+		},
 	}
-
-	if !reflect.DeepEqual(*got, createdApp) {
-		t.Error("Did not retrieve the expected app")
-		t.Error("got", got)
-		t.Error("want", createdApp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := CreateApplication(tt.args.iq, tt.args.name, tt.args.id, tt.args.organizationID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateApplication() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("CreateApplication() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -179,7 +216,7 @@ func TestDeleteApplication(t *testing.T) {
 	deleteMeApp := Application{PublicID: "deleteMeApp", Name: "deleteMeApp", OrganizationID: "deleteMeAppOrgId"}
 
 	var err error
-	deleteMeApp.ID, err = CreateApplication(iq, deleteMeApp.Name, deleteMeApp.OrganizationID)
+	deleteMeApp.ID, err = CreateApplication(iq, deleteMeApp.Name, deleteMeApp.PublicID, deleteMeApp.OrganizationID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,4 +278,17 @@ func ExampleGetAllApplications() {
 	}
 
 	fmt.Printf("%v\n", applications)
+}
+
+func ExampleCreateApplication() {
+	iq, err := New("http://localhost:8070", "user", "password")
+	if err != nil {
+		panic(err)
+	}
+
+	appID, err := CreateApplication(iq, "name", "id", "organization")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Application ID: %s\n", appID)
 }

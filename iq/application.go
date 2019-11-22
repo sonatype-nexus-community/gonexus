@@ -67,12 +67,17 @@ func GetApplicationByPublicID(iq IQ, applicationPublicID string) (*Application, 
 	return &resp.Applications[0], nil
 }
 
-// CreateApplication creates an application in IQ with the given name
-func CreateApplication(iq IQ, name, organizationID string) (string, error) {
+// CreateApplication creates an application in IQ with the given name and identifier
+func CreateApplication(iq IQ, name, id, organizationID string) (string, error) {
+	if name == "" || id == "" || organizationID == "" {
+		return "", fmt.Errorf("cannot create application with empty values")
+	}
+
 	doError := func(err error) (string, error) {
 		return "", fmt.Errorf("application '%s' not created: %v", name, err)
 	}
-	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: name, OrganizationID: organizationID})
+
+	request, err := json.Marshal(iqNewAppRequest{Name: name, PublicID: id, OrganizationID: organizationID})
 	if err != nil {
 		return doError(err)
 	}
