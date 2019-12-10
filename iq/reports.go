@@ -205,8 +205,7 @@ func getRawReportByURL(iq IQ, URL string) (ReportRaw, error) {
 	return report, nil
 }
 
-// GetRawReportByAppReportID returns raw report information by application and application public ID
-func GetRawReportByAppReportID(iq IQ, appID, reportID string) (ReportRaw, error) {
+func getRawReportByAppReportID(iq IQ, appID, reportID string) (ReportRaw, error) {
 	return getRawReportByURL(iq, fmt.Sprintf(restReportsRaw, appID, reportID))
 }
 
@@ -249,18 +248,6 @@ func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
 	for _, info := range infos {
 		if info.Stage == stage {
 			return getPolicyReportByURL(iq, strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
-			/*
-				body, _, err := iq.Get(strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
-				if err != nil {
-					return ReportPolicy{}, fmt.Errorf("could not get policy report: %v", err)
-				}
-
-				var report ReportPolicy
-				if err = json.Unmarshal(body, &report); err != nil {
-					return report, fmt.Errorf("could not unmarshal policy report: %v", err)
-				}
-				return report, nil
-			*/
 		}
 	}
 
@@ -282,7 +269,8 @@ func GetReportByAppID(iq IQ, appID, stage string) (report Report, err error) {
 	return report, nil
 }
 
-func getReportByID(iq IQ, appID, reportID string) (report Report, err error) {
+// GetReportByAppReportID returns raw and policy report information for a given report ID
+func GetReportByAppReportID(iq IQ, appID, reportID string) (report Report, err error) {
 	report.Policy, err = getPolicyReportByURL(iq, fmt.Sprintf(restReportsPolicy, appID, reportID))
 	if err != nil {
 		return report, fmt.Errorf("could not retrieve policy report: %v", err)
@@ -348,9 +336,9 @@ func ReportsDiff(iq IQ, appID, report1ID, report2ID string) (ReportDiff, error) 
 		err              error
 	)
 
-	report1, err = getReportByID(iq, appID, report1ID)
+	report1, err = GetReportByAppReportID(iq, appID, report1ID)
 	if err == nil {
-		report2, err = getReportByID(iq, appID, report2ID)
+		report2, err = GetReportByAppReportID(iq, appID, report2ID)
 	}
 	if err != nil {
 		return ReportDiff{}, fmt.Errorf("could not retrieve raw reports: %v", err)

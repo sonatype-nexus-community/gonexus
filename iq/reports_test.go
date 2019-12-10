@@ -196,13 +196,13 @@ func TestGetReportInfosByAppID(t *testing.T) {
 	}
 }
 
-func TestGetRawReportByAppReportID(t *testing.T) {
+func Test_getRawReportByAppReportID(t *testing.T) {
 	iq, mock := reportsTestIQ(t)
 	defer mock.Close()
 
 	testIdx := 0
 
-	report, err := GetRawReportByAppReportID(iq, dummyApps[testIdx].PublicID, fmt.Sprintf("%d", testIdx))
+	report, err := getRawReportByAppReportID(iq, dummyApps[testIdx].PublicID, fmt.Sprintf("%d", testIdx))
 	if err != nil {
 		t.Fatal(err)
 	}

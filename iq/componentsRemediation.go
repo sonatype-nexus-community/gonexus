@@ -108,7 +108,7 @@ func GetRemediationByOrg(iq IQ, component Component, stage, organizationName str
 
 // GetRemediationsByAppReport retrieves the remediation information on each component of a report
 func GetRemediationsByAppReport(iq IQ, applicationID, reportID string) (remediations []Remediation, err error) {
-	report, err := GetRawReportByAppReportID(iq, applicationID, reportID)
+	report, err := getRawReportByAppReportID(iq, applicationID, reportID)
 	if err != nil {
 		return nil, fmt.Errorf("could not get report %s for app %s: %v", reportID, applicationID, err)
 	}
