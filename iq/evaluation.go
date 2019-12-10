@@ -91,6 +91,11 @@ type versionDetailsRubyGem struct {
 	Sha            string      `json:"sha"`
 }
 
+// NewComponentFromPURL creates a new Component object from the given PURL string
+func NewComponentFromPURL(purl string) (*Component, error) {
+	return &Component{PackageURL: purl}, nil
+}
+
 // NewComponentFromString creates a new Component object by parsing
 // a string in the expected format; format:group:name:version:ext
 func NewComponentFromString(str string) (*Component, error) {
@@ -102,13 +107,13 @@ func NewComponentFromString(str string) (*Component, error) {
 	} else {
 		switch split[0] {
 		case "maven":
-			// c.PackageURL = fmt.Sprintf("pkg:maven/%s/%s@%s?type=%s", split[1], split[2], split[3], split[4])
 			c.ComponentID = new(ComponentIdentifier)
-			c.ComponentID.Format = split[0]
-			c.ComponentID.Coordinates.GroupID = split[1]
-			c.ComponentID.Coordinates.ArtifactID = split[2]
-			c.ComponentID.Coordinates.Version = split[3]
-			c.ComponentID.Coordinates.Extension = split[4]
+			// c.ComponentID.Format = split[0]
+			// c.ComponentID.Coordinates.GroupID = split[1]
+			// c.ComponentID.Coordinates.ArtifactID = split[2]
+			// c.ComponentID.Coordinates.Version = split[3]
+			// c.ComponentID.Coordinates.Extension = split[4]
+			c.PackageURL = fmt.Sprintf("pkg:maven/%s/%s@%s?type=%s", split[1], split[2], split[3], split[4])
 		case "gem":
 			c.PackageURL = fmt.Sprintf("pkg:gem/%s@%s?platform=ruby", split[1], split[2])
 		case "npm":
