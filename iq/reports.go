@@ -288,6 +288,17 @@ func GetReportByAppReportID(iq IQ, appID, reportID string) (report Report, err e
 		return report, fmt.Errorf("could not retrieve raw report: %v", err)
 	}
 
+	infos, err := GetReportInfosByAppID(iq, appID)
+	if err != nil {
+		return report, fmt.Errorf("could not retrieve report infos: %v", err)
+	}
+	for _, info := range infos {
+		if info.ReportID() == reportID {
+			report.Policy.ReportInfo = info
+			report.Raw.ReportInfo = info
+		}
+	}
+
 	return report, nil
 }
 
