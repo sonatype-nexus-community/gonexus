@@ -52,6 +52,7 @@ var dummyRawReports = map[string]ReportRaw{
 			},
 		},
 		MatchSummary: rawReportMatchSummary{KnownComponentCount: 11, TotalComponentCount: 111},
+		ReportInfo:   dummyReportInfos[0],
 	},
 	dummyReportInfos[1].ReportDataURL: ReportRaw{},
 }
@@ -83,6 +84,7 @@ var dummyPolicyReports = map[string]ReportPolicy{
 		},
 		ReportTime:  54,
 		ReportTitle: "foobar",
+		ReportInfo:  dummyReportInfos[0],
 	},
 	strings.Replace(dummyReportInfos[1].ReportDataURL, "/raw", "/policy", 1): ReportPolicy{},
 }

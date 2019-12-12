@@ -148,6 +148,9 @@ func GetAllReports(iq IQ) ([]Report, error) {
 		raw, _ := getRawReportByURL(iq, info.ReportDataURL)
 		policy, _ := getPolicyReportByURL(iq, strings.Replace(info.ReportDataURL, "/raw", "/policy", 1))
 
+		raw.ReportInfo = info
+		policy.ReportInfo = info
+
 		reports = append(reports,
 			Report{
 				Raw:    raw,
@@ -218,7 +221,9 @@ func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 
 	for _, info := range infos {
 		if info.Stage == stage {
-			return getRawReportByURL(iq, info.ReportDataURL)
+			report, err := getRawReportByURL(iq, info.ReportDataURL)
+			report.ReportInfo = info
+			return report, err
 		}
 	}
 
@@ -247,7 +252,9 @@ func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
 
 	for _, info := range infos {
 		if info.Stage == stage {
-			return getPolicyReportByURL(iq, strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+			report, err := getPolicyReportByURL(iq, strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+			report.ReportInfo = info
+			return report, err
 		}
 	}
 
