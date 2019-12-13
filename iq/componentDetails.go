@@ -12,8 +12,22 @@ type detailsResponse struct {
 	ComponentDetails []ComponentDetail `json:"componentDetails"`
 }
 
+type componentRequested struct {
+	Hash        string               `json:"hash,omitempty"`
+	ComponentID *ComponentIdentifier `json:"componentIdentifier,omitempty"`
+	PackageURL  string               `json:"packageUrl,omitempty"`
+}
+
+func componentRequestedFromComponent(c Component) componentRequested {
+	return componentRequested{
+		Hash:        c.Hash,
+		ComponentID: c.ComponentID,
+		PackageURL:  c.PackageURL,
+	}
+}
+
 type detailsRequest struct {
-	Components []Component `json:"components"`
+	Components []componentRequested `json:"components"`
 }
 
 // ComponentDetail lists information about a given component
@@ -39,13 +53,20 @@ func GetComponent(iq IQ, component Component) (ComponentDetail, error) {
 
 // GetComponents returns information on the named components
 func GetComponents(iq IQ, components []Component) ([]ComponentDetail, error) {
-	req, err := json.Marshal(detailsRequest{components})
+	reqComponents := detailsRequest{Components: make([]componentRequested, len(components))}
+	for i, c := range components {
+		reqComponents.Components[i] = componentRequestedFromComponent(c)
+	}
+
+	req, err := json.MarshalIndent(reqComponents, "", " ")
+	// req, err := json.MarshalIndent(detailsRequest{components}, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("could not generate request: %v", err)
 	}
 
 	body, _, err := iq.Post(restComponentDetails, bytes.NewBuffer(req))
 	if err != nil {
+		fmt.Printf(string(req))
 		return nil, fmt.Errorf("could not find component details: %v", err)
 	}
 
