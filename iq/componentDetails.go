@@ -45,7 +45,7 @@ type ComponentDetail struct {
 // GetComponent returns information on a named component
 func GetComponent(iq IQ, component Component) (ComponentDetail, error) {
 	deets, err := GetComponents(iq, []Component{component})
-	if deets == nil {
+	if deets == nil || len(deets) == 0 {
 		return ComponentDetail{}, err
 	}
 	return deets[0], err
@@ -59,14 +59,12 @@ func GetComponents(iq IQ, components []Component) ([]ComponentDetail, error) {
 	}
 
 	req, err := json.MarshalIndent(reqComponents, "", " ")
-	// req, err := json.MarshalIndent(detailsRequest{components}, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("could not generate request: %v", err)
 	}
 
 	body, _, err := iq.Post(restComponentDetails, bytes.NewBuffer(req))
 	if err != nil {
-		fmt.Printf(string(req))
 		return nil, fmt.Errorf("could not find component details: %v", err)
 	}
 

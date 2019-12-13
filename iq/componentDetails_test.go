@@ -33,7 +33,7 @@ func componentDetailsTestFunc(t *testing.T, w http.ResponseWriter, r *http.Reque
 		components := make([]ComponentDetail, 0)
 		for _, c := range req.Components {
 			for _, deets := range dummyComponentDetails {
-				if reflect.DeepEqual(deets.Component, c) {
+				if deets.Component.Hash == c.Hash || reflect.DeepEqual(deets.Component.ComponentID, c.ComponentID) {
 					components = append(components, deets)
 				}
 			}
