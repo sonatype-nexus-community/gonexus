@@ -19,10 +19,9 @@ func ComponentLabelApply(iq IQ, comp Component, appID, label string) error {
 	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, url.PathEscape(label), app.ID)
 	_, resp, err := iq.Post(endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("could not apply label: %v", err)
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("could not apply label: %s", resp.Status)
+		if resp == nil || resp.StatusCode != http.StatusNoContent {
+			return fmt.Errorf("could not apply label: %v", err)
+		}
 	}
 
 	return nil
@@ -38,10 +37,9 @@ func ComponentLabelUnapply(iq IQ, comp Component, appID, label string) error {
 	endpoint := fmt.Sprintf(restLabelComponent, comp.Hash, url.PathEscape(label), app.ID)
 	resp, err := iq.Del(endpoint)
 	if err != nil {
-		return fmt.Errorf("could not unapply label: %v", err)
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("could not unapply label: %s", resp.Status)
+		if resp == nil || resp.StatusCode != http.StatusNoContent {
+			return fmt.Errorf("could not unapply label: %v", err)
+		}
 	}
 
 	return nil
