@@ -62,10 +62,10 @@ func (s DefaultClient) Do(request *http.Request) (body []byte, resp *http.Respon
 	if err != nil {
 		return nil, nil, err
 	}
+	defer resp.Body.Close()
 
 	// TODO: Trying to decide if this is a horrible idea or just kinda bad
 	if resp.StatusCode == http.StatusOK {
-		defer resp.Body.Close()
 		body, err = ioutil.ReadAll(resp.Body)
 		return
 	}
