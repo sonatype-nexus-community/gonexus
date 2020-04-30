@@ -3,6 +3,8 @@ package nexusiq
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http/httputil"
 	"path"
 	"strings"
 	"time"
@@ -196,8 +198,11 @@ func GetReportInfoByAppIDStage(iq IQ, appID, stage string) (ReportInfo, error) {
 }
 
 func getRawReportByURL(iq IQ, URL string) (ReportRaw, error) {
-	body, _, err := iq.Get(URL)
+	body, resp, err := iq.Get(URL)
 	if err != nil {
+		log.Printf("error: could not retrieve raw report: %v\n", err)
+		dump, _ := httputil.DumpRequest(resp.Request, true)
+		log.Printf("error: policy raw request: %v\n", dump)
 		return ReportRaw{}, fmt.Errorf("could not get raw report at URL %s: %v", URL, err)
 	}
 
@@ -231,8 +236,11 @@ func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 }
 
 func getPolicyReportByURL(iq IQ, URL string) (ReportPolicy, error) {
-	body, _, err := iq.Get(URL)
+	body, resp, err := iq.Get(URL)
 	if err != nil {
+		log.Printf("error: could not retrieve policy report: %v\n", err)
+		dump, _ := httputil.DumpRequest(resp.Request, true)
+		log.Printf("error: policy report request: %v\n", dump)
 		return ReportPolicy{}, fmt.Errorf("could not get policy report at URL %s: %v", URL, err)
 	}
 
