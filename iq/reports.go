@@ -240,7 +240,7 @@ func getPolicyReportByURL(iq IQ, URL string) (ReportPolicy, error) {
 	if err != nil {
 		log.Printf("error: could not retrieve policy report: %v\n", err)
 		dump, _ := httputil.DumpRequest(resp.Request, true)
-		log.Printf("error: policy report request: %v\n", dump)
+		log.Printf("error: policy report request: %s\n", string(dump))
 		return ReportPolicy{}, fmt.Errorf("could not get policy report at URL %s: %v", URL, err)
 	}
 
