@@ -202,7 +202,7 @@ func getRawReportByURL(iq IQ, URL string) (ReportRaw, error) {
 	if err != nil {
 		log.Printf("error: could not retrieve raw report: %v\n", err)
 		dump, _ := httputil.DumpRequest(resp.Request, true)
-		log.Printf("error: policy raw request: %v\n", dump)
+		log.Printf("error: policy raw request: %s\n", string(dump))
 		return ReportRaw{}, fmt.Errorf("could not get raw report at URL %s: %v", URL, err)
 	}
 
