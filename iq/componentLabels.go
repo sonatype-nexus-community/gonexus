@@ -1,13 +1,27 @@
 package nexusiq
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 )
 
-// api/v2/components/{componentHash}/labels/{labelName}/applications/{applicationId}
-const restLabelComponent = "api/v2/components/%s/labels/%s/applications/%s"
+const (
+	restLabelComponent      = "api/v2/components/%s/labels/%s/applications/%s"
+	restLabelComponentByOrg = "api/v2/labels/organization/%s"
+	restLabelComponentByApp = "api/v2/labels/application/%s"
+)
+
+// IqComponentLabel describes a component label
+type IqComponentLabel struct {
+	ID             string `json:"id,omitempty"`
+	OwnerID        string `json:"ownerId,omitempty"`
+	Label          string `json:"label"`
+	LabelLowercase string `json:"labelLowercase,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Color          string `json:"color"`
+}
 
 // ComponentLabelApply adds an existing label to a component for a given application
 func ComponentLabelApply(iq IQ, comp Component, appID, label string) error {
@@ -43,4 +57,31 @@ func ComponentLabelUnapply(iq IQ, comp Component, appID, label string) error {
 	}
 
 	return nil
+}
+
+func getComponentLabels(iq IQ, endpoint string) ([]IqComponentLabel, error) {
+	body, _, err := iq.Get(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	var labels []IqComponentLabel
+	err = json.Unmarshal(body, &labels)
+	if err != nil {
+		return nil, err
+	}
+
+	return labels, nil
+}
+
+// GetComponentLabelsByOrganization retrieves an array of an organization's component label
+func GetComponentLabelsByOrganization(iq IQ, organization string) ([]IqComponentLabel, error) {
+	endpoint := fmt.Sprintf(restLabelComponentByOrg, organization)
+	return getComponentLabels(iq, endpoint)
+}
+
+// GetComponentLabelsByAppID retrieves an array of an organization's component label
+func GetComponentLabelsByAppID(iq IQ, appID string) ([]IqComponentLabel, error) {
+	endpoint := fmt.Sprintf(restLabelComponentByApp, appID)
+	return getComponentLabels(iq, endpoint)
 }
