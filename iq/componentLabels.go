@@ -100,10 +100,9 @@ func createLabel(iq IQ, endpoint, label, description, color string) (IqComponent
 	if resp.StatusCode != http.StatusOK {
 		return labelResponse, fmt.Errorf("did not succeeed in creating label: %v", err)
 	}
-	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&labelResponse); err != nil {
-		return labelResponse, fmt.Errorf("could not read json: %v", err)
+		return labelResponse, fmt.Errorf("could not read json of new label: %v", err)
 	}
 
 	return labelResponse, nil
