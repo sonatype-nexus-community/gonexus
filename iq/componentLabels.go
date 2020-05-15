@@ -96,12 +96,13 @@ func createLabel(iq IQ, endpoint, label, description, color string) (IqComponent
 		return labelResponse, fmt.Errorf("could not marshal label: %v", err)
 	}
 
-	_, resp, err := iq.Post(endpoint, bytes.NewBuffer(request))
+	body, resp, err := iq.Post(endpoint, bytes.NewBuffer(request))
 	if resp.StatusCode != http.StatusOK {
 		return labelResponse, fmt.Errorf("did not succeeed in creating label: %v", err)
 	}
+	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(&labelResponse); err != nil {
+	if err := json.Unmarshal(body, &labelResponse); err != nil {
 		return labelResponse, fmt.Errorf("could not read json of new label: %v", err)
 	}
 
