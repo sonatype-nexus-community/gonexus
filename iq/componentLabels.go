@@ -1,6 +1,7 @@
 package nexusiq
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,9 +9,11 @@ import (
 )
 
 const (
-	restLabelComponent      = "api/v2/components/%s/labels/%s/applications/%s"
-	restLabelComponentByOrg = "api/v2/labels/organization/%s"
-	restLabelComponentByApp = "api/v2/labels/application/%s"
+	restLabelComponent         = "api/v2/components/%s/labels/%s/applications/%s"
+	restLabelComponentByOrg    = "api/v2/labels/organization/%s"
+	restLabelComponentByOrgDel = "api/v2/labels/organization/%s/%s"
+	restLabelComponentByApp    = "api/v2/labels/application/%s"
+	restLabelComponentByAppDel = "api/v2/labels/application/%s/%s"
 )
 
 // IqComponentLabel describes a component label
@@ -84,4 +87,60 @@ func GetComponentLabelsByOrganization(iq IQ, organization string) ([]IqComponent
 func GetComponentLabelsByAppID(iq IQ, appID string) ([]IqComponentLabel, error) {
 	endpoint := fmt.Sprintf(restLabelComponentByApp, appID)
 	return getComponentLabels(iq, endpoint)
+}
+
+func createLabel(iq IQ, endpoint, label, description, color string) (IqComponentLabel, error) {
+	var labelResponse IqComponentLabel
+	request, err := json.Marshal(IqComponentLabel{Label: label, Description: description, Color: color})
+	if err != nil {
+		return labelResponse, fmt.Errorf("could not marshal label: %v", err)
+	}
+
+	_, resp, err := iq.Post(endpoint, bytes.NewBuffer(request))
+	if resp.StatusCode != http.StatusOK {
+		return labelResponse, fmt.Errorf("did not succeeed in creating label: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&labelResponse); err != nil {
+		return labelResponse, fmt.Errorf("could not read json: %v", err)
+	}
+
+	return labelResponse, nil
+}
+
+// CreateComponentLabelForOrganization creates a label for an organization
+func CreateComponentLabelForOrganization(iq IQ, organization, label, description, color string) (IqComponentLabel, error) {
+	endpoint := fmt.Sprintf(restLabelComponentByOrg, organization)
+	return createLabel(iq, endpoint, label, description, color)
+}
+
+// CreateComponentLabelForApplication creates a label for an application
+func CreateComponentLabelForApplication(iq IQ, appID, label, description, color string) (IqComponentLabel, error) {
+	endpoint := fmt.Sprintf(restLabelComponentByApp, appID)
+	return createLabel(iq, endpoint, label, description, color)
+}
+
+// DeleteComponentLabelForOrganization deletes a label from an organization
+func DeleteComponentLabelForOrganization(iq IQ, organization, label string) error {
+	endpoint := fmt.Sprintf(restLabelComponentByOrgDel, organization, label)
+	resp, err := iq.Del(endpoint)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("did not succeeed in deleting label: %v", err)
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+// DeleteComponentLabelForApplication deletes a label from an application
+func DeleteComponentLabelForApplication(iq IQ, appID, label string) error {
+	endpoint := fmt.Sprintf(restLabelComponentByAppDel, appID, label)
+	resp, err := iq.Del(endpoint)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("did not succeeed in deleting label: %v", err)
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
