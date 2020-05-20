@@ -236,7 +236,7 @@ func GetRawReportByAppID(iq IQ, appID, stage string) (ReportRaw, error) {
 }
 
 func getPolicyReportByURL(iq IQ, URL string) (ReportPolicy, error) {
-	body, resp, err := iq.Get(URL)
+	body, _, err := iq.Get(URL)
 	if err != nil {
 		return ReportPolicy{}, fmt.Errorf("could not get policy report at URL %s: %v", URL, err)
 	}
