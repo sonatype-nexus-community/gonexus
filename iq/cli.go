@@ -83,6 +83,7 @@ type part struct {
 	Value string `json:"value"`
 }
 
+// ReadIqCliResultFile marshals into a struct the results file from a Nexus IQ CLI evaluation
 func ReadIqCliResultFile(filename string) (IqCliResults, error) {
 	f, err := ioutil.ReadFile(filename)
 	if err != nil {

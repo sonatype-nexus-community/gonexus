@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -24,6 +25,7 @@ type Client interface {
 	Put(endpoint string, payload io.Reader) ([]byte, *http.Response, error)
 	Del(endpoint string) (*http.Response, error)
 	Info() ServerInfo
+	SetDebug(enabled bool)
 }
 
 // DefaultClient provides an HTTP wrapper with optimized for communicating with a Nexus server
@@ -52,7 +54,8 @@ func (s DefaultClient) NewRequest(method, endpoint string, payload io.Reader) (r
 func (s DefaultClient) Do(request *http.Request) (body []byte, resp *http.Response, err error) {
 	if s.Debug {
 		dump, _ := httputil.DumpRequest(request, true)
-		fmt.Printf("%q\n", dump)
+		log.Println("debug: http request:")
+		log.Printf("%q\n", dump)
 	}
 
 	client := &http.Client{
@@ -107,6 +110,11 @@ func (s DefaultClient) Del(endpoint string) (resp *http.Response, err error) {
 // Info return information about the Nexus server
 func (s DefaultClient) Info() ServerInfo {
 	return ServerInfo{s.Host, s.Username, s.Password}
+}
+
+// SetDebug sets the debug flag to the given value
+func (s DefaultClient) SetDebug(enabled bool) {
+	s.Debug = enabled
 }
 
 // SearchQueryBuilder is the interface that a search builder should follow
