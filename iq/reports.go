@@ -71,7 +71,7 @@ type rawReportMatchSummary struct {
 	TotalComponentCount int64 `json:"totalComponentCount"`
 }
 
-// ReportRaw descrpibes the raw data of an application report
+// ReportRaw describes the raw data of an application report
 type ReportRaw struct {
 	Components   []rawReportComponent  `json:"components"`
 	MatchSummary rawReportMatchSummary `json:"matchSummary"`
