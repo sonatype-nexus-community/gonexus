@@ -21,3 +21,13 @@ func New(host, username, password string) (IQ, error) {
 	iq.Password = password
 	return iq, nil
 }
+
+// NewDebug creates a new IQ instance with debug enabled
+func NewDebug(host, username, password string) (IQ, error) {
+	iq := new(iqClient)
+	iq.Host = host
+	iq.Username = username
+	iq.Password = password
+	iq.Debug = true
+	return iq, nil
+}

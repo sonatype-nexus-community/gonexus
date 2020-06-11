@@ -25,7 +25,6 @@ type Client interface {
 	Put(endpoint string, payload io.Reader) ([]byte, *http.Response, error)
 	Del(endpoint string) (*http.Response, error)
 	Info() ServerInfo
-	SetDebug(enabled bool)
 }
 
 // DefaultClient provides an HTTP wrapper with optimized for communicating with a Nexus server
@@ -110,11 +109,6 @@ func (s DefaultClient) Del(endpoint string) (resp *http.Response, err error) {
 // Info return information about the Nexus server
 func (s DefaultClient) Info() ServerInfo {
 	return ServerInfo{s.Host, s.Username, s.Password}
-}
-
-// SetDebug sets the debug flag to the given value
-func (s DefaultClient) SetDebug(enabled bool) {
-	s.Debug = enabled
 }
 
 // SearchQueryBuilder is the interface that a search builder should follow

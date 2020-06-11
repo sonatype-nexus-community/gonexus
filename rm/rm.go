@@ -24,6 +24,16 @@ func New(host, username, password string) (RM, error) {
 	return rm, nil
 }
 
+// NewDebug creates a new Repository Manager instance with debug enabled
+func NewDebug(host, username, password string) (RM, error) {
+	rm := new(rmClient)
+	rm.Host = host
+	rm.Username = username
+	rm.Password = password
+	rm.Debug = true
+	return rm, nil
+}
+
 // QueryBuilder allows you to build a search query
 type QueryBuilder struct {
 	criteria map[string]string
