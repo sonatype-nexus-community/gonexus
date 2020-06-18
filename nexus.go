@@ -1,6 +1,8 @@
 package nexus
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -13,7 +15,7 @@ import (
 
 // ServerInfo contains the information needed to connect to a Nexus server
 type ServerInfo struct {
-	Host, Username, Password string
+	Host, Username, Password, CertFile string
 }
 
 // Client is the interface which allows interacting with an IQ server
@@ -57,8 +59,32 @@ func (s DefaultClient) Do(request *http.Request) (body []byte, resp *http.Respon
 		log.Printf("%q\n", dump)
 	}
 
-	client := &http.Client{
-		Timeout: 30 * time.Second,
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	if s.CertFile != "" {
+		rootCAs, err := x509.SystemCertPool()
+		if err != nil {
+			log.Println("warning: failed to get the system cert pool:", err)
+		}
+
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		certs, err := ioutil.ReadFile(s.CertFile)
+		if err != nil {
+			log.Fatalf("Failed to append %q to RootCAs: %v", s.CertFile, err)
+		}
+
+		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+			log.Println("warning: no certs appended, using system certs only")
+		}
+
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: rootCAs,
+			},
+		}
 	}
 	resp, err = client.Do(request)
 	if err != nil {
