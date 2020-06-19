@@ -14,22 +14,10 @@ type iqClient struct {
 }
 
 // New creates a new IQ instance
-func New(host, username, password, certFile string) (IQ, error) {
+func New(host, username, password string) (IQ, error) {
 	iq := new(iqClient)
 	iq.Host = host
 	iq.Username = username
 	iq.Password = password
-	iq.CertFile = certFile
-	return iq, nil
-}
-
-// NewDebug creates a new IQ instance with debug enabled
-func NewDebug(host, username, password, certFile string) (IQ, error) {
-	iq := new(iqClient)
-	iq.Host = host
-	iq.Username = username
-	iq.Password = password
-	iq.CertFile = certFile
-	iq.Debug = true
 	return iq, nil
 }

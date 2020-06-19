@@ -16,23 +16,11 @@ type rmClient struct {
 }
 
 // New creates a new Repository Manager instance
-func New(host, username, password, certFile string) (RM, error) {
+func New(host, username, password string) (RM, error) {
 	rm := new(rmClient)
 	rm.Host = host
 	rm.Username = username
 	rm.Password = password
-	rm.CertFile = certFile
-	return rm, nil
-}
-
-// NewDebug creates a new Repository Manager instance with debug enabled
-func NewDebug(host, username, password, certFile string) (RM, error) {
-	rm := new(rmClient)
-	rm.Host = host
-	rm.Username = username
-	rm.Password = password
-	rm.CertFile = certFile
-	rm.Debug = true
 	return rm, nil
 }
 
