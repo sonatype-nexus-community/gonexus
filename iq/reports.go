@@ -89,6 +89,7 @@ type policyReportViolation struct {
 	} `json:"constraints"`
 	Grandfathered        bool   `json:"grandfathered"`
 	PolicyID             string `json:"policyId"`
+	PolicyViolationId    string `json:"policyViolationId"`
 	PolicyName           string `json:"policyName"`
 	PolicyThreatCategory string `json:"policyThreatCategory"`
 	PolicyThreatLevel    int64  `json:"policyThreatLevel"`
