@@ -78,7 +78,7 @@ type ReportRaw struct {
 	ReportInfo   ReportInfo            `json:"reportInfo,omitempty"`
 }
 
-type policyReportViolation struct {
+type PolicyReportViolation struct {
 	Constraints []struct {
 		Conditions []struct {
 			ConditionReason  string `json:"conditionReason"`
@@ -99,7 +99,7 @@ type policyReportViolation struct {
 // PolicyReportComponent encapsulates a component which violates a policy
 type PolicyReportComponent struct {
 	Component
-	Violations []policyReportViolation `json:"violations"`
+	Violations []PolicyReportViolation `json:"violations"`
 }
 
 type policyReportCounts struct {
