@@ -78,7 +78,7 @@ type ReportRaw struct {
 	ReportInfo   ReportInfo            `json:"reportInfo,omitempty"`
 }
 
-type policyReportViolation struct {
+type PolicyReportViolation struct {
 	Constraints []struct {
 		Conditions []struct {
 			ConditionReason  string `json:"conditionReason"`
@@ -89,6 +89,7 @@ type policyReportViolation struct {
 	} `json:"constraints"`
 	Grandfathered        bool   `json:"grandfathered"`
 	PolicyID             string `json:"policyId"`
+	PolicyViolationId    string `json:"policyViolationId"`
 	PolicyName           string `json:"policyName"`
 	PolicyThreatCategory string `json:"policyThreatCategory"`
 	PolicyThreatLevel    int64  `json:"policyThreatLevel"`
@@ -98,7 +99,7 @@ type policyReportViolation struct {
 // PolicyReportComponent encapsulates a component which violates a policy
 type PolicyReportComponent struct {
 	Component
-	Violations []policyReportViolation `json:"violations"`
+	Violations []PolicyReportViolation `json:"violations"`
 }
 
 type policyReportCounts struct {
