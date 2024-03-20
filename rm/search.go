@@ -144,7 +144,6 @@ func search(rm RM, endpoint string, queryBuilder nexus.SearchQueryBuilder, respo
 
 // SearchComponents allows searching the indicated RM instance for specific components
 func SearchComponents(rm RM, query nexus.SearchQueryBuilder) ([]RepositoryItem, error) {
-	fmt.Println("query", query.Build())
 	items := make([]RepositoryItem, 0)
 
 	err := search(rm, restSearchComponents, query, func(body []byte) (string, error) {
