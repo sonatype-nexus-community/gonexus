@@ -1,3 +1,3 @@
-module github.com/Tom-B-gw/gonexus
+github.com/sonatype-nexus-community/gonexus
 
 go 1.12
