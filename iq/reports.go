@@ -258,7 +258,7 @@ func GetPolicyReportByAppID(iq IQ, appID, stage string) (ReportPolicy, error) {
 
 	for _, info := range infos {
 		if info.Stage == stage {
-			report, err := getPolicyReportByURL(iq, strings.Replace(infos[0].ReportDataURL, "/raw", "/policy", 1))
+			report, err := getPolicyReportByURL(iq, strings.Replace(info.ReportDataURL, "/raw", "/policy", 1))
 			report.ReportInfo = info
 			return report, err
 		}
